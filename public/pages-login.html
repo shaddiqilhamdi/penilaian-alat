@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="utf-8">
+  <meta content="width=device-width, initial-scale=1.0" name="viewport">
+
+  <title>Login - Penilaian Alat Kerja</title>
+  <meta content="" name="description">
+  <meta content="" name="keywords">
+
+  <!-- Favicons -->
+  <link href="assets/img/favicon.svg" rel="icon">
+
+  <!-- Google Fonts -->
+  <link href="https://fonts.gstatic.com" rel="preconnect">
+  <link
+    href="https://fonts.googleapis.com/css?family=Open+Sans:300,300i,400,400i,600,600i,700,700i|Nunito:300,300i,400,400i,600,600i,700,700i|Poppins:300,300i,400,400i,500,500i,600,600i,700,700i"
+    rel="stylesheet">
+
+  <!-- Vendor CSS Files -->
+  <link href="assets/vendor/bootstrap/css/bootstrap.min.css" rel="stylesheet">
+  <link href="assets/vendor/bootstrap-icons/bootstrap-icons.css" rel="stylesheet">
+
+  <!-- Template Main CSS File -->
+  <link href="assets/css/style.css" rel="stylesheet">
+
+</head>
+
+<body>
+
+  <main>
+    <div class="container">
+
+      <section class="section register min-vh-100 d-flex flex-column align-items-center justify-content-center py-4">
+        <div class="container">
+          <div class="row justify-content-center">
+            <div class="col-lg-4 col-md-6 d-flex flex-column align-items-center justify-content-center">
+
+              <div class="card mb-3">
+
+                <div class="card-body">
+
+                  <div class="pt-4 pb-2">
+                    <h5 class="card-title text-center pb-0 fs-4">Penilaian Alat Kerja</h5>
+                    <p class="text-center small">Sistem Penilaian APD</p>
+                  </div>
+
+                  <!-- Error Alert -->
+                  <div id="alertContainer" style="display:none;">
+                    <div class="alert alert-danger alert-dismissible fade show" role="alert" id="errorAlert">
+                      <i class="bi bi-exclamation-octagon me-1"></i>
+                      <span id="errorMessage"></span>
+                      <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                    </div>
+                  </div>
+
+                  <!-- Loading Indicator -->
+                  <div id="loadingSpinner" class="spinner-border text-primary mx-auto mb-3" role="status"
+                    style="display:none;">
+                    <span class="visually-hidden">Loading...</span>
+                  </div>
+
+                  <form class="row g-3" id="loginForm">
+
+                    <div class="col-12">
+                      <label for="emailInput" class="form-label">Email</label>
+                      <div class="input-group has-validation">
+                        <span class="input-group-text">@</span>
+                        <input type="email" name="email" class="form-control" id="emailInput"
+                          placeholder="user@example.com" required>
+                        <div class="invalid-feedback">Please enter valid email.</div>
+                      </div>
+                    </div>
+
+                    <div class="col-12">
+                      <label for="passwordInput" class="form-label">Password</label>
+                      <input type="password" name="password" class="form-control" id="passwordInput"
+                        placeholder="Enter password" required>
+                      <div class="invalid-feedback">Please enter your password!</div>
+                    </div>
+
+                    <div class="col-12 mb-4">
+                      <div class="form-check">
+                        <input class="form-check-input" type="checkbox" name="remember" value="true" id="rememberMe">
+                        <label class="form-check-label" for="rememberMe">Remember me</label>
+                      </div>
+                    </div>
+
+                    <div class="col-12 mb-3">
+                      <button class="btn btn-primary w-100" id="loginBtn" type="submit">Login</button>
+                    </div>
+
+                  </form>
+
+                </div>
+              </div>
+
+            </div>
+          </div>
+        </div>
+
+      </section>
+
+    </div>
+  </main><!-- End #main -->
+
+  <!-- Supabase Library (load first) -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+  <!-- Supabase Client Config -->
+  <script src="assets/js/config/supabase-client.js"></script>
+
+  <!-- Auth Module -->
+  <script src="assets/js/auth/supabase-auth.js"></script>
+
+  <!-- Login Script -->
+  <script>
+    document.addEventListener('DOMContentLoaded', function () {
+      const loginForm = document.getElementById('loginForm');
+      const loginBtn = document.getElementById('loginBtn');
+      const emailInput = document.getElementById('emailInput');
+      const passwordInput = document.getElementById('passwordInput');
+      const alertContainer = document.getElementById('alertContainer');
+      const errorMessage = document.getElementById('errorMessage');
+      const loadingSpinner = document.getElementById('loadingSpinner');
+
+      loginForm.addEventListener('submit', async function (e) {
+        e.preventDefault();
+
+        // Validate inputs
+        if (!emailInput.value || !passwordInput.value) {
+          showError('Email dan password tidak boleh kosong');
+          return;
+        }
+
+        // Validate email format
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        if (!emailRegex.test(emailInput.value)) {
+          showError('Format email tidak valid');
+          return;
+        }
+
+        // Show loading state
+        loginBtn.disabled = true;
+        loadingSpinner.style.display = 'block';
+        alertContainer.style.display = 'none';
+
+        try {
+          const result = await login(emailInput.value, passwordInput.value);
+
+          if (result.success) {
+            console.log('✅ Login berhasil');
+            // Redirect ke dashboard
+            window.location.href = 'index.html';
+          } else {
+            showError(result.error || 'Login gagal');
+          }
+        } catch (error) {
+          showError('Terjadi kesalahan: ' + error.message);
+        } finally {
+          loginBtn.disabled = false;
+          loadingSpinner.style.display = 'none';
+        }
+      });
+
+      function showError(message) {
+        errorMessage.textContent = message;
+        alertContainer.style.display = 'block';
+      }
+
+      // Check if already logged in
+      checkAuthStatus();
+
+      async function checkAuthStatus() {
+        // Wait for config to load
+        let waitCount = 0;
+        while (typeof getSupabaseClient === 'undefined' && waitCount < 10) {
+          await new Promise(resolve => setTimeout(resolve, 200));
+          waitCount++;
+        }
+
+        if (typeof getSupabaseClient === 'undefined') {
+          console.error('Supabase client not loaded');
+          return;
+        }
+
+        try {
+          const client = getSupabaseClient();
+          const { data: { session }, error } = await client.auth.getSession();
+
+          console.log('Login page - Session check:', session ? 'has session' : 'no session', error?.message || '');
+
+          if (session && session.user) {
+            // Already logged in, redirect to dashboard
+            console.log('User already logged in, redirecting to dashboard');
+            window.location.href = 'index.html';
+          }
+        } catch (error) {
+          console.log('Not logged in:', error);
+        }
+      }
+    });
+  </script>
+
+  <!-- Template Main JS File -->
+  <script src="assets/js/main.js"></script>
+
+</body>

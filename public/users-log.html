@@ -1,0 +1,513 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="utf-8">
+  <meta content="width=device-width, initial-scale=1.0" name="viewport">
+
+  <title>Log - Penilaian Alat Kerja</title>
+  <meta content="" name="description">
+  <meta content="" name="keywords">
+
+  <!-- Favicons -->
+  <link href="assets/img/favicon.svg" rel="icon">
+
+  <!-- Google Fonts -->
+  <link href="https://fonts.gstatic.com" rel="preconnect">
+  <link
+    href="https://fonts.googleapis.com/css?family=Open+Sans:300,300i,400,400i,600,600i,700,700i|Nunito:300,300i,400,400i,600,600i,700,700i|Poppins:300,300i,400,400i,500,500i,600,600i,700,700i"
+    rel="stylesheet">
+
+  <!-- Vendor CSS Files -->
+  <link href="assets/vendor/bootstrap/css/bootstrap.min.css" rel="stylesheet">
+  <link href="assets/vendor/bootstrap-icons/bootstrap-icons.css" rel="stylesheet">
+  <link href="assets/vendor/boxicons/css/boxicons.min.css" rel="stylesheet">
+  <link href="assets/vendor/quill/quill.snow.css" rel="stylesheet">
+  <link href="assets/vendor/quill/quill.bubble.css" rel="stylesheet">
+  <link href="assets/vendor/remixicon/remixicon.css" rel="stylesheet">
+  <link href="assets/vendor/simple-datatables/style.css" rel="stylesheet">
+
+  <!-- Template Main CSS File -->
+  <link href="assets/css/style.css" rel="stylesheet">
+
+</head>
+
+<body>
+
+  <!-- ======= Header ======= -->
+  <header id="header" class="header fixed-top d-flex align-items-center">
+
+    <div class="d-flex align-items-center justify-content-between">
+      <a href="index.html" class="logo d-flex align-items-center">
+        <i class="bi bi-shield-check fs-4 text-primary me-2"></i>
+        <span class="d-none d-lg-block">Penilaian Alat Kerja</span>
+      </a>
+      <i class="bi bi-list toggle-sidebar-btn"></i>
+    </div><!-- End Logo -->
+
+    <div class="search-bar">
+      <form class="search-form d-flex align-items-center" method="POST" action="#">
+        <input type="text" name="query" placeholder="Search" title="Enter search keyword">
+        <button type="submit" title="Search"><i class="bi bi-search"></i></button>
+      </form>
+    </div><!-- End Search Bar -->
+
+    <nav class="header-nav ms-auto">
+      <ul class="d-flex align-items-center">
+
+        <li class="nav-item d-block d-lg-none">
+          <a class="nav-link nav-icon search-bar-toggle " href="#">
+            <i class="bi bi-search"></i>
+          </a>
+        </li><!-- End Search Icon-->
+
+        <!-- Notification Nav - Hidden -->
+        <li class="nav-item dropdown" style="display: none;">
+          <a class="nav-link nav-icon" href="#" data-bs-toggle="dropdown">
+            <i class="bi bi-bell"></i>
+            <span class="badge bg-primary badge-number">0</span>
+          </a>
+        </li>
+
+        <!-- Messages Nav - Hidden -->
+        <li class="nav-item dropdown" style="display: none;">
+          <a class="nav-link nav-icon" href="#" data-bs-toggle="dropdown">
+            <i class="bi bi-chat-left-text"></i>
+            <span class="badge bg-success badge-number">0</span>
+          </a>
+        </li>
+
+        <li class="nav-item dropdown pe-3">
+
+          <a class="nav-link nav-profile d-flex align-items-center pe-0" href="#" data-bs-toggle="dropdown">
+            <div id="navProfileInitial"
+              class="rounded-circle bg-primary text-white d-flex align-items-center justify-content-center"
+              style="width: 36px; height: 36px; font-size: 16px; font-weight: 600;">?</div>
+            <span id="navProfileName" class="d-none d-md-block dropdown-toggle ps-2">Loading...</span>
+          </a><!-- End Profile Image Icon -->
+
+          <ul class="dropdown-menu dropdown-menu-end dropdown-menu-arrow profile">
+            <li class="dropdown-header">
+              <h6 id="navProfileFullName">Loading...</h6>
+              <span id="navProfileRole">-</span>
+            </li>
+            <li>
+              <hr class="dropdown-divider">
+            </li>
+
+            <li>
+              <a class="dropdown-item d-flex align-items-center" href="users-profile.html">
+                <i class="bi bi-person"></i>
+                <span>My Profile</span>
+              </a>
+            </li>
+            <li>
+              <hr class="dropdown-divider">
+            </li>
+
+            <li>
+              <a class="dropdown-item d-flex align-items-center" href="users-profile.html">
+                <i class="bi bi-gear"></i>
+                <span>Account Settings</span>
+              </a>
+            </li>
+            <li>
+              <hr class="dropdown-divider">
+            </li>
+
+            <li>
+              <a class="dropdown-item d-flex align-items-center" href="pages-faq.html">
+                <i class="bi bi-question-circle"></i>
+                <span>Need Help?</span>
+              </a>
+            </li>
+            <li>
+              <hr class="dropdown-divider">
+            </li>
+
+            <li>
+              <a class="dropdown-item d-flex align-items-center" href="#" id="logoutBtn">
+                <i class="bi bi-box-arrow-right"></i>
+                <span>Sign Out</span>
+              </a>
+            </li>
+
+          </ul><!-- End Profile Dropdown Items -->
+        </li><!-- End Profile Nav -->
+
+      </ul>
+    </nav><!-- End Icons Navigation -->
+
+  </header><!-- End Header -->
+
+  <!-- ======= Sidebar ======= -->
+  <aside id="sidebar" class="sidebar">
+
+    <ul class="sidebar-nav" id="sidebar-nav">
+
+      <li class="nav-item">
+        <a class="nav-link collapsed" href="index.html">
+          <i class="bi bi-grid"></i>
+          <span>Dashboard</span>
+        </a>
+      </li><!-- End Dashboard Nav -->
+
+      <li class="nav-heading">Penilaian</li>
+
+      <li class="nav-item">
+        <a class="nav-link collapsed" data-bs-target="#forms-nav" data-bs-toggle="collapse" href="#">
+          <i class="bi bi-menu-button-wide"></i><span>Formulir</span><i class="bi bi-chevron-down ms-auto"></i>
+        </a>
+        <ul id="forms-nav" class="nav-content collapse " data-bs-parent="#sidebar-nav">
+          <li>
+            <a href="forms-penilaian.html">
+              <i class="bi bi-circle"></i><span>Form Penilaian</span>
+            </a>
+          </li>
+          <li>
+            <a href="forms-data-penilaian.html">
+              <i class="bi bi-circle"></i><span>Data Penilaian</span>
+            </a>
+          </li>
+
+        </ul>
+      </li><!-- End Components Nav -->
+
+      <li class="nav-heading">Pengaturan</li>
+
+      <li class="nav-item">
+        <a class="nav-link collapsed" data-bs-target="#data-nav" data-bs-toggle="collapse" href="#">
+          <i class="bi bi-journal-text"></i><span>Data Master</span><i class="bi bi-chevron-down ms-auto"></i>
+        </a>
+        <ul id="data-nav" class="nav-content collapse " data-bs-parent="#sidebar-nav">
+          <li>
+            <a href="data-unit.html">
+              <i class="bi bi-circle"></i><span>Unit</span>
+            </a>
+          </li>
+          <li>
+            <a href="data-vendor.html">
+              <i class="bi bi-circle"></i><span>Vendor Pelaksana</span>
+            </a>
+          </li>
+          <li>
+            <a href="data-peruntukan.html">
+              <i class="bi bi-circle"></i><span>Peruntukan</span>
+            </a>
+          </li>
+          <li>
+            <a href="data-peralatan.html">
+              <i class="bi bi-circle"></i><span>Peralatan</span>
+            </a>
+          </li>
+
+          <li>
+            <a href="data-kendaraan.html">
+              <i class="bi bi-circle"></i><span>Kendaraan</span>
+            </a>
+          </li>
+          <li>
+            <a href="data-personil.html">
+              <i class="bi bi-circle"></i><span>Personil</span>
+            </a>
+          </li>
+
+        </ul>
+      </li><!-- End Pengaturan Nav -->
+
+      <li class="nav-item">
+        <a class="nav-link collapsed" data-bs-target="#users-nav" data-bs-toggle="collapse" href="#">
+          <i class="bi bi-layout-text-window-reverse"></i><span>Pengguna</span><i
+            class="bi bi-chevron-down ms-auto"></i>
+        </a>
+        <ul id="users-nav" class="nav-content collapse " data-bs-parent="#sidebar-nav">
+          <li>
+            <a href="users-tambah-pengguna.html">
+              <i class="bi bi-circle"></i><span>Tambah Pengguna</span>
+            </a>
+          </li>
+          <li>
+            <a href="users-data-pengguna.html">
+              <i class="bi bi-circle"></i><span>Daftar Pengguna</span>
+            </a>
+          </li>
+        </ul>
+      </li><!-- End Users Nav -->
+
+      <li class="nav-heading">Profil</li>
+
+      <li class="nav-item">
+        <a class="nav-link collapsed" href="users-profile.html">
+          <i class="bi bi-person"></i>
+          <span>Profil</span>
+        </a>
+      </li><!-- End Profile Page Nav -->
+
+      <li class="nav-item">
+        <a class="nav-link " href="users-log.html">
+          <i class="bi bi-file-earmark-text"></i>
+          <span>Log</span>
+        </a>
+      </li><!-- End Log Page Nav -->
+
+
+
+    </ul>
+
+  </aside><!-- End Sidebar-->
+
+  <main id="main" class="main">
+
+    <div class="pagetitle">
+      <h1>Log</h1>
+      <nav>
+        <ol class="breadcrumb">
+          <li class="breadcrumb-item"><a href="index.html">Home</a></li>
+          <li class="breadcrumb-item">Profil</li>
+          <li class="breadcrumb-item active">Log</li>
+        </ol>
+      </nav>
+    </div><!-- End Page Title -->
+
+    <section class="section">
+      <div class="row">
+        <div class="col-lg-12">
+
+          <div class="card">
+            <div class="card-body">
+              <h5 class="card-title">User Log</h5>
+
+              <!-- Table with stripped rows -->
+              <table class="table datatable table-striped">
+                <thead>
+                  <tr>
+                    <th data-type="datetime" data-format="YYYY/DD/MM HH:mm:ss">
+                      <b>W</b>aktu
+                    </th>
+                    <th>Pengguna</th>
+                    <th>Aksi</th>
+                    <th>Data</th>
+                    <th>Detail</th>
+                    <th>Status</th>
+                  </tr>
+                </thead>
+
+                <tbody>
+                  <tr>
+                    <td>2024/10/01 14:23:45</td>
+                    <td>Brandon Jacob</td>
+                    <td>Update</td>
+                    <td>Peralatan</td>
+                    <td>Updated equipment ID 1234</td>
+                    <td>Success</td>
+                  </tr>
+                  <tr>
+                    <td>2024/10/01 13:15:22</td>
+                    <td>Brandon Jacob</td>
+                    <td>Create</td>
+                    <td>Vendor Pelaksana</td>
+                    <td>Created vendor ID 5678</td>
+                    <td>Success</td>
+                  </tr>
+                  <tr>
+                    <td>2024/10/01 12:05:10</td>
+                    <td>Brandon Jacob</td>
+                    <td>Delete</td>
+                    <td>Personil</td>
+                    <td>Deleted personnel ID 9101</td>
+                    <td>Failed</td>
+                  </tr>
+                  <tr>
+                    <td>2024/09/30 16:45:00</td>
+                    <td>Brandon Jacob</td>
+                    <td>Update</td>
+                    <td>Kendaraan</td>
+                    <td>Updated vehicle ID 1121</td>
+                    <td>Success</td>
+                  </tr>
+                  <tr>
+                    <td>2024/09/30 15:30:30</td>
+                    <td>Brandon Jacob</td>
+                    <td>Create</td>
+                    <td>Unit</td>
+                    <td>Created unit ID 3141</td>
+                    <td>Success</td>
+                  </tr>
+                  <tr>
+                    <td>2024/09/30 14:20:15</td>
+                    <td>Brandon Jacob</td>
+                    <td>Delete</td>
+                    <td>Peruntukan</td>
+                    <td>Deleted allocation ID 5161</td>
+                    <td>Failed</td>
+                  </tr>
+                  <tr>
+                    <td>2024/09/29 11:10:05</td>
+                    <td>Brandon Jacob</td>
+                    <td>Update</td>
+                    <td>Peralatan</td>
+                    <td>Updated equipment ID 7181</td>
+                    <td>Success</td>
+                  </tr>
+                  <tr>
+                    <td>2024/09/29 10:00:00</td>
+                    <td>Brandon Jacob</td>
+                    <td>Create</td>
+                    <td>Vendor Pelaksana</td>
+                    <td>Created vendor ID 9202</td>
+                    <td>Success</td>
+                  </tr>
+                  <tr>
+                    <td>2024/09/29 09:45:30</td>
+                    <td>Brandon Jacob</td>
+                    <td>Delete</td>
+                    <td>Personil</td>
+                    <td>Deleted personnel ID 1222</td>
+                    <td>Failed</td>
+                  </tr>
+                  <tr>
+                    <td>2024/09/28 17:30:45</td>
+                    <td>Brandon Jacob</td>
+                    <td>Update</td>
+                    <td>Kendaraan</td>
+                    <td>Updated vehicle ID 3242</td>
+                    <td>Success</td>
+                  </tr>
+                  <tr>
+                    <td>2024/09/28 16:15:20</td>
+                    <td>Brandon Jacob</td>
+                    <td>Create</td>
+                    <td>Unit</td>
+                    <td>Created unit ID 5262</td>
+                    <td>Success</td>
+                </tbody>
+
+              </table>
+              <!-- End Table with stripped rows -->
+
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </section>
+
+  </main><!-- End #main -->
+
+  <!-- ======= Footer ======= -->
+  <footer id="footer" class="footer">
+
+  </footer><!-- End Footer -->
+
+  <a href="#" class="back-to-top d-flex align-items-center justify-content-center"><i
+      class="bi bi-arrow-up-short"></i></a>
+
+  <!-- Vendor JS Files -->
+  <script src="assets/vendor/bootstrap/js/bootstrap.bundle.min.js"></script>
+  <script src="assets/vendor/simple-datatables/simple-datatables.js"></script>
+
+  <!-- Supabase & SweetAlert2 -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+  <!-- Supabase Config & Auth -->
+  <script src="assets/js/config/supabase-client.js"></script>
+  <script src="assets/js/auth/supabase-auth.js"></script>
+
+  <!-- API Modules -->
+  <script src="assets/js/api/profiles.js"></script>
+
+  <!-- Template Main JS File -->
+  <script src="assets/js/main.js"></script>
+
+  <!-- Page Script -->
+  <script>
+    // Initialize page
+    document.addEventListener('DOMContentLoaded', async function () {
+      await checkAuthAndLoadProfile();
+      setupEventListeners();
+    });
+
+    // Check auth and load profile
+    async function checkAuthAndLoadProfile() {
+      try {
+        const currentUser = await getCurrentUser();
+
+        if (!currentUser) {
+          window.location.href = 'pages-login.html';
+          return;
+        }
+
+        // Load profile
+        const result = await ProfilesAPI.getById(currentUser.id);
+        if (result.success && result.data) {
+          updateNavbarProfile(result.data);
+        }
+      } catch (error) {
+        console.error('Error loading profile:', error);
+      }
+    }
+
+    // Update navbar profile
+    function updateNavbarProfile(profile) {
+      const fullName = profile.nama || profile.email || 'User';
+      const shortName = fullName.split(' ')[0];
+      const initial = shortName.charAt(0).toUpperCase();
+      const roleLabel = formatRole(profile.role);
+
+      const navProfileInitial = document.getElementById('navProfileInitial');
+      const navProfileName = document.getElementById('navProfileName');
+      const navProfileFullName = document.getElementById('navProfileFullName');
+      const navProfileRole = document.getElementById('navProfileRole');
+
+      if (navProfileInitial) navProfileInitial.textContent = initial;
+      if (navProfileName) navProfileName.textContent = shortName;
+      if (navProfileFullName) navProfileFullName.textContent = fullName;
+      if (navProfileRole) navProfileRole.textContent = roleLabel;
+    }
+
+    // Format role
+    function formatRole(role) {
+      const roles = {
+        'uid_admin': 'UID Admin',
+        'uid_user': 'UID User',
+        'up3_admin': 'UP3 Admin',
+        'up3_user': 'UP3 User',
+        'vendor_k3': 'Vendor K3'
+      };
+      return roles[role] || role || '-';
+    }
+
+    // Setup event listeners
+    function setupEventListeners() {
+      // Logout button
+      const logoutBtn = document.getElementById('logoutBtn');
+      if (logoutBtn) {
+        logoutBtn.addEventListener('click', async (e) => {
+          e.preventDefault();
+          const result = await Swal.fire({
+            title: 'Konfirmasi Logout',
+            text: 'Apakah Anda yakin ingin keluar?',
+            icon: 'question',
+            showCancelButton: true,
+            confirmButtonColor: '#3085d6',
+            cancelButtonColor: '#6c757d',
+            confirmButtonText: 'Ya, Logout',
+            cancelButtonText: 'Batal'
+          });
+          if (result.isConfirmed) {
+            try {
+              await logout();
+            } catch (error) {
+              console.error('Logout error:', error);
+            }
+            window.location.href = 'pages-login.html';
+          }
+        });
+      }
+    }
+  </script>
+
+</body>
+
+</html>

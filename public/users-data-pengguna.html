@@ -1,0 +1,558 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="utf-8">
+  <meta content="width=device-width, initial-scale=1.0" name="viewport">
+
+  <title>Data Pengguna - Penilaian Alat Kerja</title>
+  <meta content="" name="description">
+  <meta content="" name="keywords">
+
+  <!-- Favicons -->
+  <link href="assets/img/favicon.svg" rel="icon">
+
+  <!-- Google Fonts -->
+  <link href="https://fonts.gstatic.com" rel="preconnect">
+  <link
+    href="https://fonts.googleapis.com/css?family=Open+Sans:300,300i,400,400i,600,600i,700,700i|Nunito:300,300i,400,400i,600,600i,700,700i|Poppins:300,300i,400,400i,500,500i,600,600i,700,700i"
+    rel="stylesheet">
+
+  <!-- Vendor CSS Files -->
+  <link href="assets/vendor/bootstrap/css/bootstrap.min.css" rel="stylesheet">
+  <link href="assets/vendor/bootstrap-icons/bootstrap-icons.css" rel="stylesheet">
+  <link href="assets/vendor/boxicons/css/boxicons.min.css" rel="stylesheet">
+  <link href="assets/vendor/quill/quill.snow.css" rel="stylesheet">
+  <link href="assets/vendor/quill/quill.bubble.css" rel="stylesheet">
+  <link href="assets/vendor/remixicon/remixicon.css" rel="stylesheet">
+  <link href="assets/vendor/simple-datatables/style.css" rel="stylesheet">
+
+  <!-- Template Main CSS File -->
+  <link href="assets/css/style.css" rel="stylesheet">
+
+  <style>
+    /* Data pengguna page custom styling */
+
+    /* Smaller font sizes for main content - proportional to sidebar */
+    #main {
+      font-size: 13px;
+    }
+
+    #main .card-title {
+      font-size: 15px;
+      font-weight: 600;
+    }
+
+    /* Navbar avatar */
+    .nav-avatar-small {
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: white;
+      font-weight: bold;
+      font-size: 14px;
+    }
+
+    #main .pagetitle h1 {
+      font-size: 20px;
+    }
+
+    #main .breadcrumb {
+      font-size: 12px;
+    }
+
+    .table {
+      font-size: 12px;
+    }
+
+    .table th {
+      font-size: 12px;
+      font-weight: 600;
+      background-color: #f8f9fa;
+      vertical-align: middle;
+    }
+
+    .table td {
+      vertical-align: middle;
+    }
+
+    .user-avatar {
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: white;
+      font-weight: bold;
+      font-size: 13px;
+    }
+
+    .badge-role {
+      font-size: 10px;
+      padding: 4px 8px;
+    }
+
+    .action-buttons {
+      display: flex;
+      gap: 4px;
+      flex-wrap: wrap;
+    }
+
+    .action-buttons .btn-sm {
+      padding: 3px 6px;
+      font-size: 11px;
+    }
+
+    .loading-spinner {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 250px;
+    }
+
+    .spinner-border {
+      width: 35px;
+      height: 35px;
+    }
+
+    /* Modal styling */
+    .user-detail-modal .modal-header {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+    }
+
+    .user-detail-modal .modal-header .btn-close {
+      filter: brightness(0) invert(1);
+    }
+
+    .user-detail-modal .user-avatar-lg {
+      width: 80px;
+      height: 80px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: white;
+      font-weight: bold;
+      font-size: 32px;
+      margin: 0 auto 15px;
+    }
+
+    .user-detail-modal .detail-row {
+      display: flex;
+      padding: 8px 0;
+      border-bottom: 1px solid #eee;
+    }
+
+    .user-detail-modal .detail-row:last-child {
+      border-bottom: none;
+    }
+
+    .user-detail-modal .detail-label {
+      width: 100px;
+      font-weight: 600;
+      color: #666;
+      font-size: 12px;
+    }
+
+    .user-detail-modal .detail-value {
+      flex: 1;
+      font-size: 13px;
+    }
+
+    /* Role-based visibility */
+    .admin-only {
+      display: none;
+    }
+
+    .admin-visible .admin-only {
+      display: inline-block;
+    }
+  </style>
+</head>
+
+<body>
+
+  <!-- ======= Header ======= -->
+  <header id="header" class="header fixed-top d-flex align-items-center">
+
+    <div class="d-flex align-items-center justify-content-between">
+      <a href="index.html" class="logo d-flex align-items-center">
+        <i class="bi bi-shield-check fs-4 text-primary me-2"></i>
+        <span class="d-none d-lg-block">Penilaian Alat Kerja</span>
+      </a>
+      <i class="bi bi-list toggle-sidebar-btn"></i>
+    </div><!-- End Logo -->
+
+    <div class="search-bar">
+      <form class="search-form d-flex align-items-center" method="POST" action="#">
+        <input type="text" name="query" placeholder="Search" title="Enter search keyword">
+        <button type="submit" title="Search"><i class="bi bi-search"></i></button>
+      </form>
+    </div><!-- End Search Bar -->
+
+    <nav class="header-nav ms-auto">
+      <ul class="d-flex align-items-center">
+
+        <li class="nav-item d-block d-lg-none">
+          <a class="nav-link nav-icon search-bar-toggle " href="#">
+            <i class="bi bi-search"></i>
+          </a>
+        </li><!-- End Search Icon-->
+
+        <!-- Notification Nav - Hidden -->
+        <li class="nav-item dropdown" style="display: none;">
+          <a class="nav-link nav-icon" href="#" data-bs-toggle="dropdown">
+            <i class="bi bi-bell"></i>
+            <span class="badge bg-primary badge-number">0</span>
+          </a>
+        </li>
+
+        <!-- Messages Nav - Hidden -->
+        <li class="nav-item dropdown" style="display: none;">
+          <a class="nav-link nav-icon" href="#" data-bs-toggle="dropdown">
+            <i class="bi bi-chat-left-text"></i>
+            <span class="badge bg-success badge-number">0</span>
+          </a>
+        </li>
+
+        <li class="nav-item dropdown pe-3">
+
+          <a class="nav-link nav-profile d-flex align-items-center pe-0" href="#" data-bs-toggle="dropdown">
+            <div id="navProfileInitial"
+              class="rounded-circle bg-primary text-white d-flex align-items-center justify-content-center"
+              style="width: 36px; height: 36px; font-size: 16px; font-weight: 600;">?</div>
+            <span id="navProfileName" class="d-none d-md-block dropdown-toggle ps-2">Loading...</span>
+          </a><!-- End Profile Image Icon -->
+
+          <ul class="dropdown-menu dropdown-menu-end dropdown-menu-arrow profile">
+            <li class="dropdown-header">
+              <h6 id="navProfileFullName">Loading...</h6>
+              <span id="navProfileRole">-</span>
+            </li>
+            <li>
+              <hr class="dropdown-divider">
+            </li>
+
+            <li>
+              <a class="dropdown-item d-flex align-items-center" href="users-profile.html">
+                <i class="bi bi-person"></i>
+                <span>My Profile</span>
+              </a>
+            </li>
+            <li>
+              <hr class="dropdown-divider">
+            </li>
+
+            <li>
+              <a class="dropdown-item d-flex align-items-center" href="users-profile.html">
+                <i class="bi bi-gear"></i>
+                <span>Account Settings</span>
+              </a>
+            </li>
+            <li>
+              <hr class="dropdown-divider">
+            </li>
+
+            <li>
+              <a class="dropdown-item d-flex align-items-center" href="pages-faq.html">
+                <i class="bi bi-question-circle"></i>
+                <span>Need Help?</span>
+              </a>
+            </li>
+            <li>
+              <hr class="dropdown-divider">
+            </li>
+
+            <li>
+              <a class="dropdown-item d-flex align-items-center" href="#" id="logoutBtn">
+                <i class="bi bi-box-arrow-right"></i>
+                <span>Sign Out</span>
+              </a>
+            </li>
+
+          </ul><!-- End Profile Dropdown Items -->
+        </li><!-- End Profile Nav -->
+
+      </ul>
+    </nav><!-- End Icons Navigation -->
+
+  </header><!-- End Header -->
+
+  <!-- ======= Sidebar ======= -->
+  <aside id="sidebar" class="sidebar">
+
+    <ul class="sidebar-nav" id="sidebar-nav">
+
+      <li class="nav-item">
+        <a class="nav-link collapsed" href="index.html">
+          <i class="bi bi-grid"></i>
+          <span>Dashboard</span>
+        </a>
+      </li><!-- End Dashboard Nav -->
+
+      <li class="nav-heading">Penilaian</li>
+
+      <li class="nav-item">
+        <a class="nav-link collapsed" data-bs-target="#forms-nav" data-bs-toggle="collapse" href="#">
+          <i class="bi bi-menu-button-wide"></i><span>Formulir</span><i class="bi bi-chevron-down ms-auto"></i>
+        </a>
+        <ul id="forms-nav" class="nav-content collapse " data-bs-parent="#sidebar-nav">
+          <li>
+            <a href="forms-penilaian.html">
+              <i class="bi bi-circle"></i><span>Form Penilaian</span>
+            </a>
+          </li>
+          <li>
+            <a href="forms-data-penilaian.html">
+              <i class="bi bi-circle"></i><span>Data Penilaian</span>
+            </a>
+          </li>
+
+        </ul>
+      </li><!-- End Components Nav -->
+
+      <li class="nav-heading">Pengaturan</li>
+
+      <li class="nav-item">
+        <a class="nav-link collapsed" data-bs-target="#data-nav" data-bs-toggle="collapse" href="#">
+          <i class="bi bi-journal-text"></i><span>Data Master</span><i class="bi bi-chevron-down ms-auto"></i>
+        </a>
+        <ul id="data-nav" class="nav-content collapse " data-bs-parent="#sidebar-nav">
+          <li>
+            <a href="data-unit.html">
+              <i class="bi bi-circle"></i><span>Unit</span>
+            </a>
+          </li>
+          <li>
+            <a href="data-vendor.html">
+              <i class="bi bi-circle"></i><span>Vendor Pelaksana</span>
+            </a>
+          </li>
+          <li>
+            <a href="data-peruntukan.html">
+              <i class="bi bi-circle"></i><span>Peruntukan</span>
+            </a>
+          </li>
+          <li>
+            <a href="data-peralatan.html">
+              <i class="bi bi-circle"></i><span>Peralatan</span>
+            </a>
+          </li>
+
+          <li>
+            <a href="data-kendaraan.html">
+              <i class="bi bi-circle"></i><span>Kendaraan</span>
+            </a>
+          </li>
+          <li>
+            <a href="data-personil.html">
+              <i class="bi bi-circle"></i><span>Personil</span>
+            </a>
+          </li>
+
+        </ul>
+      </li><!-- End Pengaturan Nav -->
+
+      <li class="nav-item">
+        <a class="nav-link" data-bs-target="#users-nav" data-bs-toggle="collapse" href="#">
+          <i class="bi bi-layout-text-window-reverse"></i><span>Pengguna</span><i
+            class="bi bi-chevron-down ms-auto"></i>
+        </a>
+        <ul id="users-nav" class="nav-content show" data-bs-parent="#sidebar-nav">
+          <li>
+            <a href="users-tambah-pengguna.html">
+              <i class="bi bi-circle"></i><span>Tambah Pengguna</span>
+            </a>
+          </li>
+          <li>
+            <a href="users-data-pengguna.html" class="active">
+              <i class="bi bi-circle"></i><span>Daftar Pengguna</span>
+            </a>
+          </li>
+        </ul>
+      </li><!-- End Users Nav -->
+
+      <li class="nav-heading">Profil</li>
+
+      <li class="nav-item">
+        <a class="nav-link collapsed" href="users-profile.html">
+          <i class="bi bi-person"></i>
+          <span>Profil</span>
+        </a>
+      </li><!-- End Profile Page Nav -->
+
+      <li class="nav-item">
+        <a class="nav-link collapsed" href="users-log.html">
+          <i class="bi bi-file-earmark-text"></i>
+          <span>Log</span>
+        </a>
+      </li><!-- End Log Page Nav -->
+
+
+
+    </ul>
+
+  </aside><!-- End Sidebar-->
+
+  <main id="main" class="main">
+
+    <div class="pagetitle">
+      <h1>Data Pengguna</h1>
+      <nav>
+        <ol class="breadcrumb">
+          <li class="breadcrumb-item"><a href="index.html">Home</a></li>
+          <li class="breadcrumb-item">Pengguna</li>
+          <li class="breadcrumb-item active">Data Pengguna</li>
+        </ol>
+      </nav>
+    </div><!-- End Page Title -->
+
+    <section class="section">
+      <div class="row">
+        <div class="col-lg-12">
+
+          <div class="card">
+            <div class="card-body">
+              <div class="d-flex justify-content-between align-items-center mb-3">
+                <h5 class="card-title mb-0">Daftar Pengguna</h5>
+                <a href="users-tambah-pengguna.html" class="btn btn-primary btn-sm" id="btnAddUser">
+                  <i class="bi bi-plus-circle"></i> Tambah Pengguna
+                </a>
+              </div>
+
+              <!-- Alert container -->
+              <div id="alertContainer"></div>
+
+              <!-- Loading state -->
+              <div id="loadingUsers" class="loading-spinner">
+                <div class="spinner-border text-primary" role="status">
+                  <span class="visually-hidden">Loading...</span>
+                </div>
+              </div>
+
+              <!-- Table with user data -->
+              <div id="usersTableContainer" style="display: none;">
+                <table class="table table-striped table-hover" id="usersTable">
+                  <thead>
+                    <tr>
+                      <th>Nama</th>
+                      <th>NIP</th>
+                      <th>Email</th>
+                      <th>Unit</th>
+                      <th>Jabatan</th>
+                      <th>Role</th>
+                      <th style="width: 60px;">Aksi</th>
+                    </tr>
+                  </thead>
+                  <tbody id="usersTableBody">
+                    <!-- Data akan diisi dengan JavaScript -->
+                  </tbody>
+                </table>
+              </div>
+
+              <!-- Empty state -->
+              <div id="emptyState" style="display: none;" class="text-center py-5">
+                <i class="bi bi-inbox" style="font-size: 48px; color: #ccc;"></i>
+                <p class="mt-3 text-muted">Tidak ada data pengguna</p>
+              </div>
+
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </section>
+
+  </main><!-- End #main -->
+
+  <!-- User Detail Modal -->
+  <div class="modal fade user-detail-modal" id="userDetailModal" tabindex="-1" aria-labelledby="userDetailModalLabel"
+    aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="userDetailModalLabel"><i class="bi bi-person-circle me-2"></i>Detail Pengguna</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          <div class="text-center mb-3">
+            <div class="user-avatar-lg" id="modalUserAvatar">-</div>
+            <h5 class="mb-1" id="modalUserName">-</h5>
+            <span class="badge" id="modalUserRole">-</span>
+          </div>
+          <hr>
+          <div class="detail-row">
+            <span class="detail-label">Email</span>
+            <span class="detail-value" id="modalUserEmail">-</span>
+          </div>
+          <div class="detail-row">
+            <span class="detail-label">NIP</span>
+            <span class="detail-value" id="modalUserNip">-</span>
+          </div>
+          <div class="detail-row">
+            <span class="detail-label">Unit</span>
+            <span class="detail-value" id="modalUserUnit">-</span>
+          </div>
+          <div class="detail-row">
+            <span class="detail-label">Jabatan</span>
+            <span class="detail-value" id="modalUserJabatan">-</span>
+          </div>
+          <div class="detail-row">
+            <span class="detail-label">Bidang</span>
+            <span class="detail-value" id="modalUserBidang">-</span>
+          </div>
+          <div class="detail-row">
+            <span class="detail-label">No. HP</span>
+            <span class="detail-value" id="modalUserPhone">-</span>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Tutup</button>
+          <button type="button" class="btn btn-warning btn-sm" id="modalEditBtn" onclick="editUserFromModal()"
+            style="display:none;"><i class="bi bi-pencil me-1"></i>Edit</button>
+          <button type="button" class="btn btn-danger btn-sm" id="modalDeleteBtn" onclick="deleteUserFromModal()"
+            style="display:none;"><i class="bi bi-trash me-1"></i>Hapus</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ======= Footer ======= -->
+  <footer id="footer" class="footer">
+
+  </footer><!-- End Footer -->
+
+  <a href="#" class="back-to-top d-flex align-items-center justify-content-center"><i
+      class="bi bi-arrow-up-short"></i></a>
+
+  <!-- Vendor JS Files -->
+  <script src="assets/vendor/bootstrap/js/bootstrap.bundle.min.js"></script>
+  <script src="assets/vendor/simple-datatables/simple-datatables.js"></script>
+
+  <!-- Template Main JS File -->
+  <script src="assets/js/main.js"></script>
+
+  <!-- Supabase Library (load first) -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+  <!-- Load Supabase Config and APIs -->
+  <script src="assets/js/config/supabase-client.js"></script>
+  <script src="assets/js/auth/supabase-auth.js"></script>
+  <script src="assets/js/api/profiles.js"></script>
+  <script src="assets/js/api/units.js"></script>
+
+  <!-- Page specific script -->
+  <script src="assets/js/users-data-pengguna.js"></script>
+
+</body>
+
+</html>

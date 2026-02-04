@@ -1,0 +1,549 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8">
+    <meta content="width=device-width, initial-scale=1.0" name="viewport">
+
+    <title>Register - Penilaian Alat Kerja</title>
+    <meta content="" name="description">
+    <meta content="" name="keywords">
+
+    <!-- Favicons -->
+    <link href="assets/img/favicon.svg" rel="icon">
+
+    <!-- Google Fonts -->
+    <link href="https://fonts.gstatic.com" rel="preconnect">
+    <link
+        href="https://fonts.googleapis.com/css?family=Open+Sans:300,300i,400,400i,600,600i,700,700i|Nunito:300,300i,400,400i,600,600i,700,700i|Poppins:300,300i,400,400i,500,500i,600,600i,700,700i"
+        rel="stylesheet">
+
+    <!-- Vendor CSS Files -->
+    <link href="assets/vendor/bootstrap/css/bootstrap.min.css" rel="stylesheet">
+    <link href="assets/vendor/bootstrap-icons/bootstrap-icons.css" rel="stylesheet">
+
+    <!-- Template Main CSS File -->
+    <link href="assets/css/style.css" rel="stylesheet">
+
+    <style>
+        .register-container {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+
+        .register-card {
+            width: 100%;
+            max-width: 450px;
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+            padding: 40px;
+        }
+
+        .register-header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .register-header h1 {
+            color: #333;
+            font-size: 24px;
+            margin-bottom: 5px;
+            font-weight: 600;
+        }
+
+        .register-header p {
+            color: #666;
+            font-size: 14px;
+            margin: 0;
+        }
+
+        .form-floating>.form-control:focus~label {
+            color: #667eea;
+        }
+
+        .form-floating>.form-control:focus {
+            border-color: #667eea;
+            box-shadow: 0 0 0 0.2rem rgba(102, 126, 234, 0.25);
+        }
+
+        .btn-register {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border: none;
+            color: white;
+            font-weight: 600;
+            padding: 12px;
+            border-radius: 5px;
+            width: 100%;
+            margin-top: 10px;
+        }
+
+        .btn-register:hover {
+            background: linear-gradient(135deg, #5568d3 0%, #6a3a8d 100%);
+            color: white;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+
+        .login-link {
+            text-align: center;
+            margin-top: 15px;
+        }
+
+        .login-link a {
+            color: #667eea;
+            text-decoration: none;
+            font-weight: 600;
+        }
+
+        .login-link a:hover {
+            text-decoration: underline;
+        }
+
+        .alert {
+            margin-bottom: 20px;
+            border-radius: 5px;
+        }
+
+        .loading-spinner {
+            display: none;
+            margin-right: 10px;
+        }
+
+        .register-tabs {
+            display: flex;
+            margin-bottom: 30px;
+            border-bottom: 2px solid #f0f0f0;
+        }
+
+        .register-tabs .tab-btn {
+            flex: 1;
+            padding: 10px;
+            background: none;
+            border: none;
+            cursor: pointer;
+            color: #999;
+            font-weight: 600;
+            border-bottom: 3px solid transparent;
+            transition: all 0.3s;
+        }
+
+        .register-tabs .tab-btn.active {
+            color: #667eea;
+            border-bottom-color: #667eea;
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+    </style>
+
+</head>
+
+<body>
+
+    <main class="register-container">
+        <div class="register-card">
+            <div class="register-header">
+                <div style="margin-bottom: 15px;">
+                    <i class="bi bi-shield-check fs-4 text-primary me-2"></i>
+                </div>
+                <h1>Daftar Akun</h1>
+                <p>Sistem Penilaian Alat Kerja PLN</p>
+            </div>
+
+            <!-- Tabs for Vendor/Public Registration -->
+            <div class="register-tabs">
+                <button class="tab-btn active" data-tab="vendor-register">Vendor</button>
+                <button class="tab-btn" data-tab="admin-register">Admin</button>
+            </div>
+
+            <!-- Alert Messages -->
+            <div id="alertContainer"></div>
+
+            <!-- VENDOR REGISTRATION -->
+            <div id="vendor-register" class="tab-content active">
+                <form id="vendorRegisterForm" novalidate>
+                    <p class="text-muted small mb-3">Gunakan kode akses yang diberikan oleh PLN untuk mendaftar</p>
+
+                    <div class="form-floating mb-3">
+                        <input type="text" class="form-control" id="vendorKodeAkses" placeholder="Kode Akses" required>
+                        <label for="vendorKodeAkses">Kode Akses Vendor *</label>
+                        <small class="text-danger d-none" id="vendorKodeAksesError"></small>
+                    </div>
+
+                    <div class="form-floating mb-3">
+                        <input type="email" class="form-control" id="vendorEmail" placeholder="Email" required>
+                        <label for="vendorEmail">Email *</label>
+                        <small class="text-danger d-none" id="vendorEmailError"></small>
+                    </div>
+
+                    <div class="form-floating mb-3">
+                        <input type="text" class="form-control" id="vendorFirstName" placeholder="Nama Depan" required>
+                        <label for="vendorFirstName">Nama Depan *</label>
+                    </div>
+
+                    <div class="form-floating mb-3">
+                        <input type="text" class="form-control" id="vendorLastName" placeholder="Nama Belakang">
+                        <label for="vendorLastName">Nama Belakang</label>
+                    </div>
+
+                    <div class="form-floating mb-3">
+                        <input type="tel" class="form-control" id="vendorPhone" placeholder="Nomor Telepon">
+                        <label for="vendorPhone">Nomor Telepon</label>
+                    </div>
+
+                    <div class="form-floating mb-3">
+                        <input type="password" class="form-control" id="vendorPassword" placeholder="Password" required>
+                        <label for="vendorPassword">Password *</label>
+                        <small class="text-muted d-block mt-1">Min. 8 karakter, kombinasi huruf, angka, dan
+                            simbol</small>
+                    </div>
+
+                    <div class="form-floating mb-3">
+                        <input type="password" class="form-control" id="vendorConfirmPassword"
+                            placeholder="Konfirmasi Password" required>
+                        <label for="vendorConfirmPassword">Konfirmasi Password *</label>
+                        <small class="text-danger d-none" id="vendorConfirmError"></small>
+                    </div>
+
+                    <div class="form-check mb-3">
+                        <input class="form-check-input" type="checkbox" id="vendorAgree" required>
+                        <label class="form-check-label" for="vendorAgree">
+                            Saya setuju dengan <a href="#" class="text-decoration-none">Syarat & Ketentuan</a>
+                        </label>
+                    </div>
+
+                    <button type="submit" class="btn btn-register" id="vendorSubmitBtn">
+                        <span class="loading-spinner" id="vendorLoadingSpinner">
+                            <span class="spinner-border spinner-border-sm"></span>
+                        </span>
+                        <span id="vendorSubmitText">Daftar sebagai Vendor</span>
+                    </button>
+
+                    <div class="login-link">
+                        Sudah punya akun? <a href="pages-login.html">Login di sini</a>
+                    </div>
+                </form>
+            </div>
+
+            <!-- ADMIN REGISTRATION (untuk internal PLN) -->
+            <div id="admin-register" class="tab-content">
+                <form id="adminRegisterForm" novalidate>
+                    <p class="text-muted small mb-3">Pendaftaran akun admin hanya oleh administrator sistem</p>
+
+                    <div class="alert alert-info" role="alert">
+                        <i class="bi bi-info-circle"></i> Hubungi administrator sistem untuk mendaftar akun admin
+                    </div>
+
+                    <div class="form-floating mb-3">
+                        <input type="email" class="form-control" id="adminEmail" placeholder="Email" required>
+                        <label for="adminEmail">Email Admin *</label>
+                    </div>
+
+                    <div class="form-floating mb-3">
+                        <input type="text" class="form-control" id="adminFirstName" placeholder="Nama Depan" required>
+                        <label for="adminFirstName">Nama Depan *</label>
+                    </div>
+
+                    <div class="form-floating mb-3">
+                        <input type="text" class="form-control" id="adminLastName" placeholder="Nama Belakang" required>
+                        <label for="adminLastName">Nama Belakang *</label>
+                    </div>
+
+                    <div class="form-floating mb-3">
+                        <select class="form-control" id="adminUnit" required>
+                            <option value="">-- Pilih Unit --</option>
+                        </select>
+                        <label for="adminUnit">Unit Kerja *</label>
+                    </div>
+
+                    <div class="form-floating mb-3">
+                        <select class="form-control" id="adminRole" required>
+                            <option value="">-- Pilih Role --</option>
+                            <option value="admin">Admin (Full Access)</option>
+                            <option value="user">Supervisor (Limited Access)</option>
+                        </select>
+                        <label for="adminRole">Role *</label>
+                    </div>
+
+                    <div class="form-floating mb-3">
+                        <input type="password" class="form-control" id="adminPassword" placeholder="Password" required>
+                        <label for="adminPassword">Password *</label>
+                    </div>
+
+                    <button type="submit" class="btn btn-register" id="adminSubmitBtn" disabled>
+                        <span class="loading-spinner" id="adminLoadingSpinner">
+                            <span class="spinner-border spinner-border-sm"></span>
+                        </span>
+                        <span id="adminSubmitText">Daftar sebagai Admin</span>
+                    </button>
+
+                    <div class="alert alert-warning mt-3" role="alert">
+                        <small>Admin registration dinonaktifkan. Hubungi super admin untuk akses.</small>
+                    </div>
+                </form>
+            </div>
+
+        </div>
+    </main>
+
+    <!-- Vendor JS Files -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="assets/vendor/bootstrap/js/bootstrap.bundle.min.js"></script>
+
+    <!-- Supabase Config & Auth Module -->
+    <script src="assets/js/config/supabase-config.js"></script>
+    <script src="assets/js/auth/auth.js"></script>
+
+    <!-- Registration Handler -->
+    <script>
+        // Initialize
+        let authManager = null;
+
+        document.addEventListener('DOMContentLoaded', async function () {
+            // Initialize AuthManager
+            authManager = new AuthManager(supabaseClient);
+
+            // Wait for initialization
+            await new Promise(resolve => {
+                const checkInit = setInterval(() => {
+                    if (authManager.isInitialized) {
+                        clearInterval(checkInit);
+                        resolve();
+                    }
+                }, 100);
+            });
+
+            // Load units for admin form
+            await loadUnits();
+
+            // Setup event listeners
+            setupTabSwitching();
+            setupFormHandlers();
+        });
+
+        /**
+         * Load units from database
+         */
+        async function loadUnits() {
+            try {
+                const { data, error } = await supabaseClient
+                    .from('unit')
+                    .select('kode_unit, unit')
+                    .order('unit');
+
+                if (error) throw error;
+
+                const unitSelect = document.getElementById('adminUnit');
+                data.forEach(unit => {
+                    const option = document.createElement('option');
+                    option.value = unit.kode_unit;
+                    option.textContent = unit.unit;
+                    unitSelect.appendChild(option);
+                });
+            } catch (error) {
+                console.error('Error loading units:', error);
+                showAlert('Gagal memuat daftar unit', 'error');
+            }
+        }
+
+        /**
+         * Setup tab switching
+         */
+        function setupTabSwitching() {
+            const tabBtns = document.querySelectorAll('.tab-btn');
+            const tabContents = document.querySelectorAll('.tab-content');
+
+            tabBtns.forEach(btn => {
+                btn.addEventListener('click', () => {
+                    // Remove active class from all
+                    tabBtns.forEach(b => b.classList.remove('active'));
+                    tabContents.forEach(c => c.classList.remove('active'));
+
+                    // Add active class to clicked tab
+                    btn.classList.add('active');
+                    const tabId = btn.getAttribute('data-tab');
+                    document.getElementById(tabId).classList.add('active');
+
+                    // Clear previous errors
+                    document.getElementById('alertContainer').innerHTML = '';
+                });
+            });
+        }
+
+        /**
+         * Setup form handlers
+         */
+        function setupFormHandlers() {
+            // Vendor registration form
+            const vendorForm = document.getElementById('vendorRegisterForm');
+            vendorForm.addEventListener('submit', async (e) => {
+                e.preventDefault();
+                await handleVendorRegistration();
+            });
+
+            // Admin registration form
+            const adminForm = document.getElementById('adminRegisterForm');
+            adminForm.addEventListener('submit', async (e) => {
+                e.preventDefault();
+                showAlert('Admin registration dinonaktifkan. Hubungi super admin.', 'warning');
+            });
+
+            // Real-time validation
+            document.getElementById('vendorPassword').addEventListener('input', validatePassword);
+            document.getElementById('vendorConfirmPassword').addEventListener('input', validatePasswordMatch);
+        }
+
+        /**
+         * Handle vendor registration
+         */
+        async function handleVendorRegistration() {
+            const kodeAkses = document.getElementById('vendorKodeAkses').value.trim();
+            const email = document.getElementById('vendorEmail').value.trim();
+            const firstName = document.getElementById('vendorFirstName').value.trim();
+            const lastName = document.getElementById('vendorLastName').value.trim();
+            const phone = document.getElementById('vendorPhone').value.trim();
+            const password = document.getElementById('vendorPassword').value;
+            const confirmPassword = document.getElementById('vendorConfirmPassword').value;
+            const agree = document.getElementById('vendorAgree').checked;
+
+            // Validation
+            if (!kodeAkses || !email || !firstName || !password || !confirmPassword) {
+                showAlert('Harap isi semua field yang wajib', 'warning');
+                return;
+            }
+
+            if (!agree) {
+                showAlert('Anda harus menyetujui Syarat & Ketentuan', 'warning');
+                return;
+            }
+
+            if (password !== confirmPassword) {
+                showAlert('Password dan konfirmasi password tidak cocok', 'error');
+                return;
+            }
+
+            if (password.length < 8) {
+                showAlert('Password minimal 8 karakter', 'error');
+                return;
+            }
+
+            // Disable button
+            const submitBtn = document.getElementById('vendorSubmitBtn');
+            const loadingSpinner = document.getElementById('vendorLoadingSpinner');
+            const submitText = document.getElementById('vendorSubmitText');
+
+            submitBtn.disabled = true;
+            loadingSpinner.style.display = 'inline-block';
+            submitText.textContent = 'Mendaftar...';
+
+            try {
+                const result = await authManager.signUpVendor(email, password, kodeAkses, {
+                    first_name: firstName,
+                    last_name: lastName,
+                    phone: phone
+                });
+
+                if (result.success) {
+                    showAlert(result.message, 'success');
+                    // Redirect after 2 seconds
+                    setTimeout(() => {
+                        window.location.href = 'pages-login.html';
+                    }, 2000);
+                } else {
+                    showAlert(result.error, 'error');
+                }
+            } catch (error) {
+                console.error('Registration error:', error);
+                showAlert('Terjadi kesalahan saat mendaftar. Coba lagi.', 'error');
+            } finally {
+                submitBtn.disabled = false;
+                loadingSpinner.style.display = 'none';
+                submitText.textContent = 'Daftar sebagai Vendor';
+            }
+        }
+
+        /**
+         * Validate password strength
+         */
+        function validatePassword() {
+            const password = document.getElementById('vendorPassword').value;
+            const strength = {
+                hasUpper: /[A-Z]/.test(password),
+                hasLower: /[a-z]/.test(password),
+                hasNumber: /[0-9]/.test(password),
+                hasSpecial: /[!@#$%^&*]/.test(password),
+                minLength: password.length >= 8
+            };
+
+            const isStrong = Object.values(strength).filter(v => v).length >= 3;
+            const element = document.getElementById('vendorPassword');
+
+            if (password.length === 0) {
+                element.classList.remove('is-invalid', 'is-valid');
+            } else if (isStrong) {
+                element.classList.remove('is-invalid');
+                element.classList.add('is-valid');
+            } else {
+                element.classList.remove('is-valid');
+                element.classList.add('is-invalid');
+            }
+        }
+
+        /**
+         * Validate password match
+         */
+        function validatePasswordMatch() {
+            const password = document.getElementById('vendorPassword').value;
+            const confirmPassword = document.getElementById('vendorConfirmPassword').value;
+            const element = document.getElementById('vendorConfirmPassword');
+            const errorMsg = document.getElementById('vendorConfirmError');
+
+            if (confirmPassword.length === 0) {
+                element.classList.remove('is-invalid', 'is-valid');
+                errorMsg.classList.add('d-none');
+            } else if (password === confirmPassword) {
+                element.classList.remove('is-invalid');
+                element.classList.add('is-valid');
+                errorMsg.classList.add('d-none');
+            } else {
+                element.classList.remove('is-valid');
+                element.classList.add('is-invalid');
+                errorMsg.classList.remove('d-none');
+                errorMsg.textContent = 'Password tidak cocok';
+            }
+        }
+
+        /**
+         * Show alert message
+         */
+        function showAlert(message, type = 'info') {
+            const alertClass = {
+                'success': 'alert-success',
+                'error': 'alert-danger',
+                'warning': 'alert-warning',
+                'info': 'alert-info'
+            }[type] || 'alert-info';
+
+            const alertHtml = `
+        <div class="alert ${alertClass} alert-dismissible fade show" role="alert">
+          <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+          <strong>${type === 'error' ? 'Error!' : type === 'success' ? 'Sukses!' : 'Info!'}</strong> ${message}
+        </div>
+      `;
+
+            document.getElementById('alertContainer').innerHTML = alertHtml;
+        }
+    </script>
+
+</body>
+
+</html>

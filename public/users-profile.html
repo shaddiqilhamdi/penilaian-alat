@@ -1,0 +1,1213 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="utf-8">
+  <meta content="width=device-width, initial-scale=1.0" name="viewport">
+
+  <title>Profile - Penilaian Alat Kerja</title>
+  <meta content="" name="description">
+  <meta content="" name="keywords">
+
+  <!-- Favicons -->
+  <link href="assets/img/favicon.svg" rel="icon">
+
+  <!-- Google Fonts -->
+  <link href="https://fonts.gstatic.com" rel="preconnect">
+  <link
+    href="https://fonts.googleapis.com/css?family=Open+Sans:300,300i,400,400i,600,600i,700,700i|Nunito:300,300i,400,400i,600,600i,700,700i|Poppins:300,300i,400,400i,500,500i,600,600i,700,700i"
+    rel="stylesheet">
+
+  <!-- Vendor CSS Files -->
+  <link href="assets/vendor/bootstrap/css/bootstrap.min.css" rel="stylesheet">
+  <link href="assets/vendor/bootstrap-icons/bootstrap-icons.css" rel="stylesheet">
+  <link href="assets/vendor/boxicons/css/boxicons.min.css" rel="stylesheet">
+  <link href="assets/vendor/quill/quill.snow.css" rel="stylesheet">
+  <link href="assets/vendor/quill/quill.bubble.css" rel="stylesheet">
+  <link href="assets/vendor/remixicon/remixicon.css" rel="stylesheet">
+  <link href="assets/vendor/simple-datatables/style.css" rel="stylesheet">
+
+  <!-- Template Main CSS File -->
+  <link href="assets/css/style.css" rel="stylesheet">
+
+  <style>
+    /* Profil page custom styling */
+    .pagetitle h1 {
+      font-size: 28px;
+    }
+
+    .pagetitle h2 {
+      font-size: 24px;
+    }
+
+    .card-title {
+      font-size: 16px;
+      font-weight: 600;
+    }
+
+    .label {
+      font-size: 13px;
+      font-weight: 500;
+    }
+
+    .profile-card {
+      border: none;
+      box-shadow: 0 0.5px 2px rgba(0, 0, 0, 0.06);
+    }
+
+    /* Make profile section cards equal height */
+    .section.profile .row {
+      display: flex;
+      align-items: stretch;
+    }
+
+    .section.profile .col-xl-4,
+    .section.profile .col-xl-8 {
+      display: flex;
+    }
+
+    .section.profile .card {
+      width: 100%;
+    }
+
+    .profile-overview {
+      font-size: 14px;
+    }
+
+    .profile-overview .row>div {
+      font-size: 14px;
+      line-height: 1.6;
+    }
+
+    h4 {
+      font-size: 18px;
+    }
+
+    h5 {
+      font-size: 15px;
+    }
+
+    p {
+      font-size: 14px;
+    }
+
+    .small {
+      font-size: 12px;
+    }
+
+    .nav-link {
+      font-size: 14px;
+    }
+  </style>
+
+</head>
+
+<body>
+
+  <!-- ======= Header ======= -->
+  <header id="header" class="header fixed-top d-flex align-items-center">
+
+    <div class="d-flex align-items-center justify-content-between">
+      <a href="index.html" class="logo d-flex align-items-center">
+        <i class="bi bi-shield-check fs-4 text-primary me-2"></i>
+        <span class="d-none d-lg-block">Penilaian Alat Kerja</span>
+      </a>
+      <i class="bi bi-list toggle-sidebar-btn"></i>
+    </div><!-- End Logo -->
+
+    <div class="search-bar">
+      <form class="search-form d-flex align-items-center" method="POST" action="#">
+        <input type="text" name="query" placeholder="Search" title="Enter search keyword">
+        <button type="submit" title="Search"><i class="bi bi-search"></i></button>
+      </form>
+    </div><!-- End Search Bar -->
+
+    <nav class="header-nav ms-auto">
+      <ul class="d-flex align-items-center">
+
+        <li class="nav-item d-block d-lg-none">
+          <a class="nav-link nav-icon search-bar-toggle " href="#">
+            <i class="bi bi-search"></i>
+          </a>
+        </li><!-- End Search Icon-->
+
+        <!-- Notification Nav - Hidden -->
+        <li class="nav-item dropdown" style="display: none;">
+          <a class="nav-link nav-icon" href="#" data-bs-toggle="dropdown">
+            <i class="bi bi-bell"></i>
+            <span class="badge bg-primary badge-number">0</span>
+          </a>
+        </li>
+
+        <!-- Messages Nav - Hidden -->
+        <li class="nav-item dropdown" style="display: none;">
+          <a class="nav-link nav-icon" href="#" data-bs-toggle="dropdown">
+            <i class="bi bi-chat-left-text"></i>
+            <span class="badge bg-success badge-number">0</span>
+          </a>
+        </li>
+
+        <li class="nav-item dropdown pe-3">
+
+          <a class="nav-link nav-profile d-flex align-items-center pe-0" href="#" data-bs-toggle="dropdown">
+            <div id="navProfileInitial"
+              class="rounded-circle bg-primary text-white d-flex align-items-center justify-content-center"
+              style="width: 36px; height: 36px; font-size: 16px; font-weight: 600;">?</div>
+            <span id="navProfileName" class="d-none d-md-block dropdown-toggle ps-2">Loading...</span>
+          </a><!-- End Profile Image Icon -->
+
+          <ul class="dropdown-menu dropdown-menu-end dropdown-menu-arrow profile">
+            <li class="dropdown-header">
+              <h6 id="navProfileFullName">Loading...</h6>
+              <span id="navProfileRole">-</span>
+            </li>
+            <li>
+              <hr class="dropdown-divider">
+            </li>
+
+            <li>
+              <a class="dropdown-item d-flex align-items-center" href="users-profile.html">
+                <i class="bi bi-person"></i>
+                <span>My Profile</span>
+              </a>
+            </li>
+            <li>
+              <hr class="dropdown-divider">
+            </li>
+
+            <li>
+              <a class="dropdown-item d-flex align-items-center" href="users-profile.html">
+                <i class="bi bi-gear"></i>
+                <span>Account Settings</span>
+              </a>
+            </li>
+            <li>
+              <hr class="dropdown-divider">
+            </li>
+
+            <li>
+              <a class="dropdown-item d-flex align-items-center" href="pages-faq.html">
+                <i class="bi bi-question-circle"></i>
+                <span>Need Help?</span>
+              </a>
+            </li>
+            <li>
+              <hr class="dropdown-divider">
+            </li>
+
+            <li>
+              <a class="dropdown-item d-flex align-items-center" href="#" id="logoutBtn">
+                <i class="bi bi-box-arrow-right"></i>
+                <span>Sign Out</span>
+              </a>
+            </li>
+
+          </ul><!-- End Profile Dropdown Items -->
+        </li><!-- End Profile Nav -->
+
+      </ul>
+    </nav><!-- End Icons Navigation -->
+
+  </header><!-- End Header -->
+
+  <!-- ======= Sidebar ======= -->
+  <aside id="sidebar" class="sidebar">
+
+    <ul class="sidebar-nav" id="sidebar-nav">
+
+      <li class="nav-item">
+        <a class="nav-link collapsed" href="index.html">
+          <i class="bi bi-grid"></i>
+          <span>Dashboard</span>
+        </a>
+      </li><!-- End Dashboard Nav -->
+
+      <li class="nav-heading">Penilaian</li>
+
+      <li class="nav-item">
+        <a class="nav-link collapsed" data-bs-target="#forms-nav" data-bs-toggle="collapse" href="#">
+          <i class="bi bi-menu-button-wide"></i><span>Formulir</span><i class="bi bi-chevron-down ms-auto"></i>
+        </a>
+        <ul id="forms-nav" class="nav-content collapse " data-bs-parent="#sidebar-nav">
+          <li>
+            <a href="forms-penilaian.html">
+              <i class="bi bi-circle"></i><span>Form Penilaian</span>
+            </a>
+          </li>
+          <li>
+            <a href="forms-data-penilaian.html">
+              <i class="bi bi-circle"></i><span>Data Penilaian</span>
+            </a>
+          </li>
+
+        </ul>
+      </li><!-- End Components Nav -->
+
+      <li class="nav-heading">Pengaturan</li>
+
+      <li class="nav-item">
+        <a class="nav-link collapsed" data-bs-target="#data-nav" data-bs-toggle="collapse" href="#">
+          <i class="bi bi-journal-text"></i><span>Data Master</span><i class="bi bi-chevron-down ms-auto"></i>
+        </a>
+        <ul id="data-nav" class="nav-content collapse " data-bs-parent="#sidebar-nav">
+          <li>
+            <a href="data-unit.html">
+              <i class="bi bi-circle"></i><span>Unit</span>
+            </a>
+          </li>
+          <li>
+            <a href="data-vendor.html">
+              <i class="bi bi-circle"></i><span>Vendor Pelaksana</span>
+            </a>
+          </li>
+          <li>
+            <a href="data-peruntukan.html">
+              <i class="bi bi-circle"></i><span>Peruntukan</span>
+            </a>
+          </li>
+          <li>
+            <a href="data-peralatan.html">
+              <i class="bi bi-circle"></i><span>Peralatan</span>
+            </a>
+          </li>
+
+          <li>
+            <a href="data-kendaraan.html">
+              <i class="bi bi-circle"></i><span>Kendaraan</span>
+            </a>
+          </li>
+          <li>
+            <a href="data-personil.html">
+              <i class="bi bi-circle"></i><span>Personil</span>
+            </a>
+          </li>
+
+        </ul>
+      </li><!-- End Pengaturan Nav -->
+
+      <li class="nav-item">
+        <a class="nav-link collapsed" data-bs-target="#users-nav" data-bs-toggle="collapse" href="#">
+          <i class="bi bi-layout-text-window-reverse"></i><span>Pengguna</span><i
+            class="bi bi-chevron-down ms-auto"></i>
+        </a>
+        <ul id="users-nav" class="nav-content collapse " data-bs-parent="#sidebar-nav">
+          <li>
+            <a href="users-tambah-pengguna.html">
+              <i class="bi bi-circle"></i><span>Tambah Pengguna</span>
+            </a>
+          </li>
+          <li>
+            <a href="users-data-pengguna.html">
+              <i class="bi bi-circle"></i><span>Daftar Pengguna</span>
+            </a>
+          </li>
+        </ul>
+      </li><!-- End Users Nav -->
+
+      <li class="nav-heading">Profil</li>
+
+      <li class="nav-item">
+        <a class="nav-link" href="users-profile.html">
+          <i class="bi bi-person"></i>
+          <span>Profil</span>
+        </a>
+      </li><!-- End Profile Page Nav -->
+
+      <li class="nav-item">
+        <a class="nav-link collapsed" href="users-log.html">
+          <i class="bi bi-file-earmark-text"></i>
+          <span>Log</span>
+        </a>
+      </li><!-- End Log Page Nav -->
+
+
+
+    </ul>
+
+  </aside><!-- End Sidebar-->
+
+  <main id="main" class="main">
+
+    <div class="pagetitle">
+      <h1>Profil Pengguna</h1>
+      <nav>
+        <ol class="breadcrumb">
+          <li class="breadcrumb-item"><a href="index.html">Home</a></li>
+          <li class="breadcrumb-item">Profil</li>
+          <li class="breadcrumb-item active">Profil Pengguna</li>
+        </ol>
+      </nav>
+    </div><!-- End Page Title -->
+
+    <section class="section profile">
+      <div class="row">
+
+        <!-- Left Column - Profile Card -->
+        <div class="col-xl-4">
+          <div class="card">
+            <div class="card-body profile-card pt-4">
+
+              <!-- Loading State -->
+              <div id="loadingProfile" class="text-center py-5">
+                <div class="spinner-border text-primary" role="status">
+                  <span class="visually-hidden">Loading...</span>
+                </div>
+                <p class="mt-3 text-muted">Memuat profil...</p>
+              </div>
+
+              <!-- Profile Content -->
+              <div id="profileContent" class="d-flex flex-column align-items-center" style="display: none !important;">
+                <!-- Avatar with initial -->
+                <div id="profileAvatar" class="rounded-circle d-flex align-items-center justify-content-center mb-3"
+                  style="width: 110px; height: 110px; background: linear-gradient(135deg, #4154f1 0%, #2c3e8c 100%); font-size: 42px; font-weight: 600; color: white; flex-shrink: 0;">
+                  <span id="avatarInitial">-</span>
+                </div>
+
+                <h4 class="mb-0" id="profileNama">-</h4>
+                <p class="text-muted small mb-3" id="profileJabatan">-</p>
+
+                <div class="d-flex gap-2 mb-4">
+                  <span class="badge bg-primary" id="profileRole">-</span>
+                  <span class="badge bg-success">Aktif</span>
+                </div>
+
+                <!-- Quick Info -->
+                <div class="border-top pt-3 w-100" style="text-align: left;">
+                  <div class="row mb-2">
+                    <div class="col-3 text-end">
+                      <i class="bi bi-envelope text-primary"></i>
+                    </div>
+                    <div class="col-9">
+                      <small class="text-muted" id="profileEmail" style="word-break: break-all;">-</small>
+                    </div>
+                  </div>
+                  <div class="row mb-2">
+                    <div class="col-3 text-end">
+                      <i class="bi bi-building text-primary"></i>
+                    </div>
+                    <div class="col-9">
+                      <small class="text-muted" id="profileUnit">-</small>
+                    </div>
+                  </div>
+                  <div class="row">
+                    <div class="col-3 text-end">
+                      <i class="bi bi-calendar-check text-primary"></i>
+                    </div>
+                    <div class="col-9">
+                      <small class="text-muted" id="profileJoinDate">-</small>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+            </div>
+          </div>
+        </div>
+
+        <!-- Right Column - Tabs -->
+        <div class="col-xl-8">
+          <div class="card">
+            <div class="card-body pt-3">
+
+              <!-- Bordered Tabs -->
+              <ul class="nav nav-tabs nav-tabs-bordered" role="tablist">
+                <li class="nav-item" role="presentation">
+                  <button class="nav-link active" data-bs-toggle="tab" data-bs-target="#profile-overview" type="button"
+                    role="tab">
+                    <i class="bi bi-person me-1"></i>Informasi
+                  </button>
+                </li>
+                <li class="nav-item" role="presentation">
+                  <button class="nav-link" data-bs-toggle="tab" data-bs-target="#profile-edit" type="button" role="tab">
+                    <i class="bi bi-pencil-square me-1"></i>Edit Profil
+                  </button>
+                </li>
+                <li class="nav-item" role="presentation">
+                  <button class="nav-link" data-bs-toggle="tab" data-bs-target="#profile-change-password" type="button"
+                    role="tab">
+                    <i class="bi bi-shield-lock me-1"></i>Password
+                  </button>
+                </li>
+              </ul>
+
+              <div class="tab-content pt-4">
+
+                <!-- Overview Tab -->
+                <div class="tab-pane fade show active profile-overview" id="profile-overview" role="tabpanel">
+
+                  <h5 class="card-title border-bottom pb-2 mb-4">
+                    <i class="bi bi-info-circle-fill me-2 text-primary"></i>Informasi Pribadi
+                  </h5>
+
+                  <div class="row mb-3">
+                    <div class="col-lg-3 col-md-4 label text-muted">Nama Lengkap</div>
+                    <div class="col-lg-9 col-md-8 fw-medium" id="viewNama">-</div>
+                  </div>
+
+                  <div class="row mb-3">
+                    <div class="col-lg-3 col-md-4 label text-muted">NIP</div>
+                    <div class="col-lg-9 col-md-8" id="viewNip">-</div>
+                  </div>
+
+                  <div class="row mb-3">
+                    <div class="col-lg-3 col-md-4 label text-muted">Email</div>
+                    <div class="col-lg-9 col-md-8" id="viewEmail">-</div>
+                  </div>
+
+                  <h5 class="card-title mt-4 border-bottom pb-2 mb-4">
+                    <i class="bi bi-briefcase-fill me-2 text-primary"></i>Informasi Pekerjaan
+                  </h5>
+
+                  <div class="row mb-3">
+                    <div class="col-lg-3 col-md-4 label text-muted">Jabatan</div>
+                    <div class="col-lg-9 col-md-8" id="viewJabatan">-</div>
+                  </div>
+
+                  <div class="row mb-3">
+                    <div class="col-lg-3 col-md-4 label text-muted">Bidang</div>
+                    <div class="col-lg-9 col-md-8" id="viewBidang">-</div>
+                  </div>
+
+                  <div class="row mb-3">
+                    <div class="col-lg-3 col-md-4 label text-muted">Sub Bidang</div>
+                    <div class="col-lg-9 col-md-8" id="viewSubBidang">-</div>
+                  </div>
+
+                  <div class="row mb-3">
+                    <div class="col-lg-3 col-md-4 label text-muted">Unit</div>
+                    <div class="col-lg-9 col-md-8" id="viewUnit">-</div>
+                  </div>
+
+                  <h5 class="card-title mt-4 border-bottom pb-2 mb-4">
+                    <i class="bi bi-gear-fill me-2 text-primary"></i>Akses Sistem
+                  </h5>
+
+                  <div class="row mb-3">
+                    <div class="col-lg-3 col-md-4 label text-muted">Role</div>
+                    <div class="col-lg-9 col-md-8" id="viewRole">-</div>
+                  </div>
+
+                  <div class="row mb-3">
+                    <div class="col-lg-3 col-md-4 label text-muted">Vendor</div>
+                    <div class="col-lg-9 col-md-8" id="viewVendor">-</div>
+                  </div>
+
+                  <div class="row mb-3">
+                    <div class="col-lg-3 col-md-4 label text-muted">Bergabung Sejak</div>
+                    <div class="col-lg-9 col-md-8" id="viewCreatedAt">-</div>
+                  </div>
+
+                </div>
+
+                <!-- Edit Profile Tab -->
+                <div class="tab-pane fade profile-edit" id="profile-edit" role="tabpanel">
+
+                  <!-- Alert Messages -->
+                  <div id="editAlertContainer"></div>
+
+                  <h5 class="card-title border-bottom pb-2 mb-4">
+                    <i class="bi bi-pencil-fill me-2 text-primary"></i>Edit Data Profil
+                  </h5>
+
+                  <!-- Profile Edit Form -->
+                  <form id="editProfileForm" class="needs-validation" novalidate>
+
+                    <div class="row mb-3">
+                      <label for="editNama" class="col-md-4 col-lg-3 col-form-label">Nama Lengkap <span
+                          class="text-danger">*</span></label>
+                      <div class="col-md-8 col-lg-9">
+                        <input name="nama" type="text" class="form-control" id="editNama" required>
+                        <div class="invalid-feedback">Nama lengkap harus diisi.</div>
+                      </div>
+                    </div>
+
+                    <div class="row mb-3">
+                      <label for="editNip" class="col-md-4 col-lg-3 col-form-label">NIP</label>
+                      <div class="col-md-8 col-lg-9">
+                        <input name="nip" type="text" class="form-control" id="editNip" placeholder="Contoh: 19850123">
+                      </div>
+                    </div>
+
+                    <div class="row mb-3">
+                      <label for="editEmail" class="col-md-4 col-lg-3 col-form-label">Email</label>
+                      <div class="col-md-8 col-lg-9">
+                        <input name="email" type="email" class="form-control bg-light" id="editEmail" readonly>
+                        <small class="text-muted"><i class="bi bi-lock me-1"></i>Email tidak dapat diubah</small>
+                      </div>
+                    </div>
+
+                    <hr class="my-4">
+
+                    <div class="row mb-3">
+                      <label for="editJabatan" class="col-md-4 col-lg-3 col-form-label">Jabatan</label>
+                      <div class="col-md-8 col-lg-9">
+                        <input name="jabatan" type="text" class="form-control" id="editJabatan"
+                          placeholder="Contoh: Manager K3">
+                      </div>
+                    </div>
+
+                    <div class="row mb-3">
+                      <label for="editBidang" class="col-md-4 col-lg-3 col-form-label">Bidang</label>
+                      <div class="col-md-8 col-lg-9">
+                        <input name="bidang" type="text" class="form-control" id="editBidang"
+                          placeholder="Contoh: K3L dan KAM">
+                      </div>
+                    </div>
+
+                    <div class="row mb-3">
+                      <label for="editSubBidang" class="col-md-4 col-lg-3 col-form-label">Sub Bidang</label>
+                      <div class="col-md-8 col-lg-9">
+                        <input name="sub_bidang" type="text" class="form-control" id="editSubBidang"
+                          placeholder="Contoh: K3L">
+                      </div>
+                    </div>
+
+                    <div class="row mb-3">
+                      <label for="editUnit" class="col-md-4 col-lg-3 col-form-label">Unit</label>
+                      <div class="col-md-8 col-lg-9">
+                        <select class="form-select" id="editUnit" name="unit_code">
+                          <option value="">-- Pilih Unit --</option>
+                        </select>
+                      </div>
+                    </div>
+
+                    <hr class="my-4">
+
+                    <div class="row mb-3">
+                      <label for="editRole" class="col-md-4 col-lg-3 col-form-label">Role</label>
+                      <div class="col-md-8 col-lg-9">
+                        <select class="form-select bg-light" id="editRole" name="role" disabled>
+                          <option value="uid_admin">UID Admin</option>
+                          <option value="vendor_k3">Vendor K3</option>
+                        </select>
+                        <small class="text-muted"><i class="bi bi-lock me-1"></i>Role hanya dapat diubah oleh
+                          Administrator</small>
+                      </div>
+                    </div>
+
+                    <div class="text-end pt-3">
+                      <button type="button" class="btn btn-outline-secondary me-2" id="btnResetProfile">
+                        <i class="bi bi-arrow-clockwise me-1"></i>Reset
+                      </button>
+                      <button type="submit" class="btn btn-primary" id="btnSaveProfile">
+                        <span class="spinner-border spinner-border-sm d-none me-1" id="saveSpinner"></span>
+                        <i class="bi bi-check-lg me-1"></i>Simpan Perubahan
+                      </button>
+                    </div>
+                  </form><!-- End Profile Edit Form -->
+
+                </div>
+
+                <!-- Change Password Tab -->
+                <div class="tab-pane fade" id="profile-change-password" role="tabpanel">
+
+                  <!-- Alert Messages -->
+                  <div id="passwordAlertContainer"></div>
+
+                  <h5 class="card-title border-bottom pb-2 mb-4">
+                    <i class="bi bi-key-fill me-2 text-primary"></i>Ubah Password
+                  </h5>
+
+                  <div class="alert alert-info d-flex align-items-start" role="alert">
+                    <i class="bi bi-info-circle-fill me-3 flex-shrink-0" style="font-size: 1.2rem;"></i>
+                    <div>
+                      <strong>Tips Password Kuat:</strong><br>
+                      Gunakan minimal 8 karakter dengan kombinasi huruf besar, huruf kecil, dan angka.
+                    </div>
+                  </div>
+
+                  <!-- Change Password Form -->
+                  <form id="changePasswordForm" class="needs-validation" novalidate>
+
+                    <div class="row mb-3">
+                      <label for="newPassword" class="col-md-4 col-lg-3 col-form-label">Password Baru <span
+                          class="text-danger">*</span></label>
+                      <div class="col-md-8 col-lg-9">
+                        <div class="input-group">
+                          <input name="newPassword" type="password" class="form-control" id="newPassword" minlength="8"
+                            required placeholder="Minimal 8 karakter">
+                          <button class="btn btn-outline-secondary" type="button" id="togglePassword">
+                            <i class="bi bi-eye"></i>
+                          </button>
+                        </div>
+                        <div class="invalid-feedback">Password baru minimal 8 karakter.</div>
+                      </div>
+                    </div>
+
+                    <div class="row mb-3">
+                      <label for="confirmNewPassword" class="col-md-4 col-lg-3 col-form-label">Konfirmasi Password <span
+                          class="text-danger">*</span></label>
+                      <div class="col-md-8 col-lg-9">
+                        <div class="input-group">
+                          <input name="confirmNewPassword" type="password" class="form-control" id="confirmNewPassword"
+                            required placeholder="Ulangi password baru">
+                          <button class="btn btn-outline-secondary" type="button" id="toggleConfirmPassword">
+                            <i class="bi bi-eye"></i>
+                          </button>
+                        </div>
+                        <div class="invalid-feedback">Konfirmasi password harus sesuai.</div>
+                      </div>
+                    </div>
+
+                    <div class="text-end pt-3">
+                      <button type="submit" class="btn btn-primary" id="btnChangePassword">
+                        <span class="spinner-border spinner-border-sm d-none me-1" id="passwordSpinner"></span>
+                        <i class="bi bi-shield-check me-1"></i>Ubah Password
+                      </button>
+                    </div>
+                  </form><!-- End Change Password Form -->
+
+                </div>
+
+              </div><!-- End Bordered Tabs -->
+
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </section>
+
+  </main><!-- End #main -->
+
+  <!-- ======= Footer ======= -->
+  <footer id="footer" class="footer">
+  </footer><!-- End Footer -->
+
+  <a href="#" class="back-to-top d-flex align-items-center justify-content-center"><i
+      class="bi bi-arrow-up-short"></i></a>
+
+  <!-- Vendor JS Files -->
+  <script src="assets/vendor/bootstrap/js/bootstrap.bundle.min.js"></script>
+
+  <!-- Supabase Library & SweetAlert2 -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+  <!-- Supabase Config & Auth -->
+  <script src="assets/js/config/supabase-client.js"></script>
+  <script src="assets/js/auth/supabase-auth.js"></script>
+
+  <!-- API Modules -->
+  <script src="assets/js/api/profiles.js"></script>
+  <script src="assets/js/api/units.js"></script>
+  <script src="assets/js/api/vendors.js"></script>
+
+  <!-- Template Main JS File -->
+  <script src="assets/js/main.js"></script>
+
+  <!-- Profile Page Script -->
+  <script>
+    // Global variables
+    let currentUser = null;
+    let currentProfile = null;
+    let unitsList = [];
+
+    // Initialize page
+    document.addEventListener('DOMContentLoaded', async function () {
+      await checkAuthAndLoadProfile();
+      setupEventListeners();
+    });
+
+    // Check auth and load profile
+    async function checkAuthAndLoadProfile() {
+      try {
+        // Check if user is logged in
+        currentUser = await getCurrentUser();
+
+        if (!currentUser) {
+          // Redirect to login if not authenticated
+          window.location.href = 'pages-login.html';
+          return;
+        }
+
+        // Load profile data
+        await loadUserProfile();
+
+        // Load units for dropdown
+        await loadUnits();
+
+      } catch (error) {
+        console.error('Error loading profile:', error);
+        showAlert('editAlertContainer', 'Gagal memuat profil: ' + error.message, 'danger');
+      }
+    }
+
+    // Load user profile from database
+    async function loadUserProfile() {
+      try {
+        const result = await ProfilesAPI.getById(currentUser.id);
+
+        if (result.success && result.data) {
+          currentProfile = result.data;
+          displayProfile(currentProfile);
+        } else {
+          // Profile not found, create minimal display
+          currentProfile = {
+            id: currentUser.id,
+            email: currentUser.email,
+            nama: currentUser.email.split('@')[0],
+            role: 'uid_admin'
+          };
+          displayProfile(currentProfile);
+          showAlert('editAlertContainer', 'Profil belum lengkap. Silakan lengkapi data Anda.', 'warning');
+        }
+
+        // Hide loading, show content
+        document.getElementById('loadingProfile').style.display = 'none';
+        document.getElementById('profileContent').style.display = 'flex';
+
+      } catch (error) {
+        console.error('Error loading profile:', error);
+        throw error;
+      }
+    }
+
+    // Display profile data
+    function displayProfile(profile) {
+      // Left card - Profile summary
+      const nama = profile.nama || currentUser.email.split('@')[0] || 'Pengguna';
+      document.getElementById('profileNama').textContent = nama;
+      document.getElementById('profileJabatan').textContent = profile.jabatan || 'Belum diatur';
+      document.getElementById('profileRole').textContent = formatRole(profile.role);
+      document.getElementById('profileEmail').textContent = profile.email || currentUser.email;
+      document.getElementById('profileUnit').textContent = profile.unit_code || 'Belum diatur';
+
+      // Avatar initial - ambil huruf pertama nama
+      let initial = '-';
+      if (nama && nama.length > 0 && nama !== '-') {
+        initial = nama.charAt(0).toUpperCase();
+      }
+      document.getElementById('avatarInitial').textContent = initial;
+
+      // Join date
+      document.getElementById('profileJoinDate').textContent = profile.created_at
+        ? new Date(profile.created_at).toLocaleDateString('id-ID', {
+          day: 'numeric', month: 'short', year: 'numeric'
+        })
+        : 'Baru bergabung';
+
+      // Overview section
+      document.getElementById('viewNama').textContent = profile.nama || '-';
+      document.getElementById('viewNip').textContent = profile.nip || '-';
+      document.getElementById('viewEmail').textContent = profile.email || currentUser.email;
+      document.getElementById('viewJabatan').textContent = profile.jabatan || '-';
+      document.getElementById('viewBidang').textContent = profile.bidang || '-';
+      document.getElementById('viewSubBidang').textContent = profile.sub_bidang || '-';
+      document.getElementById('viewUnit').textContent = profile.unit_code || '-';
+      document.getElementById('viewRole').textContent = formatRole(profile.role);
+      document.getElementById('viewVendor').textContent = profile.vendor_id ? 'Ya (Terhubung ke Vendor)' : 'Tidak';
+      document.getElementById('viewCreatedAt').textContent = profile.created_at
+        ? new Date(profile.created_at).toLocaleDateString('id-ID', {
+          weekday: 'long', day: 'numeric', month: 'long', year: 'numeric'
+        })
+        : '-';
+
+      // Edit form
+      document.getElementById('editNama').value = profile.nama || '';
+      document.getElementById('editNip').value = profile.nip || '';
+      document.getElementById('editEmail').value = profile.email || currentUser.email;
+      document.getElementById('editJabatan').value = profile.jabatan || '';
+      document.getElementById('editBidang').value = profile.bidang || '';
+      document.getElementById('editSubBidang').value = profile.sub_bidang || '';
+      document.getElementById('editUnit').value = profile.unit_code || '';
+      document.getElementById('editRole').value = profile.role || 'uid_admin';
+
+      // Apply role-based field restrictions
+      updateFieldPermissions(profile.role || 'uid_admin');
+
+      // Update header nav profile
+      updateHeaderProfile(profile);
+    }
+
+    // Format role for display
+    function formatRole(role) {
+      const roles = {
+        'uid_admin': 'UID Admin (Pusat)',
+        'uid_user': 'UID User (Pusat)',
+        'up3_admin': 'UP3 Admin (Cabang)',
+        'up3_user': 'UP3 User (Cabang)',
+        'vendor_k3': 'Vendor K3'
+      };
+      return roles[role] || role || '-';
+    }
+
+    // Get role permissions - determine which fields are editable
+    function getRolePermissions(role) {
+      const permissions = {
+        'uid_admin': {
+          label: 'UID Admin (Pusat)',
+          canEdit: true,
+          editableFields: ['nama', 'nip', 'jabatan', 'bidang', 'sub_bidang', 'unit', 'role'],
+          readOnlyFields: ['email'],
+          description: 'Full access - dapat mengedit semua field'
+        },
+        'uid_user': {
+          label: 'UID User (Pusat)',
+          canEdit: false,
+          editableFields: [],
+          readOnlyFields: ['nama', 'nip', 'email', 'jabatan', 'bidang', 'sub_bidang', 'unit', 'role'],
+          description: 'Read-only - tidak dapat mengedit field apapun'
+        },
+        'up3_admin': {
+          label: 'UP3 Admin (Cabang)',
+          canEdit: true,
+          editableFields: ['nama', 'nip', 'jabatan', 'bidang', 'sub_bidang'],
+          readOnlyFields: ['email', 'unit', 'role'],
+          description: 'Dapat edit info personal, unit & role read-only'
+        },
+        'up3_user': {
+          label: 'UP3 User (Cabang)',
+          canEdit: false,
+          editableFields: [],
+          readOnlyFields: ['nama', 'nip', 'email', 'jabatan', 'bidang', 'sub_bidang', 'unit', 'role'],
+          description: 'Read-only - tidak dapat mengedit field apapun'
+        },
+        'vendor_k3': {
+          label: 'Vendor K3',
+          canEdit: true,
+          editableFields: ['nama', 'jabatan'],
+          readOnlyFields: ['nip', 'email', 'bidang', 'sub_bidang', 'unit', 'role'],
+          description: 'Dapat edit nama dan jabatan saja'
+        }
+      };
+      return permissions[role] || permissions['uid_user'];
+    }
+
+    // Update field permissions based on user role
+    function updateFieldPermissions(userRole) {
+      const permissions = getRolePermissions(userRole);
+      const fields = ['editNama', 'editNip', 'editEmail', 'editJabatan', 'editBidang', 'editSubBidang', 'editUnit', 'editRole'];
+
+      fields.forEach(fieldId => {
+        const field = document.getElementById(fieldId);
+        if (!field) return;
+
+        const fieldName = fieldId.replace('edit', '').toLowerCase();
+
+        if (permissions.editableFields.includes(fieldName)) {
+          // Field dapat diedit
+          field.disabled = false;
+          field.classList.remove('form-control-plaintext');
+          field.classList.add('form-control');
+        } else {
+          // Field tidak dapat diedit
+          field.disabled = true;
+          field.classList.add('form-control-plaintext');
+          field.classList.remove('form-control');
+        }
+      });
+
+      // Update button save visibility
+      const saveBtn = document.getElementById('btnSaveProfile');
+      if (saveBtn) {
+        if (permissions.canEdit) {
+          saveBtn.style.display = 'block';
+        } else {
+          saveBtn.style.display = 'none';
+        }
+      }
+
+      // Update role dropdown - hanya uid_admin yang bisa edit role
+      const roleField = document.getElementById('editRole');
+      if (roleField) {
+        if (userRole === 'uid_admin') {
+          roleField.disabled = false;
+          populateRoleDropdown();
+        } else {
+          roleField.disabled = true;
+        }
+      }
+
+      // Update info banner
+      updateRoleInfoBanner(permissions);
+    }
+
+    // Populate role dropdown - hanya untuk uid_admin
+    function populateRoleDropdown() {
+      const roleField = document.getElementById('editRole');
+      if (!roleField) return;
+
+      const roles = [
+        { value: 'uid_admin', label: 'UID Admin (Pusat)' },
+        { value: 'uid_user', label: 'UID User (Pusat)' },
+        { value: 'up3_admin', label: 'UP3 Admin (Cabang)' },
+        { value: 'up3_user', label: 'UP3 User (Cabang)' },
+        { value: 'vendor_k3', label: 'Vendor K3' }
+      ];
+
+      const currentValue = roleField.value;
+      roleField.innerHTML = '';
+
+      roles.forEach(role => {
+        const option = document.createElement('option');
+        option.value = role.value;
+        option.textContent = role.label;
+        if (currentValue === role.value) {
+          option.selected = true;
+        }
+        roleField.appendChild(option);
+      });
+    }
+
+    // Update role info banner
+    function updateRoleInfoBanner(permissions) {
+      let banner = document.getElementById('roleInfoBanner');
+      if (!banner) {
+        // Create banner if not exist
+        const tabContent = document.querySelector('.tab-pane.active');
+        if (tabContent) {
+          banner = document.createElement('div');
+          banner.id = 'roleInfoBanner';
+          banner.className = 'alert alert-info mb-3';
+          tabContent.insertBefore(banner, tabContent.firstChild);
+        }
+      }
+      if (banner) {
+        banner.innerHTML = `
+          <i class="bi bi-info-circle"></i>
+          <strong>${permissions.label}:</strong> ${permissions.description}
+        `;
+      }
+    }
+
+    // Load units for dropdown
+    async function loadUnits() {
+      try {
+        const result = await UnitsAPI.getAll();
+        if (result.success && result.data && result.data.length > 0) {
+          unitsList = result.data;
+          populateUnitsDropdown();
+        }
+      } catch (error) {
+        console.error('Error loading units:', error);
+      }
+    }
+
+    // Populate units dropdown
+    function populateUnitsDropdown() {
+      const select = document.getElementById('editUnit');
+      select.innerHTML = '<option value="">-- Pilih Unit --</option>';
+
+      unitsList.forEach(unit => {
+        const option = document.createElement('option');
+        option.value = unit.unit_code;
+        option.textContent = `${unit.unit_code} - ${unit.unit_name}`;
+        if (currentProfile && currentProfile.unit_code === unit.unit_code) {
+          option.selected = true;
+        }
+        select.appendChild(option);
+      });
+    }
+
+    // Update header profile display
+    function updateHeaderProfile(profile) {
+      if (!profile) return;
+
+      const fullName = profile.nama || profile.email || 'User';
+      const shortName = fullName.split(' ')[0];
+      const initial = shortName.charAt(0).toUpperCase();
+      const roleLabel = formatRole(profile.role);
+
+      const navProfileInitial = document.getElementById('navProfileInitial');
+      const navProfileName = document.getElementById('navProfileName');
+      const navProfileFullName = document.getElementById('navProfileFullName');
+      const navProfileRole = document.getElementById('navProfileRole');
+
+      if (navProfileInitial) navProfileInitial.textContent = initial;
+      if (navProfileName) navProfileName.textContent = shortName;
+      if (navProfileFullName) navProfileFullName.textContent = fullName;
+      if (navProfileRole) navProfileRole.textContent = roleLabel;
+    }
+
+    // Setup event listeners
+    function setupEventListeners() {
+      // Edit Profile Form
+      document.getElementById('editProfileForm').addEventListener('submit', handleUpdateProfile);
+
+      // Reset button
+      document.getElementById('btnResetProfile').addEventListener('click', function () {
+        displayProfile(currentProfile);
+        showAlert('editAlertContainer', 'Form telah direset ke data sebelumnya.', 'info');
+      });
+
+      // Change Password Form
+      document.getElementById('changePasswordForm').addEventListener('submit', handleChangePassword);
+
+      // Toggle password visibility
+      document.getElementById('togglePassword').addEventListener('click', function () {
+        togglePasswordVisibility('newPassword', this);
+      });
+      document.getElementById('toggleConfirmPassword').addEventListener('click', function () {
+        togglePasswordVisibility('confirmNewPassword', this);
+      });
+
+      // Logout button - use ID selector
+      const logoutBtn = document.getElementById('logoutBtn');
+      if (logoutBtn) {
+        logoutBtn.addEventListener('click', async (e) => {
+          e.preventDefault();
+          const result = await Swal.fire({
+            title: 'Konfirmasi Logout',
+            text: 'Apakah Anda yakin ingin keluar?',
+            icon: 'question',
+            showCancelButton: true,
+            confirmButtonColor: '#3085d6',
+            cancelButtonColor: '#6c757d',
+            confirmButtonText: 'Ya, Logout',
+            cancelButtonText: 'Batal'
+          });
+          if (result.isConfirmed) {
+            try {
+              await logout();
+            } catch (error) {
+              console.error('Logout error:', error);
+            }
+            window.location.href = 'pages-login.html';
+          }
+        });
+      }
+    }
+
+    // Toggle password visibility
+    function togglePasswordVisibility(inputId, button) {
+      const input = document.getElementById(inputId);
+      const icon = button.querySelector('i');
+
+      if (input.type === 'password') {
+        input.type = 'text';
+        icon.classList.remove('bi-eye');
+        icon.classList.add('bi-eye-slash');
+      } else {
+        input.type = 'password';
+        icon.classList.remove('bi-eye-slash');
+        icon.classList.add('bi-eye');
+      }
+    }
+
+    // Handle update profile
+    async function handleUpdateProfile(e) {
+      e.preventDefault();
+
+      const form = e.target;
+      if (!form.checkValidity()) {
+        form.classList.add('was-validated');
+        return;
+      }
+
+      const saveBtn = document.getElementById('btnSaveProfile');
+      const spinner = document.getElementById('saveSpinner');
+
+      try {
+        // Show loading
+        saveBtn.disabled = true;
+        spinner.classList.remove('d-none');
+
+        // Collect form data - include id and email for upsert
+        const profileData = {
+          id: currentUser.id,
+          email: currentUser.email,
+          nama: document.getElementById('editNama').value.trim(),
+          nip: document.getElementById('editNip').value.trim() || null,
+          jabatan: document.getElementById('editJabatan').value.trim() || null,
+          bidang: document.getElementById('editBidang').value.trim() || null,
+          sub_bidang: document.getElementById('editSubBidang').value.trim() || null,
+          unit_code: document.getElementById('editUnit').value || null,
+          // Only uid_admin can change role, others keep their current role
+          role: currentProfile.role === 'uid_admin'
+            ? (document.getElementById('editRole').value || 'uid_admin')
+            : (currentProfile.role || 'uid_admin')
+        };
+
+        // Validate required fields
+        if (!profileData.nama) {
+          showAlert('editAlertContainer', 'Nama lengkap harus diisi', 'danger');
+          saveBtn.disabled = false;
+          spinner.classList.add('d-none');
+          return;
+        }
+
+        // Upsert profile (insert if not exists, update if exists)
+        const result = await ProfilesAPI.upsert(profileData);
+
+        if (result.success) {
+          currentProfile = result.data;
+          displayProfile(currentProfile);
+          showAlert('editAlertContainer', 'Profil berhasil disimpan!', 'success');
+        } else {
+          showAlert('editAlertContainer', 'Gagal menyimpan profil: ' + result.error, 'danger');
+        }
+
+      } catch (error) {
+        console.error('Error updating profile:', error);
+        showAlert('editAlertContainer', 'Terjadi kesalahan: ' + error.message, 'danger');
+      } finally {
+        saveBtn.disabled = false;
+        spinner.classList.add('d-none');
+      }
+    }
+
+    // Handle change password
+    async function handleChangePassword(e) {
+      e.preventDefault();
+
+      const newPassword = document.getElementById('newPassword').value;
+      const confirmPassword = document.getElementById('confirmNewPassword').value;
+
+      // Validate passwords match
+      if (newPassword !== confirmPassword) {
+        showAlert('passwordAlertContainer', 'Password baru dan konfirmasi tidak cocok!', 'danger');
+        return;
+      }
+
+      // Validate password length
+      if (newPassword.length < 8) {
+        showAlert('passwordAlertContainer', 'Password minimal 8 karakter!', 'danger');
+        return;
+      }
+
+      const changeBtn = document.getElementById('btnChangePassword');
+      const spinner = document.getElementById('passwordSpinner');
+
+      try {
+        // Show loading
+        changeBtn.disabled = true;
+        spinner.classList.remove('d-none');
+
+        // Update password via Supabase Auth
+        const client = getSupabaseClient();
+        const { error } = await client.auth.updateUser({
+          password: newPassword
+        });
+
+        if (error) {
+          showAlert('passwordAlertContainer', 'Gagal mengubah password: ' + error.message, 'danger');
+        } else {
+          showAlert('passwordAlertContainer', 'Password berhasil diubah!', 'success');
+          document.getElementById('changePasswordForm').reset();
+        }
+
+      } catch (error) {
+        console.error('Error changing password:', error);
+        showAlert('passwordAlertContainer', 'Terjadi kesalahan: ' + error.message, 'danger');
+      } finally {
+        changeBtn.disabled = false;
+        spinner.classList.add('d-none');
+      }
+    }
+
+    // Show alert helper
+    function showAlert(containerId, message, type) {
+      const container = document.getElementById(containerId);
+      container.innerHTML = `
+        <div class="alert alert-${type} alert-dismissible fade show" role="alert">
+          ${message}
+          <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+      `;
+    }
+  </script>
+
+</body>
+
+</html>
