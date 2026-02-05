@@ -102,7 +102,7 @@
 
   <!-- Role-based menu visibility - must run before body renders -->
   <script>
-    (function() {
+    (function () {
       var role = localStorage.getItem('user_role') || '';
       if (role) {
         document.documentElement.className += ' role-' + role;
@@ -249,6 +249,11 @@
               <i class="bi bi-circle"></i><span>Data Penilaian</span>
             </a>
           </li>
+          <li>
+            <a href="data-standar-peralatan.html">
+              <i class="bi bi-circle"></i><span>Data Peralatan</span>
+            </a>
+          </li>
 
         </ul>
       </li><!-- End Components Nav -->
@@ -279,7 +284,6 @@
               <i class="bi bi-circle"></i><span>Peralatan</span>
             </a>
           </li>
-
           <li>
             <a href="data-kendaraan.html">
               <i class="bi bi-circle"></i><span>Kendaraan</span>
@@ -832,10 +836,10 @@
     // Format role for display
     function formatRole(role) {
       const roles = {
-        'uid_admin': 'UID Admin (Pusat)',
-        'uid_user': 'UID User (Pusat)',
-        'up3_admin': 'UP3 Admin (Cabang)',
-        'up3_user': 'UP3 User (Cabang)',
+        'uid_admin': 'UID Admin',
+        'uid_user': 'UID User',
+        'up3_admin': 'UP3 Admin',
+        'up3_user': 'UP3 User',
         'vendor_k3': 'Vendor K3'
       };
       return roles[role] || role || '-';
@@ -845,28 +849,28 @@
     function getRolePermissions(role) {
       const permissions = {
         'uid_admin': {
-          label: 'UID Admin (Pusat)',
+          label: 'UID Admin',
           canEdit: true,
           editableFields: ['nama', 'nip', 'jabatan', 'bidang', 'sub_bidang', 'unit', 'role'],
           readOnlyFields: ['email'],
           description: 'Full access - dapat mengedit semua field'
         },
         'uid_user': {
-          label: 'UID User (Pusat)',
+          label: 'UID User',
           canEdit: false,
           editableFields: [],
           readOnlyFields: ['nama', 'nip', 'email', 'jabatan', 'bidang', 'sub_bidang', 'unit', 'role'],
           description: 'Read-only - tidak dapat mengedit field apapun'
         },
         'up3_admin': {
-          label: 'UP3 Admin (Cabang)',
+          label: 'UP3 Admin',
           canEdit: true,
           editableFields: ['nama', 'nip', 'jabatan', 'bidang', 'sub_bidang'],
           readOnlyFields: ['email', 'unit', 'role'],
           description: 'Dapat edit info personal, unit & role read-only'
         },
         'up3_user': {
-          label: 'UP3 User (Cabang)',
+          label: 'UP3 User',
           canEdit: false,
           editableFields: [],
           readOnlyFields: ['nama', 'nip', 'email', 'jabatan', 'bidang', 'sub_bidang', 'unit', 'role'],
@@ -938,10 +942,10 @@
       if (!roleField) return;
 
       const roles = [
-        { value: 'uid_admin', label: 'UID Admin (Pusat)' },
-        { value: 'uid_user', label: 'UID User (Pusat)' },
-        { value: 'up3_admin', label: 'UP3 Admin (Cabang)' },
-        { value: 'up3_user', label: 'UP3 User (Cabang)' },
+        { value: 'uid_admin', label: 'UID Admin' },
+        { value: 'uid_user', label: 'UID User' },
+        { value: 'up3_admin', label: 'UP3 Admin' },
+        { value: 'up3_user', label: 'UP3 User' },
         { value: 'vendor_k3', label: 'Vendor K3' }
       ];
 

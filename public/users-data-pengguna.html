@@ -178,7 +178,7 @@
   </style>
   <!-- Role-based menu visibility - must run before body renders -->
   <script>
-    (function() {
+    (function () {
       var role = localStorage.getItem('user_role') || '';
       if (role) {
         document.documentElement.className += ' role-' + role;
@@ -325,6 +325,11 @@
               <i class="bi bi-circle"></i><span>Data Penilaian</span>
             </a>
           </li>
+          <li>
+            <a href="data-standar-peralatan.html">
+              <i class="bi bi-circle"></i><span>Data Peralatan</span>
+            </a>
+          </li>
 
         </ul>
       </li><!-- End Components Nav -->
@@ -355,7 +360,6 @@
               <i class="bi bi-circle"></i><span>Peralatan</span>
             </a>
           </li>
-
           <li>
             <a href="data-kendaraan.html">
               <i class="bi bi-circle"></i><span>Kendaraan</span>
@@ -529,6 +533,70 @@
             style="display:none;"><i class="bi bi-pencil me-1"></i>Edit</button>
           <button type="button" class="btn btn-danger btn-sm" id="modalDeleteBtn" onclick="deleteUserFromModal()"
             style="display:none;"><i class="bi bi-trash me-1"></i>Hapus</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Edit User Modal -->
+  <div class="modal fade user-detail-modal" id="editUserModal" tabindex="-1" aria-labelledby="editUserModalLabel"
+    aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="editUserModalLabel"><i class="bi bi-pencil-square me-2"></i>Edit Pengguna</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          <form id="editUserForm">
+            <input type="hidden" id="editUserId">
+
+            <div class="mb-3">
+              <label for="editNama" class="form-label">Nama Lengkap <span class="text-danger">*</span></label>
+              <input type="text" class="form-control form-control-sm" id="editNama" required>
+            </div>
+
+            <div class="mb-3">
+              <label for="editEmail" class="form-label">Email</label>
+              <input type="email" class="form-control form-control-sm" id="editEmail" readonly disabled>
+              <small class="text-muted">Email tidak dapat diubah</small>
+            </div>
+
+            <div class="mb-3">
+              <label for="editNip" class="form-label">NIP</label>
+              <input type="text" class="form-control form-control-sm" id="editNip">
+            </div>
+
+            <div class="mb-3">
+              <label for="editJabatan" class="form-label">Jabatan</label>
+              <input type="text" class="form-control form-control-sm" id="editJabatan">
+            </div>
+
+            <div class="mb-3">
+              <label for="editBidang" class="form-label">Bidang</label>
+              <input type="text" class="form-control form-control-sm" id="editBidang">
+            </div>
+
+            <div class="mb-3">
+              <label for="editNoHp" class="form-label">No. HP</label>
+              <input type="text" class="form-control form-control-sm" id="editNoHp">
+            </div>
+
+            <div class="mb-3">
+              <label for="editRole" class="form-label">Role <span class="text-danger">*</span></label>
+              <select class="form-select form-select-sm" id="editRole" required>
+                <!-- Options will be populated dynamically based on current user role -->
+              </select>
+            </div>
+
+            <div id="editAlertContainer"></div>
+          </form>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Batal</button>
+          <button type="button" class="btn btn-primary btn-sm" id="btnSaveEdit" onclick="saveUserEdit()">
+            <i class="bi bi-check-lg me-1"></i>Simpan
+          </button>
         </div>
       </div>
     </div>

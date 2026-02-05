@@ -17,7 +17,7 @@ if (typeof window.AssessmentsAPI === 'undefined') {
                     .from('assessments')
                     .select(`
                         *,
-                        vendors(id, vendor_name, unit_code),
+                        vendors!inner(id, vendor_name, unit_code),
                         peruntukan(id, jenis, deskripsi),
                         teams(id, nomor_polisi, category),
                         profiles!assessments_assessor_id_fkey(id, nama)
@@ -25,7 +25,7 @@ if (typeof window.AssessmentsAPI === 'undefined') {
 
                 // Apply filters
                 if (filters.unitCode) {
-                    // Filter by vendor's unit_code
+                    // Filter by vendor's unit_code using inner join
                     query = query.eq('vendors.unit_code', filters.unitCode);
                 }
                 if (filters.vendorId) {

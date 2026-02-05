@@ -292,17 +292,23 @@ function viewUser(userId) {
     const deleteBtn = document.getElementById('modalDeleteBtn');
 
     // Permission rules:
-    // uid_admin: bisa edit dan delete
-    // uid_user: bisa edit, tidak bisa delete
-    // up3_admin: bisa edit dan delete (di unitnya)
-    // up3_user: bisa edit (vendor_k3 di unitnya), tidak bisa delete
-    // vendor_k3: tidak bisa edit atau delete (hanya view)
+    // - Setiap user BISA edit profil sendiri
+    // - uid_admin: bisa edit dan delete siapa saja
+    // - uid_user: bisa edit siapa saja, tidak bisa delete
+    // - up3_admin: bisa edit dan delete (di unitnya)
+    // - up3_user: bisa edit (vendor_k3 di unitnya), tidak bisa delete
+    // - vendor_k3: hanya bisa edit profil sendiri
     const role = currentProfile.role;
+    const isOwnProfile = userId === currentProfile.id;
 
     let canEdit = false;
     let canDelete = false;
 
-    if (role === 'uid_admin') {
+    // Setiap user bisa edit profil sendiri
+    if (isOwnProfile) {
+        canEdit = true;
+        canDelete = false; // Tidak bisa hapus diri sendiri
+    } else if (role === 'uid_admin') {
         canEdit = true;
         canDelete = true;
     } else if (role === 'uid_user') {
@@ -330,13 +336,174 @@ function viewUser(userId) {
 // Edit user from modal
 function editUserFromModal() {
     if (selectedUserId) {
-        // Close modal first
-        const modal = bootstrap.Modal.getInstance(document.getElementById('userDetailModal'));
-        if (modal) modal.hide();
+        // Close detail modal first
+        const detailModal = bootstrap.Modal.getInstance(document.getElementById('userDetailModal'));
+        if (detailModal) detailModal.hide();
 
-        // Redirect to edit page or show edit form
-        window.location.href = `users-profile.html?id=${selectedUserId}`;
+        // Open edit modal
+        openEditModal(selectedUserId);
     }
+}
+
+// Open edit modal and populate data
+function openEditModal(userId) {
+    const user = usersList.find(u => u.id === userId);
+    if (!user) return;
+
+    selectedUserId = userId;
+
+    // Populate form fields
+    document.getElementById('editUserId').value = user.id;
+    document.getElementById('editNama').value = user.nama || '';
+    document.getElementById('editEmail').value = user.email || '';
+    document.getElementById('editNip').value = user.nip || '';
+    document.getElementById('editJabatan').value = user.jabatan || '';
+    document.getElementById('editBidang').value = user.bidang || '';
+    document.getElementById('editNoHp').value = user.no_hp || '';
+
+    // Check if editing own profile
+    const isOwnProfile = user.id === currentProfile.id;
+
+    // Populate role dropdown based on current user's role
+    populateRoleDropdown(user.role, isOwnProfile);
+
+    // Clear any previous alerts
+    document.getElementById('editAlertContainer').innerHTML = '';
+
+    // Show modal
+    const modal = new bootstrap.Modal(document.getElementById('editUserModal'));
+    modal.show();
+}
+
+// Populate role dropdown based on current user's permission
+function populateRoleDropdown(targetUserRole, isOwnProfile = false) {
+    const roleSelect = document.getElementById('editRole');
+    roleSelect.innerHTML = '';
+
+    const myRole = currentProfile.role;
+    let allowedRoles = [];
+
+    // Role assignment permissions:
+    // - Jika edit profil sendiri: role tidak bisa diubah (kecuali uid_admin)
+    // - uid_admin: can assign any role
+    // - uid_user: can assign any role except uid_admin
+    // - up3_admin: can assign up3_user, vendor_k3
+    // - up3_user: can assign vendor_k3 only
+    // - vendor_k3: cannot assign roles (hanya bisa edit data sendiri, bukan role)
+
+    // Jika edit profil sendiri dan bukan uid_admin, role di-lock
+    if (isOwnProfile && myRole !== 'uid_admin') {
+        allowedRoles = [
+            { value: targetUserRole, label: formatRole(targetUserRole) }
+        ];
+        roleSelect.disabled = true;
+    } else {
+        roleSelect.disabled = false;
+
+        if (myRole === 'uid_admin') {
+            allowedRoles = [
+                { value: 'uid_admin', label: 'UID Admin' },
+                { value: 'uid_user', label: 'UID User' },
+                { value: 'up3_admin', label: 'UP3 Admin' },
+                { value: 'up3_user', label: 'UP3 User' },
+                { value: 'vendor_k3', label: 'Vendor K3' }
+            ];
+        } else if (myRole === 'uid_user') {
+            allowedRoles = [
+                { value: 'uid_user', label: 'UID User' },
+                { value: 'up3_admin', label: 'UP3 Admin' },
+                { value: 'up3_user', label: 'UP3 User' },
+                { value: 'vendor_k3', label: 'Vendor K3' }
+            ];
+        } else if (myRole === 'up3_admin') {
+            allowedRoles = [
+                { value: 'up3_user', label: 'UP3 User' },
+                { value: 'vendor_k3', label: 'Vendor K3' }
+            ];
+        } else if (myRole === 'up3_user') {
+            allowedRoles = [
+                { value: 'vendor_k3', label: 'Vendor K3' }
+            ];
+        }
+    }
+
+    allowedRoles.forEach(role => {
+        const option = document.createElement('option');
+        option.value = role.value;
+        option.textContent = role.label;
+        if (role.value === targetUserRole) {
+            option.selected = true;
+        }
+        roleSelect.appendChild(option);
+    });
+}
+
+// Save user edit
+async function saveUserEdit() {
+    const userId = document.getElementById('editUserId').value;
+    const nama = document.getElementById('editNama').value.trim();
+    const nip = document.getElementById('editNip').value.trim();
+    const jabatan = document.getElementById('editJabatan').value.trim();
+    const bidang = document.getElementById('editBidang').value.trim();
+    const noHp = document.getElementById('editNoHp').value.trim();
+    const role = document.getElementById('editRole').value;
+
+    // Validation
+    if (!nama) {
+        showEditAlert('Nama tidak boleh kosong', 'danger');
+        return;
+    }
+
+    // Disable save button
+    const saveBtn = document.getElementById('btnSaveEdit');
+    saveBtn.disabled = true;
+    saveBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span>Menyimpan...';
+
+    try {
+        const updates = {
+            nama: nama,
+            nip: nip || null,
+            jabatan: jabatan || null,
+            bidang: bidang || null,
+            no_hp: noHp || null,
+            role: role
+        };
+
+        const result = await ProfilesAPI.update(userId, updates);
+
+        if (result.success) {
+            // Close modal
+            const modal = bootstrap.Modal.getInstance(document.getElementById('editUserModal'));
+            if (modal) modal.hide();
+
+            // Show success message
+            showAlert('alertContainer', 'Data pengguna berhasil diperbarui', 'success');
+
+            // Reload users list
+            await loadUsers();
+        } else {
+            showEditAlert('Gagal menyimpan: ' + (result.error || 'Unknown error'), 'danger');
+        }
+    } catch (error) {
+        console.error('Error saving user:', error);
+        showEditAlert('Terjadi kesalahan: ' + error.message, 'danger');
+    } finally {
+        // Re-enable save button
+        saveBtn.disabled = false;
+        saveBtn.innerHTML = '<i class="bi bi-check-lg me-1"></i>Simpan';
+    }
+}
+
+// Show alert in edit modal
+function showEditAlert(message, type) {
+    const container = document.getElementById('editAlertContainer');
+    if (!container) return;
+    container.innerHTML = `
+        <div class="alert alert-${type} alert-dismissible fade show py-2" role="alert" style="font-size: 12px;">
+            ${message}
+            <button type="button" class="btn-close" data-bs-dismiss="alert" style="padding: 8px;"></button>
+        </div>
+    `;
 }
 
 // Delete user from modal
@@ -365,9 +532,9 @@ async function deleteUserFromModal() {
     await deleteUser(selectedUserId, user.nama);
 }
 
-// Edit user
+// Edit user (opens edit modal)
 function editUser(userId) {
-    window.location.href = `users-profile.html?id=${userId}`;
+    openEditModal(userId);
 }
 
 // Delete user
