@@ -158,8 +158,12 @@ async function loadVendors() {
             let vendors = result.data;
             const role = currentProfile?.role;
 
-            // Filter by unit for UP3 roles
-            if (['up3_admin', 'up3_user', 'vendor_k3'].includes(role)) {
+            // Filter based on role
+            if (role === 'vendor_k3') {
+                // Vendor K3: only their own vendor
+                vendors = vendors.filter(v => v.id === currentProfile?.vendor_id);
+            } else if (['up3_admin', 'up3_user'].includes(role)) {
+                // UP3: filter by unit_code
                 const userUnit = currentProfile?.unit_code;
                 if (userUnit) {
                     vendors = vendors.filter(v => v.unit_code === userUnit);

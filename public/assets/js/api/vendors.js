@@ -128,6 +128,28 @@ if (typeof window.VendorsAPI === 'undefined') {
                 console.error('❌ Error deleting vendor:', error);
                 return { success: false, error: error.message };
             }
+        },
+
+        /**
+         * Get vendors by unit code
+         */
+        async getByUnitCode(unitCode) {
+            try {
+                const client = getSupabaseClient();
+                const { data, error } = await client
+                    .from('vendors')
+                    .select('*')
+                    .eq('unit_code', unitCode)
+                    .order('vendor_name', { ascending: true });
+
+                if (error) {
+                    return { success: false, error: error.message, data: null };
+                }
+
+                return { success: true, data, error: null };
+            } catch (error) {
+                return { success: false, error: error.message, data: null };
+            }
         }
     };
 }

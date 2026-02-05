@@ -78,10 +78,28 @@ function updateNavbarProfile() {
     if (navProfileRole) navProfileRole.textContent = roleLabel;
 }
 
-// Load vendors for dropdown
+// Load vendors for dropdown (filtered by role)
 async function loadVendors() {
     try {
-        const result = await VendorsAPI.getAll();
+        let result;
+        const role = currentProfile?.role;
+        const unitCode = currentProfile?.unit_code;
+        const vendorId = currentProfile?.vendor_id;
+
+        // Filter based on role
+        if (role === 'uid_admin' || role === 'uid_user') {
+            // UID level: load all vendors
+            result = await VendorsAPI.getAll();
+        } else if (role === 'up3_admin' || role === 'up3_user') {
+            // UP3 level: load vendors in their unit only
+            result = await VendorsAPI.getByUnitCode(unitCode);
+        } else if (role === 'vendor_k3') {
+            // Vendor level: load only their vendor
+            const vendor = await VendorsAPI.getById(vendorId);
+            result = { success: true, data: vendor ? [vendor] : [] };
+        } else {
+            result = { success: true, data: [] };
+        }
 
         if (result.success && result.data) {
             vendorsList = result.data;
@@ -124,7 +142,7 @@ async function loadPeruntukan() {
     }
 }
 
-// Load teams from database
+// Load teams from database (filtered by role)
 async function loadTeams() {
     try {
         const tableBody = document.getElementById('kendaraan-table-body');
@@ -135,7 +153,24 @@ async function loadTeams() {
         // Show loading
         tableBody.innerHTML = '<tr><td colspan="7" class="text-center"><div class="spinner-border spinner-border-sm" role="status"></div> Memuat data...</td></tr>';
 
-        const result = await TeamsAPI.getAll();
+        let result;
+        const role = currentProfile?.role;
+        const unitCode = currentProfile?.unit_code;
+        const vendorId = currentProfile?.vendor_id;
+
+        // Filter based on role
+        if (role === 'uid_admin' || role === 'uid_user') {
+            // UID level: load all teams
+            result = await TeamsAPI.getAll();
+        } else if (role === 'up3_admin' || role === 'up3_user') {
+            // UP3 level: load teams from vendors in their unit only
+            result = await TeamsAPI.getByUnitCode(unitCode);
+        } else if (role === 'vendor_k3') {
+            // Vendor level: load only their vendor's teams
+            result = await TeamsAPI.getByVendorId(vendorId);
+        } else {
+            result = { success: true, data: [] };
+        }
 
         if (!result.success) {
             tableBody.innerHTML = '<tr><td colspan="7" class="text-center text-danger">Gagal memuat data: ' + result.error + '</td></tr>';

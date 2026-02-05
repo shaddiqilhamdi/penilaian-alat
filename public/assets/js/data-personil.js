@@ -87,16 +87,25 @@ function isUIDUser() {
     return role.startsWith('uid_');
 }
 
-// Load vendors for dropdown (filtered by unit for non-UID users)
+// Check if user is Vendor K3
+function isVendorUser() {
+    return currentProfile?.role === 'vendor_k3';
+}
+
+// Load vendors for dropdown (filtered by role)
 async function loadVendors() {
     try {
         const result = await VendorsAPI.getAll();
 
         if (result.success && result.data) {
-            // Filter by unit for non-UID users
+            // Filter based on role
             if (isUIDUser()) {
                 vendorsList = result.data;
+            } else if (isVendorUser()) {
+                // Vendor K3: only their vendor
+                vendorsList = result.data.filter(v => v.id === currentProfile.vendor_id);
             } else {
+                // UP3: filter by unit_code
                 vendorsList = result.data.filter(v => v.unit_code === currentProfile.unit_code);
             }
 
@@ -145,10 +154,14 @@ async function loadTeams() {
         const result = await TeamsAPI.getAll();
 
         if (result.success && result.data) {
-            // Filter by vendor unit for non-UID users
+            // Filter based on role
             if (isUIDUser()) {
                 teamsList = result.data;
+            } else if (isVendorUser()) {
+                // Vendor K3: only their vendor's teams
+                teamsList = result.data.filter(t => t.vendor_id === currentProfile.vendor_id);
             } else {
+                // UP3: filter by unit_code
                 teamsList = result.data.filter(t => t.vendors?.unit_code === currentProfile.unit_code);
             }
 
@@ -188,8 +201,12 @@ async function loadPersonnel() {
 
         let data = result.data || [];
 
-        // Filter by unit for non-UID users
-        if (!isUIDUser() && currentProfile?.unit_code) {
+        // Filter based on role
+        if (isVendorUser() && currentProfile?.vendor_id) {
+            // Vendor K3: only their vendor's personnel
+            data = data.filter(p => p.vendor_id === currentProfile.vendor_id);
+        } else if (!isUIDUser() && currentProfile?.unit_code) {
+            // UP3: filter by unit_code
             data = data.filter(p => p.vendors?.unit_code === currentProfile.unit_code);
         }
 

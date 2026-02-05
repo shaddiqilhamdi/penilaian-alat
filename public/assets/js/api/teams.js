@@ -261,6 +261,58 @@ if (typeof window.TeamsAPI === 'undefined') {
         async regenerateToken(teamId) {
             const newToken = crypto.randomUUID().replace(/-/g, '').substring(0, 16);
             return this.update(teamId, { access_token: newToken });
+        },
+
+        /**
+         * Get teams by unit code (via vendors)
+         */
+        async getByUnitCode(unitCode) {
+            try {
+                const client = getSupabaseClient();
+                const { data, error } = await client
+                    .from('teams')
+                    .select(`
+                        *,
+                        vendors!inner(vendor_name, unit_code),
+                        peruntukan(jenis, deskripsi)
+                    `)
+                    .eq('vendors.unit_code', unitCode)
+                    .order('created_at', { ascending: false });
+
+                if (error) {
+                    return { success: false, error: error.message, data: null };
+                }
+
+                return { success: true, data, error: null };
+            } catch (error) {
+                return { success: false, error: error.message, data: null };
+            }
+        },
+
+        /**
+         * Get teams by vendor ID with full relations
+         */
+        async getByVendorId(vendorId) {
+            try {
+                const client = getSupabaseClient();
+                const { data, error } = await client
+                    .from('teams')
+                    .select(`
+                        *,
+                        vendors(vendor_name, unit_code),
+                        peruntukan(jenis, deskripsi)
+                    `)
+                    .eq('vendor_id', vendorId)
+                    .order('created_at', { ascending: false });
+
+                if (error) {
+                    return { success: false, error: error.message, data: null };
+                }
+
+                return { success: true, data, error: null };
+            } catch (error) {
+                return { success: false, error: error.message, data: null };
+            }
         }
     };
 }
