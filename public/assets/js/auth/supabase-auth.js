@@ -38,6 +38,11 @@ async function logout() {
 
         const { error } = await client.auth.signOut();
 
+        // Clear role from localStorage
+        localStorage.removeItem('user_role');
+        localStorage.removeItem('user_unit_code');
+        localStorage.removeItem('user_vendor_id');
+
         if (error) {
             console.error('❌ Logout failed:', error.message);
             return { success: false, error: error.message };
@@ -184,6 +189,25 @@ async function getCurrentUser() {
         console.error('❌ Error getting user:', error);
         return null;
     }
+}
+
+/**
+ * Save user role to localStorage for CSS-based menu visibility
+ * Call this after successful login and profile load
+ */
+function saveUserRoleToStorage(profile) {
+    if (profile) {
+        localStorage.setItem('user_role', profile.role || '');
+        localStorage.setItem('user_unit_code', profile.unit_code || '');
+        localStorage.setItem('user_vendor_id', profile.vendor_id || '');
+    }
+}
+
+/**
+ * Get user role from localStorage (for quick CSS-based checks)
+ */
+function getUserRoleFromStorage() {
+    return localStorage.getItem('user_role') || '';
 }
 
 /**

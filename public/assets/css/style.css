@@ -1484,3 +1484,15 @@ h6 {
   padding: 4px 8px;
   font-size: 12px;
 }
+
+/*--------------------------------------------------------------
+# Role-based Menu Visibility
+# Hide menu items based on body class set by localStorage role
+--------------------------------------------------------------*/
+
+/* Hide UID-only menus when user is not UID role */
+body.role-up3_admin #menu-unit,
+body.role-up3_user #menu-unit,
+body.role-vendor_k3 #menu-unit {
+  display: none !important;
+}

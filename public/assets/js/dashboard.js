@@ -49,6 +49,16 @@ document.addEventListener('DOMContentLoaded', async function () {
         const user = userWithProfile;
         const profile = userWithProfile.profile;
 
+        // Save role to localStorage for CSS-based menu visibility
+        if (profile && typeof saveUserRoleToStorage === 'function') {
+            saveUserRoleToStorage(profile);
+            // Update body class immediately
+            document.documentElement.className = document.documentElement.className.replace(/role-\S+/g, '');
+            if (profile.role) {
+                document.documentElement.classList.add('role-' + profile.role);
+            }
+        }
+
         const fullName = profile?.nama_lengkap || profile?.nama || user.email.split('@')[0];
         const firstName = fullName.split(' ')[0];
         const initial = firstName.charAt(0).toUpperCase();

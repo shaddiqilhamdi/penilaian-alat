@@ -54,6 +54,11 @@ async function checkAuthAndInitialize() {
 
         currentProfile = profileResult.data;
 
+        // Save role to localStorage for CSS-based menu visibility
+        if (typeof saveUserRoleToStorage === 'function') {
+            saveUserRoleToStorage(currentProfile);
+        }
+
         // Check if user has permission to add users
         const allowedRoles = Object.keys(ROLE_PERMISSIONS).filter(role =>
             ROLE_PERMISSIONS[role].length > 0

@@ -31,6 +31,10 @@ async function checkAuthAndLoadUsers() {
 
         if (profileResult.success && profileResult.data) {
             currentProfile = profileResult.data;
+            // Save role to localStorage for CSS-based menu visibility
+            if (typeof saveUserRoleToStorage === 'function') {
+                saveUserRoleToStorage(currentProfile);
+            }
             updateHeaderProfile(currentProfile);
             applyRoleBasedControl(currentProfile.role);
         } else {

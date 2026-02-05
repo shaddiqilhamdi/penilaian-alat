@@ -58,6 +58,10 @@ document.addEventListener('DOMContentLoaded', async function () {
         const profileResult = await ProfilesAPI.getById(currentUser.id);
         if (profileResult.success && profileResult.data) {
             currentProfile = profileResult.data;
+            // Save role to localStorage for CSS-based menu visibility
+            if (typeof saveUserRoleToStorage === 'function') {
+                saveUserRoleToStorage(currentProfile);
+            }
             updateNavbarProfile();
         }
 

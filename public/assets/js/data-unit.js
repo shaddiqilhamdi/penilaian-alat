@@ -40,6 +40,26 @@ async function checkAuthAndLoadData() {
         const profileResult = await ProfilesAPI.getById(currentUser.id);
         if (profileResult.success && profileResult.data) {
             currentProfile = profileResult.data;
+
+            // Save role to localStorage for CSS-based menu visibility
+            if (typeof saveUserRoleToStorage === 'function') {
+                saveUserRoleToStorage(currentProfile);
+            }
+
+            // Only UID roles can access this page
+            const role = currentProfile.role;
+            if (!role || !role.startsWith('uid_')) {
+                Swal.fire({
+                    icon: 'warning',
+                    title: 'Akses Ditolak',
+                    text: 'Halaman ini hanya dapat diakses oleh UID Admin/User',
+                    confirmButtonText: 'Kembali ke Dashboard'
+                }).then(() => {
+                    window.location.href = 'index.html';
+                });
+                return;
+            }
+
             updateNavbarProfile();
             applyRoleBasedControl();
         } else {

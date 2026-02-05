@@ -30,6 +30,16 @@
   <!-- Template Main CSS File -->
   <link href="assets/css/style.css" rel="stylesheet">
 
+  <!-- Role-based menu visibility - must run before body renders -->
+  <script>
+    (function() {
+      var role = localStorage.getItem('user_role') || '';
+      if (role) {
+        document.documentElement.className += ' role-' + role;
+      }
+    })();
+  </script>
+
 </head>
 
 <body>
@@ -304,7 +314,7 @@
         </a>
         <ul id="data-nav" class="nav-content collapse " data-bs-parent="#sidebar-nav">
           <li>
-            <a href="data-unit.html">
+            <a href="data-unit.html" id="menu-unit">
               <i class="bi bi-circle"></i><span>Unit</span>
             </a>
           </li>
