@@ -1531,8 +1531,73 @@ h6 {
 html.role-up3_admin #menu-unit,
 html.role-up3_user #menu-unit,
 html.role-vendor_k3 #menu-unit,
+html.role-petugas #menu-unit,
 .role-up3_admin #menu-unit,
 .role-up3_user #menu-unit,
-.role-vendor_k3 #menu-unit {
+.role-vendor_k3 #menu-unit,
+.role-petugas #menu-unit {
+  display: none !important;
+}
+
+/*--------------------------------------------------------------
+# Vendor K3 Role - Limited Data Master Access
+# Hide certain menu items for vendor_k3 role
+--------------------------------------------------------------*/
+
+/* Hide Vendor Pelaksana, Peruntukan, Peralatan for vendor_k3 */
+html.role-vendor_k3 #menu-vendor,
+html.role-vendor_k3 #menu-peruntukan,
+html.role-vendor_k3 #menu-peralatan,
+.role-vendor_k3 #menu-vendor,
+.role-vendor_k3 #menu-peruntukan,
+.role-vendor_k3 #menu-peralatan {
+  display: none !important;
+}
+
+/*--------------------------------------------------------------
+# Petugas Role - Form Only Mode
+# Hide ALL menu items except Form Penilaian for petugas role
+--------------------------------------------------------------*/
+
+/* Hide entire sidebar for petugas */
+html.role-petugas #sidebar {
+  display: none !important;
+}
+
+/* Adjust main content when sidebar is hidden */
+html.role-petugas #main {
+  margin-left: 0 !important;
+}
+
+/* Hide header toggle sidebar button for petugas */
+html.role-petugas .toggle-sidebar-btn {
+  display: none !important;
+}
+
+/* Hide search bar for petugas */
+html.role-petugas .search-bar {
+  display: none !important;
+}
+
+/* Simplify header for petugas */
+html.role-petugas .header .logo span {
+  display: block !important;
+}
+
+/* Hide "Lihat Data Penilaian" button in success modal for petugas */
+html.role-petugas .btn-lihat-data-penilaian {
+  display: none !important;
+}
+
+/* Simplify navbar profile dropdown for petugas - only show Sign Out */
+html.role-petugas .hide-for-petugas {
+  display: none !important;
+}
+
+/*--------------------------------------------------------------
+# Hide Log Menu for All Users
+# Log page is hidden from all roles
+--------------------------------------------------------------*/
+#menu-log {
   display: none !important;
 }

@@ -223,76 +223,65 @@ async function loadUP3EquipmentIssues() {
 
         const client = getSupabaseClient();
 
-        // Get recent assessments for these vendors
-        const { data: recentAssessments, error: assessError } = await client
-            .from('assessments')
-            .select('id, tanggal_penilaian, vendor_id, vendors(vendor_name)')
+        // Query langsung dari vendor_assets yang bermasalah untuk vendor di UP3 ini
+        const { data: issueAssets, error } = await client
+            .from('vendor_assets')
+            .select(`
+                id,
+                vendor_id,
+                equipment_id,
+                kondisi_fisik,
+                kondisi_fungsi,
+                nilai,
+                last_assessment_date,
+                vendors(vendor_name),
+                equipment_master(nama_alat)
+            `)
             .in('vendor_id', vendorIds)
-            .order('tanggal_penilaian', { ascending: false })
-            .limit(50);
-
-        if (assessError) throw assessError;
-
-        if (!recentAssessments || recentAssessments.length === 0) {
-            tbody.innerHTML = '<tr><td colspan="6" class="text-center text-muted">Tidak ada penilaian</td></tr>';
-            return;
-        }
-
-        const assessmentIds = recentAssessments.map(a => a.id);
-
-        // Query assessment items with issues
-        const { data: items, error } = await client
-            .from('assessment_items')
-            .select('id, kondisi_fisik, kondisi_fungsi, score_item, assessment_id, equipment_id')
-            .in('assessment_id', assessmentIds)
             .or('kondisi_fisik.eq.-1,kondisi_fungsi.eq.-1')
+            .not('last_assessment_date', 'is', null)
+            .order('last_assessment_date', { ascending: false })
             .limit(20);
 
         if (error) throw error;
 
-        if (!items || items.length === 0) {
+        if (!issueAssets || issueAssets.length === 0) {
             tbody.innerHTML = '<tr><td colspan="6" class="text-center text-muted">Tidak ada equipment bermasalah 🎉</td></tr>';
             return;
         }
 
-        // Get equipment names
-        const equipmentIds = [...new Set(items.map(i => i.equipment_id).filter(Boolean))];
-        let equipmentMap = {};
-        if (equipmentIds.length > 0) {
-            const { data: equipments } = await client
-                .from('equipment_master')
-                .select('id, nama_alat')
-                .in('id', equipmentIds);
-            equipments?.forEach(e => equipmentMap[e.id] = e.nama_alat);
-        }
+        const rows = issueAssets.map(asset => {
+            const tanggalDate = new Date(asset.last_assessment_date);
+            const tanggal = String(tanggalDate.getDate()).padStart(2, '0') + '-' +
+                String(tanggalDate.getMonth() + 1).padStart(2, '0') + '-' +
+                tanggalDate.getFullYear();
 
-        const rows = items.map(item => {
-            const assessment = recentAssessments.find(a => a.id === item.assessment_id);
-            if (!assessment) return '';
-
-            const tanggal = new Date(assessment.tanggal_penilaian).toLocaleDateString('id-ID');
-            const kondisiFisik = item.kondisi_fisik === -1 ?
+            const kondisiFisik = asset.kondisi_fisik === -1 ?
                 '<span class="badge bg-danger">TL</span>' :
                 '<span class="badge bg-success">L</span>';
-            const kondisiFungsi = item.kondisi_fungsi === -1 ?
+            const kondisiFungsi = asset.kondisi_fungsi === -1 ?
                 '<span class="badge bg-warning">TB</span>' :
                 '<span class="badge bg-success">B</span>';
-            const scoreClass = item.score_item >= 1 ? 'success' : item.score_item >= 0 ? 'warning' : 'danger';
+
+            const nilaiScore = asset.nilai ?? 0;
+            const scoreClass = nilaiScore >= 1 ? 'success' : nilaiScore >= 0 ? 'warning' : 'danger';
+            const nilaiDisplay = asset.nilai !== null && asset.nilai !== undefined ? asset.nilai : '-';
 
             return `
                 <tr>
                     <td>${tanggal}</td>
-                    <td>${assessment.vendors?.vendor_name || '-'}</td>
-                    <td>${equipmentMap[item.equipment_id] || '-'}</td>
+                    <td>${asset.vendors?.vendor_name || '-'}</td>
+                    <td>${asset.equipment_master?.nama_alat || '-'}</td>
                     <td class="text-center">${kondisiFisik}</td>
                     <td class="text-center">${kondisiFungsi}</td>
-                    <td class="text-center"><span class="badge bg-${scoreClass}">${item.score_item}</span></td>
+                    <td class="text-center"><span class="badge bg-${scoreClass}">${nilaiDisplay}</span></td>
                 </tr>
             `;
-        }).filter(row => row).join('');
+        }).join('');
 
         tbody.innerHTML = rows || '<tr><td colspan="6" class="text-center text-muted">Tidak ada data</td></tr>';
     } catch (error) {
+        console.error('Error loading UP3 equipment issues:', error);
         tbody.innerHTML = '<tr><td colspan="6" class="text-center text-danger">Error loading data</td></tr>';
     }
 }
@@ -348,7 +337,8 @@ async function loadUP3RecentAssessments() {
         });
 
         const rows = assessments.map(item => {
-            const tanggal = new Date(item.tanggal_penilaian).toLocaleDateString('id-ID');
+            const tanggalDate = new Date(item.tanggal_penilaian);
+            const tanggal = String(tanggalDate.getDate()).padStart(2, '0') + '-' + String(tanggalDate.getMonth() + 1).padStart(2, '0') + '-' + tanggalDate.getFullYear();
             const avgScore = scoreMap[item.id]?.toFixed(2) || '0.00';
             const scoreClass = avgScore >= 1.5 ? 'success' : avgScore >= 0 ? 'warning' : 'danger';
             const status = avgScore >= 1.5 ? 'Baik' : avgScore >= 0 ? 'Cukup' : 'Buruk';
@@ -373,12 +363,12 @@ async function loadUP3RecentAssessments() {
 
 async function loadUP3TeamsWithAssessments() {
     const tbody = document.querySelector('#up3TeamsTable tbody');
-    tbody.innerHTML = '<tr><td colspan="9" class="text-center text-muted">Loading...</td></tr>';
+    tbody.innerHTML = '<tr><td colspan="11" class="text-center text-muted">Loading...</td></tr>';
 
     try {
         const vendorIds = window.up3VendorIds || [];
         if (vendorIds.length === 0) {
-            tbody.innerHTML = '<tr><td colspan="9" class="text-center text-muted">Tidak ada vendor</td></tr>';
+            tbody.innerHTML = '<tr><td colspan="11" class="text-center text-muted">Tidak ada vendor</td></tr>';
             return;
         }
 
@@ -394,7 +384,7 @@ async function loadUP3TeamsWithAssessments() {
         if (teamsError) throw teamsError;
 
         if (!teams || teams.length === 0) {
-            tbody.innerHTML = '<tr><td colspan="9" class="text-center text-muted">Tidak ada kendaraan terdaftar</td></tr>';
+            tbody.innerHTML = '<tr><td colspan="11" class="text-center text-muted">Tidak ada kendaraan terdaftar</td></tr>';
             return;
         }
 
@@ -414,7 +404,7 @@ async function loadUP3TeamsWithAssessments() {
         if (assessmentIds.length > 0) {
             const { data: itemsData } = await client
                 .from('assessment_items')
-                .select('assessment_id, score_item, layak, tidak_layak')
+                .select('assessment_id, score_item, layak, tidak_layak, berfungsi, tidak_berfungsi')
                 .in('assessment_id', assessmentIds);
             items = itemsData || [];
         }
@@ -429,24 +419,29 @@ async function loadUP3TeamsWithAssessments() {
                 itemCount: 0,
                 layak: 0,
                 tidakLayak: 0,
+                berfungsi: 0,
+                tidakBerfungsi: 0,
                 lastAssessment: null
             };
         });
 
         assessments?.forEach(a => {
             if (teamStats[a.team_id]) {
-                teamStats[a.team_id].assessmentCount++;
-                if (!teamStats[a.team_id].lastAssessment) {
-                    teamStats[a.team_id].lastAssessment = a.tanggal_penilaian;
-                }
+                // Only take the latest (first) assessment per team
+                if (teamStats[a.team_id].lastAssessment) return;
 
-                // Add items
+                teamStats[a.team_id].assessmentCount = 1;
+                teamStats[a.team_id].lastAssessment = a.tanggal_penilaian;
+
+                // Add items from latest assessment only
                 const assessmentItems = items.filter(i => i.assessment_id === a.id);
                 assessmentItems.forEach(item => {
                     teamStats[a.team_id].itemCount++;
                     teamStats[a.team_id].totalScore += item.score_item || 0;
                     teamStats[a.team_id].layak += item.layak || 0;
                     teamStats[a.team_id].tidakLayak += item.tidak_layak || 0;
+                    teamStats[a.team_id].berfungsi += item.berfungsi || 0;
+                    teamStats[a.team_id].tidakBerfungsi += item.tidak_berfungsi || 0;
                 });
             }
         });
@@ -455,7 +450,11 @@ async function loadUP3TeamsWithAssessments() {
         const rows = Object.values(teamStats).map(t => {
             const avgScore = t.itemCount > 0 ? (t.totalScore / t.itemCount).toFixed(2) : '-';
             const scoreClass = avgScore >= 1.5 ? 'success' : avgScore >= 0 ? 'warning' : 'danger';
-            const lastDate = t.lastAssessment ? new Date(t.lastAssessment).toLocaleDateString('id-ID') : '-';
+            let lastDate = '-';
+            if (t.lastAssessment) {
+                const lastDateObj = new Date(t.lastAssessment);
+                lastDate = String(lastDateObj.getDate()).padStart(2, '0') + '-' + String(lastDateObj.getMonth() + 1).padStart(2, '0') + '-' + lastDateObj.getFullYear();
+            }
             const status = t.assessmentCount > 0
                 ? (avgScore >= 1.5 ? 'Baik' : avgScore >= 0 ? 'Cukup' : 'Buruk')
                 : 'Belum Dinilai';
@@ -472,14 +471,16 @@ async function loadUP3TeamsWithAssessments() {
                     <td class="text-center"><span class="badge bg-${scoreClass}">${avgScore}</span></td>
                     <td class="text-center text-success">${t.layak || 0}</td>
                     <td class="text-center text-danger">${t.tidakLayak || 0}</td>
+                    <td class="text-center text-success">${t.berfungsi || 0}</td>
+                    <td class="text-center text-danger">${t.tidakBerfungsi || 0}</td>
                     <td class="text-center">${lastDate}</td>
                     <td class="text-center"><span class="badge bg-${statusClass}">${status}</span></td>
                 </tr>
             `;
         }).join('');
 
-        tbody.innerHTML = rows || '<tr><td colspan="9" class="text-center text-muted">Tidak ada data</td></tr>';
+        tbody.innerHTML = rows || '<tr><td colspan="11" class="text-center text-muted">Tidak ada data</td></tr>';
     } catch (error) {
-        tbody.innerHTML = '<tr><td colspan="9" class="text-center text-danger">Error loading data</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="11" class="text-center text-danger">Error loading data</td></tr>';
     }
 }

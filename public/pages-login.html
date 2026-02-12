@@ -151,8 +151,27 @@
 
           if (result.success) {
             console.log('✅ Login berhasil');
-            // Redirect ke dashboard
-            window.location.href = 'index.html';
+
+            // Get user profile to check role
+            const userWithProfile = await getCurrentUserWithProfile();
+            if (userWithProfile && userWithProfile.profile) {
+              const role = userWithProfile.profile.role;
+              // Save role to localStorage
+              saveUserRoleToStorage(userWithProfile.profile);
+
+              // Redirect based on role
+              if (role === 'petugas') {
+                // Petugas only access form penilaian
+                console.log('👷 Petugas role - redirect ke form penilaian');
+                window.location.href = 'forms-penilaian.html';
+              } else {
+                // Other roles go to dashboard
+                window.location.href = 'index.html';
+              }
+            } else {
+              // Fallback to dashboard if no profile
+              window.location.href = 'index.html';
+            }
           } else {
             showError(result.error || 'Login gagal');
           }

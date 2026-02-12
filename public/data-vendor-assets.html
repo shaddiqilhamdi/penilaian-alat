@@ -1,0 +1,505 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8">
+    <meta content="width=device-width, initial-scale=1.0" name="viewport">
+
+    <title>Inventaris Vendor - Penilaian Alat Kerja</title>
+    <meta content="" name="description">
+    <meta content="" name="keywords">
+
+    <!-- Favicons -->
+    <link href="assets/img/favicon.svg" rel="icon">
+
+    <!-- Google Fonts -->
+    <link href="https://fonts.gstatic.com" rel="preconnect">
+    <link
+        href="https://fonts.googleapis.com/css?family=Open+Sans:300,300i,400,400i,600,600i,700,700i|Nunito:300,300i,400,400i,600,600i,700,700i|Poppins:300,300i,400,400i,500,500i,600,600i,700,700i"
+        rel="stylesheet">
+
+    <!-- Vendor CSS Files -->
+    <link href="assets/vendor/bootstrap/css/bootstrap.min.css" rel="stylesheet">
+    <link href="assets/vendor/bootstrap-icons/bootstrap-icons.css" rel="stylesheet">
+    <link href="assets/vendor/boxicons/css/boxicons.min.css" rel="stylesheet">
+    <link href="assets/vendor/remixicon/remixicon.css" rel="stylesheet">
+    <link href="assets/vendor/simple-datatables/style.css" rel="stylesheet">
+
+    <!-- Template Main CSS File -->
+    <link href="assets/css/style.css" rel="stylesheet">
+
+    <!-- Custom Styles -->
+    <style>
+        body {
+            font-size: 13px;
+        }
+
+        .card-title {
+            font-size: 14px;
+            font-weight: 600;
+        }
+
+        .btn-sm {
+            padding: 0.2rem 0.4rem;
+            font-size: 11px;
+        }
+
+        .form-control,
+        .form-select {
+            font-size: 13px;
+            padding: 0.375rem 0.75rem;
+        }
+
+        .form-label {
+            font-size: 13px;
+            margin-bottom: 0.25rem;
+        }
+
+        /* Filter section */
+        .filter-section {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 15px;
+        }
+
+        .filter-section .form-label {
+            font-weight: 600;
+        }
+
+        /* Table styling */
+        .table {
+            font-size: 12px;
+        }
+
+        .table th {
+            font-weight: 600;
+            background-color: #f8f9fa;
+            white-space: nowrap;
+        }
+
+        .table td {
+            vertical-align: middle;
+        }
+
+        /* Score badges */
+        .score-badge {
+            font-size: 11px;
+            padding: 3px 8px;
+            border-radius: 4px;
+        }
+
+        .score-good {
+            background-color: #d4edda;
+            color: #155724;
+        }
+
+        .score-warning {
+            background-color: #fff3cd;
+            color: #856404;
+        }
+
+        .score-bad {
+            background-color: #f8d7da;
+            color: #721c24;
+        }
+
+        /* Stats cards */
+        .stats-card {
+            border-radius: 8px;
+            padding: 15px;
+            text-align: center;
+        }
+
+        .stats-card .stats-value {
+            font-size: 24px;
+            font-weight: 700;
+        }
+
+        .stats-card .stats-label {
+            font-size: 12px;
+            color: #6c757d;
+        }
+    </style>
+
+    <!-- Role-based menu visibility -->
+    <script>
+        (function () {
+            var role = localStorage.getItem('user_role') || '';
+            if (role) {
+                document.documentElement.className += ' role-' + role;
+            }
+            // Petugas guard - redirect to form only
+            if (role === 'petugas') {
+                window.location.href = 'forms-penilaian.html';
+            }
+        })();
+    </script>
+
+</head>
+
+<body>
+
+    <!-- ======= Header ======= -->
+    <header id="header" class="header fixed-top d-flex align-items-center">
+
+        <div class="d-flex align-items-center justify-content-between">
+            <a href="index.html" class="logo d-flex align-items-center">
+                <i class="bi bi-shield-check fs-4 text-primary me-2"></i>
+                <span class="d-none d-lg-block">Penilaian Alat Kerja</span>
+            </a>
+            <i class="bi bi-list toggle-sidebar-btn"></i>
+        </div><!-- End Logo -->
+
+        <div class="search-bar">
+            <form class="search-form d-flex align-items-center" method="POST" action="#">
+                <input type="text" name="query" placeholder="Search" title="Enter search keyword">
+                <button type="submit" title="Search"><i class="bi bi-search"></i></button>
+            </form>
+        </div><!-- End Search Bar -->
+
+        <nav class="header-nav ms-auto">
+            <ul class="d-flex align-items-center">
+
+                <li class="nav-item d-block d-lg-none">
+                    <a class="nav-link nav-icon search-bar-toggle " href="#">
+                        <i class="bi bi-search"></i>
+                    </a>
+                </li><!-- End Search Icon-->
+
+                <li class="nav-item dropdown pe-3">
+
+                    <a class="nav-link nav-profile d-flex align-items-center pe-0" href="#" data-bs-toggle="dropdown">
+                        <div id="navProfileInitial"
+                            class="rounded-circle bg-primary text-white d-flex align-items-center justify-content-center"
+                            style="width: 36px; height: 36px; font-size: 16px; font-weight: 600;">?</div>
+                        <span id="navProfileName" class="d-none d-md-block dropdown-toggle ps-2">Loading...</span>
+                    </a><!-- End Profile Image Icon -->
+
+                    <ul class="dropdown-menu dropdown-menu-end dropdown-menu-arrow profile">
+                        <li class="dropdown-header">
+                            <h6 id="navProfileFullName">Loading...</h6>
+                            <span id="navProfileRole">-</span>
+                        </li>
+                        <li>
+                            <hr class="dropdown-divider">
+                        </li>
+
+                        <li>
+                            <a class="dropdown-item d-flex align-items-center" href="users-profile.html">
+                                <i class="bi bi-person"></i>
+                                <span>My Profile</span>
+                            </a>
+                        </li>
+                        <li>
+                            <hr class="dropdown-divider">
+                        </li>
+
+                        <li>
+                            <a class="dropdown-item d-flex align-items-center" href="#" id="logoutBtn">
+                                <i class="bi bi-box-arrow-right"></i>
+                                <span>Sign Out</span>
+                            </a>
+                        </li>
+
+                    </ul><!-- End Profile Dropdown Items -->
+                </li><!-- End Profile Nav -->
+
+            </ul>
+        </nav><!-- End Icons Navigation -->
+
+    </header><!-- End Header -->
+
+    <!-- ======= Sidebar ======= -->
+    <aside id="sidebar" class="sidebar">
+
+        <ul class="sidebar-nav" id="sidebar-nav">
+
+            <li class="nav-item">
+                <a class="nav-link collapsed" href="index.html">
+                    <i class="bi bi-grid"></i>
+                    <span>Dashboard</span>
+                </a>
+            </li><!-- End Dashboard Nav -->
+
+            <li class="nav-heading">Penilaian</li>
+
+            <li class="nav-item">
+                <a class="nav-link collapsed" data-bs-target="#forms-nav" data-bs-toggle="collapse" href="#">
+                    <i class="bi bi-menu-button-wide"></i><span>Formulir</span><i
+                        class="bi bi-chevron-down ms-auto"></i>
+                </a>
+                <ul id="forms-nav" class="nav-content collapse" data-bs-parent="#sidebar-nav">
+                    <li>
+                        <a href="forms-penilaian.html">
+                            <i class="bi bi-circle"></i><span>Form Penilaian</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="forms-data-penilaian.html">
+                            <i class="bi bi-circle"></i><span>Riwayat Penilaian</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="data-standar-peralatan.html">
+                            <i class="bi bi-circle"></i><span>Standar Peralatan</span>
+                        </a>
+                    </li>
+                </ul>
+            </li><!-- End Components Nav -->
+
+            <li class="nav-heading">Pengaturan</li>
+
+            <li class="nav-item">
+                <a class="nav-link" data-bs-target="#data-nav" data-bs-toggle="collapse" href="#">
+                    <i class="bi bi-journal-text"></i><span>Data Master</span><i class="bi bi-chevron-down ms-auto"></i>
+                </a>
+                <ul id="data-nav" class="nav-content collapse show" data-bs-parent="#sidebar-nav">
+                    <li id="menu-unit"><a href="data-unit.html">
+                            <i class="bi bi-circle"></i><span>Unit</span>
+                        </a>
+                    </li>
+                    <li id="menu-vendor">
+                        <a href="data-vendor.html">
+                            <i class="bi bi-circle"></i><span>Pelaksana</span>
+                        </a>
+                    </li>
+                    <li id="menu-peruntukan">
+                        <a href="data-peruntukan.html">
+                            <i class="bi bi-circle"></i><span>Peruntukan</span>
+                        </a>
+                    </li>
+                    <li id="menu-peralatan">
+                        <a href="data-peralatan.html">
+                            <i class="bi bi-circle"></i><span>Peralatan</span>
+                        </a>
+                    </li>
+                    <li id="menu-kendaraan">
+                        <a href="data-kendaraan.html">
+                            <i class="bi bi-circle"></i><span>Kendaraan</span>
+                        </a>
+                    </li>
+                    <li id="menu-personil">
+                        <a href="data-personil.html">
+                            <i class="bi bi-circle"></i><span>Personil</span>
+                        </a>
+                    </li>
+                    <li id="menu-vendor-assets">
+                        <a href="data-vendor-assets.html" class="active">
+                            <i class="bi bi-circle"></i><span>Inventaris Vendor</span>
+                        </a>
+                    </li>
+                </ul>
+            </li><!-- End Pengaturan Nav -->
+
+            <li class="nav-item">
+                <a class="nav-link collapsed" data-bs-target="#users-nav" data-bs-toggle="collapse" href="#">
+                    <i class="bi bi-layout-text-window-reverse"></i><span>Pengguna</span><i
+                        class="bi bi-chevron-down ms-auto"></i>
+                </a>
+                <ul id="users-nav" class="nav-content collapse " data-bs-parent="#sidebar-nav">
+                    <li>
+                        <a href="users-tambah-pengguna.html">
+                            <i class="bi bi-circle"></i><span>Tambah Pengguna</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="users-data-pengguna.html">
+                            <i class="bi bi-circle"></i><span>Daftar Pengguna</span>
+                        </a>
+                    </li>
+                </ul>
+            </li><!-- End Users Nav -->
+
+            <li class="nav-heading">Profil</li>
+
+            <li class="nav-item">
+                <a class="nav-link collapsed" href="users-profile.html">
+                    <i class="bi bi-person"></i>
+                    <span>Profil</span>
+                </a>
+            </li><!-- End Profile Page Nav -->
+
+            <li class="nav-item" id="menu-log">
+                <a class="nav-link collapsed" href="users-log.html">
+                    <i class="bi bi-file-earmark-text"></i>
+                    <span>Log</span>
+                </a>
+            </li><!-- End Log Page Nav -->
+
+        </ul>
+
+    </aside><!-- End Sidebar-->
+
+    <main id="main" class="main">
+
+        <div class="pagetitle">
+            <h1>Inventaris Vendor</h1>
+            <nav>
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a href="index.html">Home</a></li>
+                    <li class="breadcrumb-item">Data Master</li>
+                    <li class="breadcrumb-item active">Inventaris Vendor</li>
+                </ol>
+            </nav>
+        </div><!-- End Page Title -->
+
+        <section class="section">
+            <!-- Stats Row -->
+            <div class="row mb-3" id="statsRow">
+                <div class="col-md-3">
+                    <div class="card stats-card bg-light">
+                        <div class="stats-value text-primary" id="statsTotalAssets">0</div>
+                        <div class="stats-label">Total Aset</div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="card stats-card bg-light">
+                        <div class="stats-value text-success" id="statsGoodAssets">0</div>
+                        <div class="stats-label">Kondisi Baik</div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="card stats-card bg-light">
+                        <div class="stats-value text-warning" id="statsWarningAssets">0</div>
+                        <div class="stats-label">Perlu Perhatian</div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="card stats-card bg-light">
+                        <div class="stats-value text-danger" id="statsBadAssets">0</div>
+                        <div class="stats-label">Tidak Layak</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="row">
+                <div class="col-lg-12">
+
+                    <div class="card">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <h5 class="card-title">Inventaris Vendor</h5>
+                                <button class="btn btn-sm btn-outline-primary" onclick="loadAllAssets()">
+                                    <i class="bi bi-arrow-clockwise"></i> Refresh
+                                </button>
+                            </div>
+
+                            <!-- Filter Section -->
+                            <div class="filter-section">
+                                <div class="row align-items-end">
+                                    <div class="col-md-3">
+                                        <label for="filterVendor" class="form-label">Vendor</label>
+                                        <select class="form-select form-select-sm" id="filterVendor">
+                                            <option value="">Semua Vendor</option>
+                                        </select>
+                                    </div>
+                                    <div class="col-md-3">
+                                        <label for="filterPeruntukan" class="form-label">Peruntukan</label>
+                                        <select class="form-select form-select-sm" id="filterPeruntukan">
+                                            <option value="">Semua Peruntukan</option>
+                                        </select>
+                                    </div>
+                                    <div class="col-md-2">
+                                        <label for="filterKondisi" class="form-label">Kondisi</label>
+                                        <select class="form-select form-select-sm" id="filterKondisi">
+                                            <option value="">Semua</option>
+                                            <option value="good">Baik (2)</option>
+                                            <option value="warning">Perhatian (0-1)</option>
+                                            <option value="bad">Tidak Layak (&lt;0)</option>
+                                        </select>
+                                    </div>
+                                    <div class="col-md-2">
+                                        <button class="btn btn-primary btn-sm w-100" onclick="applyFilters()">
+                                            <i class="bi bi-funnel"></i> Filter
+                                        </button>
+                                    </div>
+                                    <div class="col-md-2">
+                                        <button class="btn btn-outline-secondary btn-sm w-100" onclick="clearFilters()">
+                                            <i class="bi bi-x-circle"></i> Reset
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Loading State -->
+                            <div id="loadingState" class="text-center py-4">
+                                <div class="spinner-border text-primary" role="status">
+                                    <span class="visually-hidden">Loading...</span>
+                                </div>
+                                <p class="mt-2 text-muted">Memuat data aset vendor...</p>
+                            </div>
+
+                            <!-- Empty State -->
+                            <div id="emptyState" class="text-center py-4" style="display: none;">
+                                <i class="bi bi-inbox" style="font-size: 48px; color: #ccc;"></i>
+                                <p class="mt-2 text-muted">Tidak ada data aset vendor</p>
+                                <p class="small text-muted">Data akan muncul setelah melakukan penilaian</p>
+                            </div>
+
+                            <!-- Data Table -->
+                            <div id="tableContainer" style="display: none;">
+                                <div class="table-responsive">
+                                    <table class="table table-sm table-hover table-bordered" id="assetsTable">
+                                        <thead class="table-light">
+                                            <tr>
+                                                <th width="40">#</th>
+                                                <th>Vendor</th>
+                                                <th>Peruntukan</th>
+                                                <th>Team/Personil</th>
+                                                <th>Peralatan</th>
+                                                <th class="text-center">Qty</th>
+                                                <th class="text-center">Fisik</th>
+                                                <th class="text-center">Fungsi</th>
+                                                <th class="text-center">Kontrak</th>
+                                                <th class="text-center">Nilai</th>
+                                                <th>Penilaian Terakhir</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody id="assetsTableBody">
+                                            <!-- Data will be populated by JavaScript -->
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+        </section>
+
+    </main><!-- End #main -->
+
+    <!-- ======= Footer ======= -->
+    <footer id="footer" class="footer">
+    </footer><!-- End Footer -->
+
+    <a href="#" class="back-to-top d-flex align-items-center justify-content-center"><i
+            class="bi bi-arrow-up-short"></i></a>
+
+    <!-- Vendor JS Files -->
+    <script src="assets/vendor/bootstrap/js/bootstrap.bundle.min.js"></script>
+
+    <!-- Supabase & SweetAlert2 -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+    <!-- Supabase Config & API -->
+    <script src="assets/js/config/supabase-client.js"></script>
+    <script src="assets/js/auth/supabase-auth.js"></script>
+    <script src="assets/js/api/profiles.js"></script>
+    <script src="assets/js/api/vendors.js"></script>
+    <script src="assets/js/api/peruntukan.js"></script>
+    <script src="assets/js/api/vendor-assets.js"></script>
+
+    <!-- Template Main JS File -->
+    <script src="assets/js/main.js"></script>
+
+    <!-- Page Specific JS File -->
+    <script src="assets/js/data-vendor-assets.js"></script>
+
+</body>
+
+</html>

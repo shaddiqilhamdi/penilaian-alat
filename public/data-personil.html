@@ -37,6 +37,10 @@
       if (role) {
         document.documentElement.className += ' role-' + role;
       }
+      // Petugas guard - redirect to form only
+      if (role === 'petugas') {
+        window.location.href = 'forms-penilaian.html';
+      }
     })();
   </script>
 
@@ -176,12 +180,12 @@
           </li>
           <li>
             <a href="forms-data-penilaian.html">
-              <i class="bi bi-circle"></i><span>Data Penilaian</span>
+              <i class="bi bi-circle"></i><span>Riwayat Penilaian</span>
             </a>
           </li>
           <li>
             <a href="data-standar-peralatan.html">
-              <i class="bi bi-circle"></i><span>Data Peralatan</span>
+              <i class="bi bi-circle"></i><span>Standar Peralatan</span>
             </a>
           </li>
 
@@ -199,29 +203,34 @@
               <i class="bi bi-circle"></i><span>Unit</span>
             </a>
           </li>
-          <li>
+          <li id="menu-vendor">
             <a href="data-vendor.html">
-              <i class="bi bi-circle"></i><span>Vendor Pelaksana</span>
+              <i class="bi bi-circle"></i><span>Pelaksana</span>
             </a>
           </li>
-          <li>
+          <li id="menu-peruntukan">
             <a href="data-peruntukan.html">
               <i class="bi bi-circle"></i><span>Peruntukan</span>
             </a>
           </li>
-          <li>
+          <li id="menu-peralatan">
             <a href="data-peralatan.html">
               <i class="bi bi-circle"></i><span>Peralatan</span>
             </a>
           </li>
-          <li>
+          <li id="menu-kendaraan">
             <a href="data-kendaraan.html">
               <i class="bi bi-circle"></i><span>Kendaraan</span>
             </a>
           </li>
-          <li>
+          <li id="menu-personil">
             <a href="data-personil.html" class="active">
               <i class="bi bi-circle"></i><span>Personil</span>
+            </a>
+          </li>
+          <li id="menu-vendor-assets">
+            <a href="data-vendor-assets.html">
+              <i class="bi bi-circle"></i><span>Inventaris Vendor</span>
             </a>
           </li>
 
@@ -256,7 +265,7 @@
         </a>
       </li><!-- End Profile Page Nav -->
 
-      <li class="nav-item">
+      <li class="nav-item" id="menu-log">
         <a class="nav-link collapsed" href="users-log.html">
           <i class="bi bi-file-earmark-text"></i>
           <span>Log</span>

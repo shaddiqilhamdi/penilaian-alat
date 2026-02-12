@@ -60,9 +60,6 @@ const FormPenilaianManager = {
                 if (selectedPeruntukan) {
                     if (selectedVendor && typeof loadEquipmentData === 'function') {
                         loadEquipmentData(selectedVendor, selectedPeruntukan);
-                    } else {
-                        console.log('Loading equipment without vendor filter');
-                        // Could call original equipment loading function here
                     }
                 }
             });
@@ -404,8 +401,39 @@ const FormPenilaianManager = {
         // Reset session info
         document.getElementById('modalTanggal').value = new Date().toISOString().split('T')[0];
         document.getElementById('modalShift').value = '';
-        document.getElementById('modalUnit').value = '';
-        document.getElementById('modalVendor').value = '';
+
+        // For Unit: Keep locked value for non-UID users
+        const unitSelect = document.getElementById('modalUnit');
+        const vendorSelect = document.getElementById('modalVendor');
+        const profile = window.currentProfile;
+        const isNonUIDUser = profile && profile.role && !profile.role.startsWith('uid_');
+        const isVendorLockedUser = profile && (profile.role === 'vendor_k3' || profile.role === 'petugas');
+
+        if (isNonUIDUser && profile.unit_code) {
+            // Non-UID users: Keep unit locked, reload vendors filtered by unit
+            unitSelect.value = profile.unit_code;
+
+            // Reload vendors filtered by user's unit
+            if (typeof filterVendorsByUnit === 'function') {
+                filterVendorsByUnit(profile.unit_code);
+            }
+        } else {
+            // UID users: Reset unit normally
+            unitSelect.value = '';
+        }
+
+        // For vendor_k3 and petugas: Keep vendor locked
+        if (isVendorLockedUser && profile.vendor_id && vendorSelect) {
+            // Keep the vendor value (it's already set and disabled)
+            // Just trigger personil reload
+            if (typeof loadPersonilData === 'function') {
+                loadPersonilData(profile.vendor_id);
+            }
+        } else {
+            // Other roles: Reset vendor
+            if (vendorSelect) vendorSelect.value = '';
+        }
+
         document.getElementById('modalJenis').value = '';
         document.getElementById('modalPeruntukan').value = '';
 
@@ -461,6 +489,25 @@ const FormPenilaianManager = {
                 </td>
             </tr>
         `;
+
+        // Clear equipment accordion for mobile
+        const accordion = document.getElementById('equipmentAccordion');
+        if (accordion) {
+            accordion.innerHTML = `
+                <div id="accordionLoadingRow" class="text-center py-5">
+                    <div class="d-flex flex-column align-items-center">
+                        <div class="bg-light rounded-circle p-4 mb-3">
+                            <i class="bi bi-inbox fs-1 text-muted"></i>
+                        </div>
+                        <h6 class="text-muted mb-2">Belum Ada Data Peralatan</h6>
+                        <p class="text-muted mb-0 small">
+                            <i class="bi bi-arrow-up me-1"></i>
+                            Lengkapi <strong>Informasi Sesi</strong> dan <strong>Detail Peruntukan</strong>
+                        </p>
+                    </div>
+                </div>
+            `;
+        }
 
         // Reset count badge
         const countBadge = document.getElementById('equipmentCountBadge');

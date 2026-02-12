@@ -5,11 +5,12 @@
 
 // Role definitions with permissions
 const ROLE_PERMISSIONS = {
-    uid_admin: ['uid_admin', 'uid_user', 'up3_admin', 'up3_user', 'vendor_k3'],
+    uid_admin: ['uid_admin', 'uid_user', 'up3_admin', 'up3_user', 'vendor_k3', 'petugas'],
     uid_user: ['uid_user', 'up3_admin', 'up3_user', 'vendor_k3'],
-    up3_admin: ['up3_user', 'vendor_k3'],
+    up3_admin: ['up3_user', 'vendor_k3', 'petugas'],
     up3_user: ['vendor_k3'],
-    vendor_k3: [] // vendor_k3 cannot add users
+    vendor_k3: ['petugas'], // vendor_k3 can only add petugas
+    petugas: [] // petugas cannot add users
 };
 
 const ROLE_LABELS = {
@@ -17,7 +18,8 @@ const ROLE_LABELS = {
     uid_user: 'UID User',
     up3_admin: 'UP3 Admin',
     up3_user: 'UP3 User',
-    vendor_k3: 'Vendor K3'
+    vendor_k3: 'Vendor K3',
+    petugas: 'Petugas'
 };
 
 // Global variables
@@ -236,7 +238,8 @@ function handleRoleChange(selectedRole) {
     const vendorFieldContainer = document.getElementById('vendorFieldContainer');
     const vendorSelect = document.getElementById('vendor_id');
 
-    if (selectedRole === 'vendor_k3') {
+    // Show vendor field for vendor_k3 and petugas roles
+    if (selectedRole === 'vendor_k3' || selectedRole === 'petugas') {
         vendorFieldContainer.style.display = 'block';
         vendorSelect.setAttribute('required', 'required');
     } else {

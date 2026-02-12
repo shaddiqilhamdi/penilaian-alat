@@ -195,60 +195,143 @@ async function loadUIDUnitRecapTable() {
     }
 }
 
+// Store equipment issues data globally for modal
+window.uidEquipmentIssuesData = {};
+
+/**
+ * Load equipment issues by unit - Query langsung dari vendor_assets
+ * Setiap baris di vendor_assets = 1 unit peralatan individual
+ * Data ini adalah single source of truth untuk kondisi peralatan
+ */
 async function loadUIDEquipmentIssuesByUnit() {
     const tbody = document.querySelector('#uidIssuesByUnitTable tbody');
     tbody.innerHTML = '<tr><td colspan="6" class="text-center text-muted">Loading...</td></tr>';
 
     try {
         const client = getSupabaseClient();
-        const now = new Date();
-        const firstDayOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
-        const lastDayOfMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0, 23, 59, 59);
 
-        const { data: recentAssessments, error: assessError } = await client
-            .from('assessments')
-            .select('id, vendor_id, peruntukan_id, vendors(unit_code, unit_name), peruntukan(jenis, deskripsi)')
-            .gte('tanggal_penilaian', firstDayOfMonth.toISOString())
-            .lte('tanggal_penilaian', lastDayOfMonth.toISOString());
-
-        if (assessError) throw assessError;
-
-        if (!recentAssessments || recentAssessments.length === 0) {
-            tbody.innerHTML = '<tr><td colspan="6" class="text-center text-muted">Tidak ada penilaian bulan ini</td></tr>';
-            return;
-        }
-
-        const assessmentIds = recentAssessments.map(a => a.id);
-        const { data: items, error } = await client
-            .from('assessment_items')
-            .select('id, kondisi_fisik, kondisi_fungsi, assessment_id')
-            .in('assessment_id', assessmentIds)
-            .or('kondisi_fisik.eq.-1,kondisi_fungsi.eq.-1');
+        // Query langsung dari vendor_assets yang bermasalah
+        // kondisi_fisik = -1 (Tidak Layak) atau kondisi_fungsi = -1 (Tidak Berfungsi)
+        const { data: issueAssets, error } = await client
+            .from('vendor_assets')
+            .select(`
+                id,
+                vendor_id,
+                peruntukan_id,
+                team_id,
+                personnel_id,
+                equipment_id,
+                kondisi_fisik,
+                kondisi_fungsi,
+                kesesuaian_kontrak,
+                nilai,
+                realisasi_qty,
+                last_assessment_date,
+                vendors(id, vendor_name, unit_code, unit_name),
+                peruntukan(id, jenis, deskripsi),
+                teams(id, nomor_polisi, category),
+                personnel(id, nama_personil),
+                equipment_master(id, nama_alat, kategori, satuan)
+            `)
+            .or('kondisi_fisik.eq.-1,kondisi_fungsi.eq.-1')
+            .not('last_assessment_date', 'is', null)
+            .order('last_assessment_date', { ascending: false });
 
         if (error) throw error;
 
-        const unitIssues = {};
-        items.forEach(item => {
-            const assessment = recentAssessments.find(a => a.id === item.assessment_id);
-            if (!assessment) return;
+        if (!issueAssets || issueAssets.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="6" class="text-center text-muted">Tidak ada equipment bermasalah</td></tr>';
+            window.uidEquipmentIssuesData = {};
+            return;
+        }
 
-            const unitCode = assessment.vendors?.unit_code || 'Unknown';
-            const unitName = assessment.vendors?.unit_name || unitCode;
-            const isPersonal = assessment.peruntukan?.jenis === 'Personal';
+        // Query equipment_standards untuk mendapatkan standar_qty
+        // Build unique keys untuk query
+        const standardKeys = [...new Set(issueAssets.map(a =>
+            `${a.vendor_id}_${a.peruntukan_id}_${a.equipment_id}`
+        ))];
+
+        const vendorIds = [...new Set(issueAssets.map(a => a.vendor_id))];
+        const peruntukanIds = [...new Set(issueAssets.map(a => a.peruntukan_id))];
+        const equipmentIds = [...new Set(issueAssets.map(a => a.equipment_id))];
+
+        const { data: standards } = await client
+            .from('equipment_standards')
+            .select('vendor_id, peruntukan_id, equipment_id, required_qty')
+            .in('vendor_id', vendorIds)
+            .in('peruntukan_id', peruntukanIds)
+            .in('equipment_id', equipmentIds);
+
+        // Buat map untuk lookup standar
+        const standardsMap = {};
+        (standards || []).forEach(s => {
+            const key = `${s.vendor_id}_${s.peruntukan_id}_${s.equipment_id}`;
+            standardsMap[key] = s.required_qty || 0;
+        });
+
+        // Group by unit dan hitung
+        const unitIssues = {};
+        const unitIssuesDetail = {};
+
+        issueAssets.forEach(asset => {
+            const unitCode = asset.vendors?.unit_code || 'Unknown';
+            const unitName = asset.vendors?.unit_name || 'Unknown';
+            const isPersonal = asset.peruntukan?.jenis === 'Personal';
 
             if (!unitIssues[unitCode]) {
-                unitIssues[unitCode] = { name: unitName, tlPersonal: 0, tlRegu: 0, tbPersonal: 0, tbRegu: 0 };
+                unitIssues[unitCode] = {
+                    name: unitName,
+                    tlPersonal: 0,
+                    tlRegu: 0,
+                    tbPersonal: 0,
+                    tbRegu: 0,
+                    uniqueItems: 0
+                };
+                unitIssuesDetail[unitCode] = [];
             }
 
-            if (item.kondisi_fisik === -1) {
+            // Simpan data lengkap untuk modal
+            // Lookup standar dari equipment_standards
+            const standardKey = `${asset.vendor_id}_${asset.peruntukan_id}_${asset.equipment_id}`;
+            const standarQty = standardsMap[standardKey] || 0;
+
+            unitIssuesDetail[unitCode].push({
+                id: asset.id,
+                equipmentName: asset.equipment_master?.nama_alat || 'Unknown',
+                vendorName: asset.vendors?.vendor_name || 'Unknown',
+                unitCode: unitCode,
+                unitName: unitName,
+                peruntukan: asset.peruntukan?.deskripsi || asset.peruntukan_id || '-',
+                isPersonal: isPersonal,
+                // Tim/Personil: Nopol untuk Regu, Nama untuk Personal
+                targetName: isPersonal
+                    ? (asset.personnel?.nama_personil || '-')
+                    : (asset.teams?.nomor_polisi || '-'),
+                tanggal: asset.last_assessment_date,
+                standar: standarQty,
+                qty: asset.realisasi_qty || 0,
+                kondisiFisik: asset.kondisi_fisik,
+                kondisiFungsi: asset.kondisi_fungsi,
+                kesesuaianKontrak: asset.kesesuaian_kontrak,
+                scoreItem: asset.nilai
+            });
+
+            // Hitung item unik
+            unitIssues[unitCode].uniqueItems++;
+
+            // Hitung per kategori masalah
+            if (asset.kondisi_fisik === -1) {
                 if (isPersonal) unitIssues[unitCode].tlPersonal++;
                 else unitIssues[unitCode].tlRegu++;
             }
-            if (item.kondisi_fungsi === -1) {
+            if (asset.kondisi_fungsi === -1) {
                 if (isPersonal) unitIssues[unitCode].tbPersonal++;
                 else unitIssues[unitCode].tbRegu++;
             }
         });
+
+        // Simpan data detail ke global variable
+        window.uidEquipmentIssuesData = unitIssuesDetail;
 
         if (Object.keys(unitIssues).length === 0) {
             tbody.innerHTML = '<tr><td colspan="6" class="text-center text-muted">Tidak ada equipment bermasalah</td></tr>';
@@ -256,27 +339,81 @@ async function loadUIDEquipmentIssuesByUnit() {
         }
 
         const rows = Object.entries(unitIssues)
-            .sort((a, b) => {
-                const totalA = a[1].tlPersonal + a[1].tlRegu + a[1].tbPersonal + a[1].tbRegu;
-                const totalB = b[1].tlPersonal + b[1].tlRegu + b[1].tbPersonal + b[1].tbRegu;
-                return totalB - totalA;
-            })
+            .sort((a, b) => b[1].uniqueItems - a[1].uniqueItems)
             .map(([unitId, data]) => {
-                const total = data.tlPersonal + data.tlRegu + data.tbPersonal + data.tbRegu;
-                return `<tr>
+                return `<tr style="cursor: pointer;" onclick="showEquipmentIssuesModal('${unitId}')">
                     <td><strong>${unitId}</strong></td>
                     <td class="text-center"><span class="badge bg-danger">${data.tlPersonal}</span></td>
-                    <td class="text-center"><span class="badge bg-danger">${data.tlRegu}</span></td>
                     <td class="text-center"><span class="badge bg-warning">${data.tbPersonal}</span></td>
+                    <td class="text-center"><span class="badge bg-danger">${data.tlRegu}</span></td>
                     <td class="text-center"><span class="badge bg-warning">${data.tbRegu}</span></td>
-                    <td class="text-center"><strong>${total}</strong></td>
+                    <td class="text-center"><strong>${data.uniqueItems}</strong></td>
                 </tr>`;
             }).join('');
 
         tbody.innerHTML = rows;
     } catch (error) {
+        console.error('Error loading equipment issues from vendor_assets:', error);
         tbody.innerHTML = '<tr><td colspan="6" class="text-center text-danger">Error loading data</td></tr>';
     }
+}
+
+// Function to show equipment issues modal
+function showEquipmentIssuesModal(unitCode) {
+    const data = window.uidEquipmentIssuesData[unitCode];
+    if (!data || data.length === 0) return;
+
+    // Set modal title
+    document.getElementById('modalUnitCode').textContent = unitCode;
+    document.getElementById('modalTotalItems').textContent = data.length + ' item';
+
+    // Render table rows
+    const tbody = document.getElementById('tbody-equipment-issues');
+
+    const rows = data.map((item, index) => {
+        const fisikClass = item.kondisiFisik === 0 ? 'success' : 'danger';
+        const fisikText = item.kondisiFisik === 0 ? 'Layak' : 'Tidak Layak';
+        const fungsiClass = item.kondisiFungsi === 0 ? 'success' : 'warning';
+        const fungsiText = item.kondisiFungsi === 0 ? 'Baik' : 'Tidak Baik';
+        const kontrakClass = item.kesesuaianKontrak >= 2 ? 'success' : 'danger';
+        const kontrakText = item.kesesuaianKontrak >= 2 ? 'Sesuai' : 'Tidak Sesuai';
+
+        // Handle nilai dari vendor_assets (bisa null) - format 2 decimal
+        const nilaiScore = item.scoreItem ?? 0;
+        const nilaiClass = nilaiScore >= 1 ? 'success' : nilaiScore >= 0 ? 'warning' : 'danger';
+        const nilaiDisplay = item.scoreItem !== null && item.scoreItem !== undefined
+            ? Number(item.scoreItem).toFixed(2)
+            : '-';
+
+        // Format standar dan qty
+        const standarDisplay = item.standar !== null && item.standar !== undefined ? item.standar : 0;
+        const qtyDisplay = item.qty !== null && item.qty !== undefined ? item.qty : 0;
+
+        const tanggalFormatted = item.tanggal ? new Date(item.tanggal).toLocaleDateString('id-ID', {
+            day: '2-digit', month: '2-digit', year: 'numeric',
+            hour: '2-digit', minute: '2-digit'
+        }) : '-';
+
+        return `<tr>
+            <td class="text-center">${index + 1}</td>
+            <td>${item.peruntukan}</td>
+            <td>${item.targetName}</td>
+            <td>${item.equipmentName}</td>
+            <td class="text-center">${standarDisplay}</td>
+            <td class="text-center">${qtyDisplay}</td>
+            <td class="text-center"><span class="badge bg-${fisikClass}">${fisikText}</span></td>
+            <td class="text-center"><span class="badge bg-${fungsiClass}">${fungsiText}</span></td>
+            <td class="text-center"><span class="badge bg-${kontrakClass}">${kontrakText}</span></td>
+            <td class="text-center"><span class="badge bg-${nilaiClass}">${nilaiDisplay}</span></td>
+            <td class="text-center text-success"><small>${tanggalFormatted}</small></td>
+        </tr>`;
+    }).join('');
+
+    tbody.innerHTML = rows || '<tr><td colspan="11" class="text-center text-muted py-3">Tidak ada data</td></tr>';
+
+    // Show modal
+    const modal = new bootstrap.Modal(document.getElementById('equipmentIssuesModal'));
+    modal.show();
 }
 
 async function loadUIDComparisonChart() {

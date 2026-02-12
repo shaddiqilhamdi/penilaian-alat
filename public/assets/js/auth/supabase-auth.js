@@ -211,6 +211,51 @@ function getUserRoleFromStorage() {
 }
 
 /**
+ * Role Guard: Check if current user is 'petugas' and redirect to form only page
+ * Call this on pages that petugas should NOT access
+ * @param {string} allowedPage - The only page petugas can access (default: 'forms-penilaian.html')
+ */
+function checkPetugasRoleGuard(allowedPage = 'forms-penilaian.html') {
+    const role = getUserRoleFromStorage();
+    const currentPage = window.location.pathname.split('/').pop() || 'index.html';
+
+    // If user is petugas and not on allowed page, redirect
+    if (role === 'petugas' && currentPage !== allowedPage) {
+        console.log('🚫 Petugas role detected - redirecting to form penilaian');
+        window.location.href = allowedPage;
+        return true; // Redirecting
+    }
+    return false; // Not redirecting
+}
+
+/**
+ * Check if current user has access to a page based on role
+ * @param {string[]} allowedRoles - Array of roles allowed to access this page
+ * @param {string} redirectTo - Where to redirect if not allowed
+ */
+function checkRoleAccess(allowedRoles, redirectTo = 'pages-login.html') {
+    const role = getUserRoleFromStorage();
+
+    if (!role) {
+        // Not logged in
+        window.location.href = redirectTo;
+        return false;
+    }
+
+    if (!allowedRoles.includes(role)) {
+        // Role not allowed
+        if (role === 'petugas') {
+            window.location.href = 'forms-penilaian.html';
+        } else {
+            window.location.href = 'index.html';
+        }
+        return false;
+    }
+
+    return true;
+}
+
+/**
  * Export functions
  */
 if (typeof module !== 'undefined' && module.exports) {

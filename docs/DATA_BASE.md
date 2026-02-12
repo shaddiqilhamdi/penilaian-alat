@@ -55,7 +55,7 @@
 - `bidang` (TEXT) - Bidang/departemen
 - `sub_bidang` (TEXT) - Sub bidang
 - `jabatan` (TEXT) - Jabatan
-- `role` (USER-DEFINED) - Role: 'uid_admin', 'vendor_k3'
+- `role` (USER-DEFINED) - Role: 'uid_admin', 'uid_user', 'up3_admin', 'up3_user', 'vendor_k3', 'petugas'
 - `vendor_id` (UUID) - FK ke vendors.id
 - `created_at` (TIMESTAMP) - Waktu pembuatan
 
@@ -439,6 +439,20 @@ Setelah semua items diisi:
   - Submit untuk review
 - **Use Cases:** Vendor APD, Assessment Creator
 
+#### 6. **petugas** (Petugas Lapangan - Form Only)
+- **Level:** Lapangan
+- **Scope:** Hanya form penilaian
+- **Akses Data:** Create Only
+- **Permissions:**
+  - Input assessments (Create Draft)
+  - Input assessment_items
+  - Upload foto dokumentasi
+- **UI Behavior:**
+  - Login langsung redirect ke halaman form penilaian
+  - Semua menu/halaman lain disembunyikan
+  - Tidak ada akses ke dashboard, reports, atau master data
+- **Use Cases:** Petugas Lapangan, Field Worker, Data Entry
+
 ### **Database Access Control (RLS Policies)**
 
 ```sql
@@ -471,26 +485,33 @@ SELECT: WHERE vendor_id = auth.user.vendor_id
 INSERT: WHERE vendor_id = auth.user.vendor_id
 UPDATE: WHERE vendor_id = auth.user.vendor_id AND status = 'Draft'
 DELETE: WHERE vendor_id = auth.user.vendor_id AND status = 'Draft'
+
+-- petugas: Form Only (Most Restricted)
+SELECT: WHERE vendor_id = auth.user.vendor_id AND table IN ('assessments', 'assessment_items', 'equipment_standards', 'equipment_master')
+INSERT: WHERE vendor_id = auth.user.vendor_id AND table IN ('assessments', 'assessment_items')
+UPDATE: FALSE
+DELETE: FALSE
 ```
 
 ### **Feature Access Matrix**
 
-| Feature | uid_admin | uid_user | up3_admin | up3_user | vendor_k3 |
-|---------|-----------|----------|-----------|----------|-----------|
-| Dashboard | ✅ Full | ✅ National | ✅ Unit | ✅ Unit | ✅ Vendor |
-| Master Data (Equipment) | ✅ CRUD | ❌ | ❌ | ❌ | ❌ |
-| Equipment Standards | ✅ CRUD | ❌ | ✅ Own Unit | ❌ | ❌ |
-| Teams Management | ✅ R | ❌ | ✅ Own Unit | ❌ | ❌ |
-| Personnel Management | ✅ R | ❌ | ✅ Own Unit | ❌ | ❌ |
-| Create Assessment | ✅ | ❌ | ❌ | ❌ | ✅ |
-| Input Assessment Items | ✅ | ❌ | ❌ | ❌ | ✅ |
-| Review Assessment | ✅ Approve | ❌ | ✅ Verify | ✅ Spot-Check | ❌ |
-| Submit Assessment | ✅ | ❌ | ❌ | ❌ | ✅ |
-| Edit Draft | ✅ | ❌ | ❌ | ❌ | ✅ Own |
-| View Reports | ✅ All | ✅ All | ✅ Unit | ✅ Unit | ✅ Own |
-| Download Reports | ✅ All | ✅ All | ✅ Unit | ✅ Unit | ✅ Own |
-| Audit Log | ✅ | ❌ | ❌ | ❌ | ❌ |
-| User Management | ✅ | ❌ | ❌ | ❌ | ❌ |
+| Feature | uid_admin | uid_user | up3_admin | up3_user | vendor_k3 | petugas |
+|---------|-----------|----------|-----------|----------|-----------|----------|
+| Dashboard | ✅ Full | ✅ National | ✅ Unit | ✅ Unit | ✅ Vendor | ❌ |
+| Master Data (Equipment) | ✅ CRUD | ❌ | ❌ | ❌ | ❌ | ❌ |
+| Equipment Standards | ✅ CRUD | ❌ | ✅ Own Unit | ❌ | ❌ | ❌ |
+| Teams Management | ✅ R | ❌ | ✅ Own Unit | ❌ | ❌ | ❌ |
+| Personnel Management | ✅ R | ❌ | ✅ Own Unit | ❌ | ❌ | ❌ |
+| Create Assessment | ✅ | ❌ | ❌ | ❌ | ✅ | ✅ |
+| Input Assessment Items | ✅ | ❌ | ❌ | ❌ | ✅ | ✅ |
+| Review Assessment | ✅ Approve | ❌ | ✅ Verify | ✅ Spot-Check | ❌ | ❌ |
+| Submit Assessment | ✅ | ❌ | ❌ | ❌ | ✅ | ❌ |
+| Edit Draft | ✅ | ❌ | ❌ | ❌ | ✅ Own | ❌ |
+| View Reports | ✅ All | ✅ All | ✅ Unit | ✅ Unit | ✅ Own | ❌ |
+| Download Reports | ✅ All | ✅ All | ✅ Unit | ✅ Unit | ✅ Own | ❌ |
+| Audit Log | ✅ | ❌ | ❌ | ❌ | ❌ | ❌ |
+| User Management | ✅ | ❌ | ❌ | ❌ | ❌ | ❌ |
+| Form Penilaian Only | ❌ | ❌ | ❌ | ❌ | ❌ | ✅ |
 
 ---
 
@@ -553,3 +574,102 @@ DELETE: WHERE vendor_id = auth.user.vendor_id AND status = 'Draft'
 - **Unique Constraints**: equipment_master.nama_alat UNIQUE
 - **Default Values**: assessments.status default 'Draft'
 - **Timestamps**: created_at di semua tabel, assessment juga bisa track last_assessment_date
+
+---
+
+## 🔧 Edge Function: submit-penilaian
+
+### Deskripsi
+Edge function untuk atomic transaction saat submit penilaian. Memastikan data assessment dan vendor_assets tersimpan secara konsisten.
+
+### Endpoint
+```
+POST /functions/v1/submit-penilaian
+```
+
+### Request Payload
+```json
+{
+  "tanggal_penilaian": "2026-02-11",
+  "shift": "Pagi",
+  "vendor_id": "uuid-vendor",
+  "peruntukan_id": "APD-001",
+  "team_id": "uuid-team-or-null",
+  "personnel_id": "uuid-personnel-or-null",
+  "assessor_id": "uuid-user",
+  "items": [
+    {
+      "equipment_id": "uuid-equipment",
+      "required_qty": 10,
+      "actual_qty": 10,
+      "layak": 10,
+      "tidak_layak": 0,
+      "berfungsi": 10,
+      "tidak_berfungsi": 0
+    }
+  ],
+  "jumlah_item_peralatan": 1,
+  "total_score": 2.0
+}
+```
+
+### Response
+```json
+{
+  "success": true,
+  "data": {
+    "assessment": { "id": "uuid", ... },
+    "items": [...],
+    "vendor_assets": [
+      { "action": "created", "id": "uuid", "equipment_id": "uuid" },
+      { "action": "updated", "id": "uuid", "equipment_id": "uuid" }
+    ]
+  },
+  "message": "Assessment created with 5 items. 3 new assets, 2 updated."
+}
+```
+
+### Proses Atomic
+1. **INSERT assessments** - Buat header penilaian
+2. **INSERT assessment_items** (batch) - Buat detail penilaian
+3. **UPSERT vendor_assets** - Insert baru atau update existing
+4. Return result atau rollback jika error
+
+### Deploy
+```bash
+supabase functions deploy submit-penilaian
+```
+
+---
+
+## 🔒 Vendor Assets Unique Constraint
+
+### Tujuan
+Memastikan setiap alat fisik memiliki ID unik berdasarkan kombinasi:
+- `vendor_id` - Vendor mana
+- `peruntukan_id` - Untuk peruntukan apa
+- `team_id` - Untuk kendaraan/regu mana (nullable)
+- `personnel_id` - Untuk personil mana (nullable)
+- `equipment_id` - Jenis alat apa
+
+### Index
+```sql
+CREATE UNIQUE INDEX idx_vendor_assets_unique_combination 
+ON vendor_assets (
+    vendor_id, 
+    peruntukan_id, 
+    COALESCE(team_id, '00000000-0000-0000-0000-000000000000'::uuid),
+    COALESCE(personnel_id, '00000000-0000-0000-0000-000000000000'::uuid),
+    equipment_id
+);
+```
+
+### Konsep
+```
+Vendor A + Peruntukan Inspeksi JTR + Mobil B-1234 + Helm = 1 Record Unik
+Vendor A + Peruntukan Inspeksi JTR + Mobil B-5678 + Helm = 1 Record Unik (BERBEDA)
+Vendor A + Peruntukan Admin + Personil Budi + Seragam = 1 Record Unik
+```
+
+### SQL Migration
+Lihat: `docs/sql/001-vendor-assets-constraint.sql`

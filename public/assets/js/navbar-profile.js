@@ -13,7 +13,8 @@ const ROLE_LABELS = {
     uid_user: 'UID User',
     up3_admin: 'UP3 Admin',
     up3_user: 'UP3 User',
-    vendor_k3: 'Vendor K3'
+    vendor_k3: 'Vendor K3',
+    petugas: 'Petugas'
 };
 
 /**

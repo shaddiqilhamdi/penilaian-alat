@@ -36,6 +36,10 @@
       if (role) {
         document.documentElement.className += ' role-' + role;
       }
+      // Petugas role guard - redirect to form only
+      if (role === 'petugas') {
+        window.location.href = 'forms-penilaian.html';
+      }
     })();
   </script>
 
@@ -175,12 +179,12 @@
           </li>
           <li>
             <a href="forms-data-penilaian.html">
-              <i class="bi bi-circle"></i><span>Data Penilaian</span>
+              <i class="bi bi-circle"></i><span>Riwayat Penilaian</span>
             </a>
           </li>
           <li>
             <a href="data-standar-peralatan.html">
-              <i class="bi bi-circle"></i><span>Data Peralatan</span>
+              <i class="bi bi-circle"></i><span>Standar Peralatan</span>
             </a>
           </li>
 
@@ -198,29 +202,34 @@
               <i class="bi bi-circle"></i><span>Unit</span>
             </a>
           </li>
-          <li>
+          <li id="menu-vendor">
             <a href="data-vendor.html">
-              <i class="bi bi-circle"></i><span>Vendor Pelaksana</span>
+              <i class="bi bi-circle"></i><span>Pelaksana</span>
             </a>
           </li>
-          <li>
+          <li id="menu-peruntukan">
             <a href="data-peruntukan.html">
               <i class="bi bi-circle"></i><span>Peruntukan</span>
             </a>
           </li>
-          <li>
+          <li id="menu-peralatan">
             <a href="data-peralatan.html">
               <i class="bi bi-circle"></i><span>Peralatan</span>
             </a>
           </li>
-          <li>
+          <li id="menu-kendaraan">
             <a href="data-kendaraan.html">
               <i class="bi bi-circle"></i><span>Kendaraan</span>
             </a>
           </li>
-          <li>
+          <li id="menu-personil">
             <a href="data-personil.html">
               <i class="bi bi-circle"></i><span>Personil</span>
+            </a>
+          </li>
+          <li id="menu-vendor-assets">
+            <a href="data-vendor-assets.html">
+              <i class="bi bi-circle"></i><span>Inventaris Vendor</span>
             </a>
           </li>
 
@@ -255,7 +264,7 @@
         </a>
       </li><!-- End Profile Page Nav -->
 
-      <li class="nav-item">
+      <li class="nav-item" id="menu-log">
         <a class="nav-link collapsed" href="users-log.html">
           <i class="bi bi-file-earmark-text"></i>
           <span>Log</span>
@@ -500,7 +509,7 @@
                         <th scope="col">Unit</th>
                         <th scope="col" class="text-center" colspan="2">Personal</th>
                         <th scope="col" class="text-center" colspan="2">Regu</th>
-                        <th scope="col" class="text-center">Total</th>
+                        <th scope="col" class="text-center">Item</th>
                       </tr>
                       <tr class="small">
                         <th></th>
@@ -541,8 +550,8 @@
         <!-- Row 1: Main Stats Cards -->
         <div class="row g-3 mb-3">
           <div class="col-lg-3 col-md-6">
-            <div class="card info-card sales-card mb-0">
-              <div class="card-body py-2 px-3">
+            <div class="card info-card sales-card mb-0 h-100">
+              <div class="card-body py-3 px-3">
                 <h5 class="card-title mb-2">Total Penilaian <span>| Bulan Ini</span></h5>
                 <div class="d-flex align-items-center">
                   <div class="card-icon rounded-circle d-flex align-items-center justify-content-center bg-primary"
@@ -559,7 +568,7 @@
           </div>
 
           <div class="col-lg-3 col-md-6">
-            <div class="card info-card revenue-card mb-0">
+            <div class="card info-card revenue-card mb-0 h-100">
               <div class="card-body py-3 px-3">
                 <h5 class="card-title mb-2">Total Vendor <span>| Unit Saya</span></h5>
                 <div class="d-flex align-items-center">
@@ -577,7 +586,7 @@
           </div>
 
           <div class="col-lg-3 col-md-6">
-            <div class="card info-card customers-card mb-0">
+            <div class="card info-card customers-card mb-0 h-100">
               <div class="card-body py-3 px-3">
                 <h5 class="card-title mb-2">Equipment Dinilai <span>| Bulan Ini</span></h5>
                 <div class="d-flex align-items-center">
@@ -595,7 +604,7 @@
           </div>
 
           <div class="col-lg-3 col-md-6">
-            <div class="card info-card mb-0">
+            <div class="card info-card mb-0 h-100">
               <div class="card-body py-3 px-3">
                 <h5 class="card-title mb-2">Rata-rata Score <span>| Unit Saya</span></h5>
                 <div class="d-flex align-items-center">
@@ -651,7 +660,7 @@
           <div class="col-12">
             <div class="card mb-0">
               <div class="card-body py-3 px-3">
-                <h5 class="card-title mb-2">Daftar Kendaraan (Regu) <span>| Dengan Nilai Assessment</span></h5>
+                <h5 class="card-title mb-2">Daftar Kendaraan (Regu) <span>| Penilaian Terakhir</span></h5>
                 <div class="table-responsive" style="max-height: 350px; overflow-y: auto;">
                   <table class="table table-hover table-sm mb-0 small" id="up3TeamsTable">
                     <thead class="table-light sticky-top">
@@ -663,13 +672,15 @@
                         <th scope="col" class="text-center">Avg Score</th>
                         <th scope="col" class="text-center text-success">Layak</th>
                         <th scope="col" class="text-center text-danger">Tidak Layak</th>
+                        <th scope="col" class="text-center text-success">Berfungsi</th>
+                        <th scope="col" class="text-center text-danger">Tidak Berfungsi</th>
                         <th scope="col" class="text-center">Penilaian Terakhir</th>
                         <th scope="col" class="text-center">Status</th>
                       </tr>
                     </thead>
                     <tbody>
                       <tr>
-                        <td colspan="9" class="text-center text-muted">Loading...</td>
+                        <td colspan="11" class="text-center text-muted">Loading...</td>
                       </tr>
                     </tbody>
                   </table>
@@ -682,10 +693,10 @@
         <!-- Row 3: Equipment Bermasalah & Penilaian Terakhir -->
         <div class="row g-3 mb-3">
           <div class="col-lg-6">
-            <div class="card mb-0">
+            <div class="card mb-0 h-100">
               <div class="card-body py-3 px-3">
                 <h5 class="card-title mb-2">Equipment Bermasalah <span>| Unit Saya</span></h5>
-                <div class="table-responsive" style="max-height: 320px; overflow-y: auto;">
+                <div class="table-responsive">
                   <table class="table table-hover table-sm mb-0 small" id="up3IssuesTable">
                     <thead class="table-light sticky-top">
                       <tr>
@@ -709,10 +720,10 @@
           </div>
 
           <div class="col-lg-6">
-            <div class="card mb-0">
+            <div class="card mb-0 h-100">
               <div class="card-body py-3 px-3">
                 <h5 class="card-title mb-2">Penilaian Terakhir <span>| 10 Terakhir</span></h5>
-                <div class="table-responsive" style="max-height: 320px; overflow-y: auto;">
+                <div class="table-responsive">
                   <table class="table table-hover table-sm mb-0 small" id="up3RecentTable">
                     <thead class="table-light sticky-top">
                       <tr>
@@ -760,6 +771,52 @@
     </section>
 
   </main><!-- End #main -->
+
+  <!-- Modal Equipment Issues Detail -->
+  <div class="modal fade" id="equipmentIssuesModal" tabindex="-1" aria-labelledby="equipmentIssuesModalLabel"
+    aria-hidden="true">
+    <div class="modal-dialog modal-dialog-scrollable" style="max-width: 80%; height: 80%;">
+      <div class="modal-content" style="height: 100%;">
+        <div class="modal-header bg-light py-2">
+          <h5 class="modal-title" id="equipmentIssuesModalLabel">
+            <i class="bi bi-exclamation-triangle text-warning me-2"></i>
+            Detail Equipment Bermasalah - <span id="modalUnitCode"></span>
+            <span class="badge bg-secondary ms-2" id="modalTotalItems">0</span>
+          </h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body p-0" style="overflow: hidden;">
+          <div class="table-responsive" style="height: 100%;">
+            <table class="table table-sm table-hover table-bordered mb-0 small">
+              <thead class="table-light sticky-top">
+                <tr>
+                  <th class="text-center" style="width: 40px;">#</th>
+                  <th>Peruntukan</th>
+                  <th>Tim/Personil</th>
+                  <th>Peralatan</th>
+                  <th class="text-center" style="width: 60px;">Standar</th>
+                  <th class="text-center" style="width: 50px;">Qty</th>
+                  <th class="text-center" style="width: 80px;">Fisik</th>
+                  <th class="text-center" style="width: 80px;">Fungsi</th>
+                  <th class="text-center" style="width: 80px;">Kontrak</th>
+                  <th class="text-center" style="width: 60px;">Nilai</th>
+                  <th class="text-center" style="width: 140px;">Penilaian Terakhir</th>
+                </tr>
+              </thead>
+              <tbody id="tbody-equipment-issues">
+                <tr>
+                  <td colspan="11" class="text-center text-muted py-3">Tidak ada data</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+        <div class="modal-footer py-2">
+          <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Tutup</button>
+        </div>
+      </div>
+    </div>
+  </div>
 
   <!-- ======= Footer ======= -->
   <footer id="footer" class="footer">

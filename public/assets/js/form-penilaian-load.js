@@ -4,6 +4,7 @@
 // Global variables
 let currentUser = null;
 let currentProfile = null;
+window.currentProfile = null; // Also expose to window for cross-module access
 
 // Role labels for display
 const ROLE_LABELS = {
@@ -51,6 +52,7 @@ document.addEventListener('DOMContentLoaded', async function () {
         const profileResult = await ProfilesAPI.getById(currentUser.id);
         if (profileResult.success && profileResult.data) {
             currentProfile = profileResult.data;
+            window.currentProfile = currentProfile; // Expose to window for cross-module access
             // Save role to localStorage for CSS-based menu visibility
             if (typeof saveUserRoleToStorage === 'function') {
                 saveUserRoleToStorage(currentProfile);
@@ -165,6 +167,12 @@ async function loadUnitData() {
 // Store all vendors for filtering
 let allVendors = [];
 
+// Check if user is vendor-locked role (vendor_k3 or petugas)
+function isVendorLockedUser() {
+    const role = currentProfile?.role || '';
+    return role === 'vendor_k3' || role === 'petugas';
+}
+
 // Load Vendor data
 async function loadVendorData() {
     try {
@@ -190,7 +198,24 @@ async function loadVendorData() {
         // Clear existing options except first
         vendorSelect.innerHTML = '<option value="">No item selected</option>';
 
-        // Filter vendors based on user role
+        // For vendor_k3 and petugas: lock to their assigned vendor_id
+        if (isVendorLockedUser() && currentProfile?.vendor_id) {
+            const userVendor = allVendors.find(v => v.id === currentProfile.vendor_id);
+            if (userVendor) {
+                const option = document.createElement('option');
+                option.value = userVendor.id;
+                option.textContent = `${userVendor.vendor_name} (${userVendor.unit_code || '-'})`;
+                vendorSelect.appendChild(option);
+                vendorSelect.value = userVendor.id;
+                vendorSelect.disabled = true; // Lock the vendor dropdown
+
+                // Trigger personil load for this vendor
+                loadPersonilData(userVendor.id);
+                return;
+            }
+        }
+
+        // Filter vendors based on user role (for non-UID users, filter by unit)
         let filteredVendors = allVendors;
         if (!isUIDUser() && currentProfile?.unit_code) {
             filteredVendors = allVendors.filter(v => v.unit_code === currentProfile.unit_code);
@@ -390,6 +415,7 @@ async function loadEquipmentData(vendorId, peruntukanId) {
 function showNoEquipmentStandardsMessage(vendorId, peruntukanId) {
     const tableBody = document.getElementById('equipmentTableBody');
     const countBadge = document.getElementById('equipmentCountBadge');
+    const accordion = document.getElementById('equipmentAccordion');
 
     // Get vendor and peruntukan names for display
     const vendorSelect = document.getElementById('modalVendor');
@@ -397,37 +423,50 @@ function showNoEquipmentStandardsMessage(vendorId, peruntukanId) {
     const vendorName = vendorSelect?.options[vendorSelect.selectedIndex]?.text || 'Vendor';
     const peruntukanName = peruntukanSelect?.options[peruntukanSelect.selectedIndex]?.text || 'Peruntukan';
 
+    const messageHtml = `
+        <i class="bi bi-exclamation-triangle-fill fs-1 text-warning d-block mb-3"></i>
+        <h5 class="text-danger mb-2">Data Standar Peralatan Belum Tersedia</h5>
+        <div class="text-muted mb-3">
+            <p class="mb-1">
+                Belum ada data <strong>Equipment Standards</strong> untuk kombinasi:
+            </p>
+            <p class="mb-0">
+                <span class="badge bg-secondary me-1">${vendorName}</span>
+                <span class="badge bg-secondary">${peruntukanName}</span>
+            </p>
+        </div>
+        <div class="alert alert-warning d-inline-block text-start" style="max-width: 500px;">
+            <strong><i class="bi bi-info-circle me-1"></i>Langkah yang diperlukan:</strong>
+            <ol class="mb-0 mt-2 small">
+                <li>Buka menu <strong>Data Master → Peralatan</strong></li>
+                <li>Tambahkan daftar standar peralatan untuk vendor dan peruntukan ini</li>
+                <li>Tentukan jumlah standar (qty kontrak) untuk setiap alat</li>
+                <li>Kembali ke halaman ini dan lakukan penilaian</li>
+            </ol>
+        </div>
+        <div class="mt-3">
+            <a href="data-peralatan.html" class="btn btn-primary btn-sm">
+                <i class="bi bi-gear me-1"></i>Setup Data Standar Peralatan
+            </a>
+        </div>
+    `;
+
     tableBody.innerHTML = `
         <tr>
             <td colspan="10" class="text-center py-5">
-                <i class="bi bi-exclamation-triangle-fill fs-1 text-warning d-block mb-3"></i>
-                <h5 class="text-danger mb-2">Data Standar Peralatan Belum Tersedia</h5>
-                <div class="text-muted mb-3">
-                    <p class="mb-1">
-                        Belum ada data <strong>Equipment Standards</strong> untuk kombinasi:
-                    </p>
-                    <p class="mb-0">
-                        <span class="badge bg-secondary me-1">${vendorName}</span>
-                        <span class="badge bg-secondary">${peruntukanName}</span>
-                    </p>
-                </div>
-                <div class="alert alert-warning d-inline-block text-start" style="max-width: 500px;">
-                    <strong><i class="bi bi-info-circle me-1"></i>Langkah yang diperlukan:</strong>
-                    <ol class="mb-0 mt-2 small">
-                        <li>Buka menu <strong>Data Master → Peralatan</strong></li>
-                        <li>Tambahkan daftar standar peralatan untuk vendor dan peruntukan ini</li>
-                        <li>Tentukan jumlah standar (qty kontrak) untuk setiap alat</li>
-                        <li>Kembali ke halaman ini dan lakukan penilaian</li>
-                    </ol>
-                </div>
-                <div class="mt-3">
-                    <a href="data-peralatan.html" class="btn btn-primary btn-sm">
-                        <i class="bi bi-gear me-1"></i>Setup Data Standar Peralatan
-                    </a>
-                </div>
+                ${messageHtml}
             </td>
         </tr>
     `;
+
+    // Also update accordion for mobile
+    if (accordion) {
+        accordion.innerHTML = `
+            <div class="text-center py-4 px-3">
+                ${messageHtml}
+            </div>
+        `;
+    }
 
     if (countBadge) countBadge.textContent = '0 Item';
 
@@ -488,10 +527,8 @@ async function loadKendaraanData(vendorId, peruntukanId = null) {
         nopolSelect.onchange = function () {
             if (this.value) {
                 if (teamIdInput) teamIdInput.value = this.value;
-                console.log('🚗 Kendaraan dipilih - nopolSelect.value:', this.value, '-> teamIdInput.value:', teamIdInput?.value);
             } else {
                 if (teamIdInput) teamIdInput.value = '';
-                console.log('🚗 Kendaraan di-reset');
             }
         };
 
@@ -568,7 +605,6 @@ async function loadPersonilData(vendorId, preserveSelection = false) {
 
             // Reset dropdown to placeholder
             this.value = '';
-            console.log('👤 Petugas dipilih - selectedPetugasIds:', window.selectedPetugasIds);
         };
 
         // Update display
@@ -931,9 +967,225 @@ function renderEquipmentTable(equipmentData, isFromVendorAssets = false) {
         tableBody.appendChild(row);
     });
 
+    // Also render accordion for mobile view
+    renderEquipmentAccordion(equipmentData, isFromVendorAssets);
+
     // Update progress after rendering
     if (typeof FormPenilaianManager !== 'undefined' && FormPenilaianManager.updateProgress) {
         FormPenilaianManager.updateProgress();
+    }
+}
+
+// Render equipment accordion for mobile view
+function renderEquipmentAccordion(equipmentData, isFromVendorAssets = false) {
+    const accordion = document.getElementById('equipmentAccordion');
+    const loadingRow = document.getElementById('accordionLoadingRow');
+
+    if (!accordion) return;
+
+    // Clear accordion except loading row
+    accordion.innerHTML = '';
+
+    if (!equipmentData || equipmentData.length === 0) {
+        accordion.innerHTML = `
+            <div class="text-center py-5">
+                <i class="bi bi-exclamation-triangle fs-1 text-warning d-block mb-2"></i>
+                <strong class="text-muted">Tidak ada data peralatan standar</strong>
+                <p class="text-muted small mb-0 mt-2">
+                    Belum ada standar peralatan untuk kombinasi ini.
+                </p>
+            </div>
+        `;
+        return;
+    }
+
+    equipmentData.forEach((item, index) => {
+        // Get equipment info - structure differs based on source
+        let equipmentInfo, equipmentId, requiredQty;
+        const dataSource = item.source || (isFromVendorAssets ? 'vendor_assets' : 'equipment_standards');
+
+        if (isFromVendorAssets) {
+            equipmentInfo = item.equipment_master || {};
+            equipmentId = item.equipment_id || equipmentInfo.id;
+            requiredQty = item.required_qty || 1;
+        } else if (dataSource === 'equipment_master') {
+            equipmentInfo = item.equipment_master || item;
+            equipmentId = item.equipment_id || item.id;
+            requiredQty = item.qty_standar || 1;
+        } else {
+            equipmentInfo = item.equipment_master || {};
+            equipmentId = item.equipment_id || equipmentInfo.id;
+            requiredQty = item.required_qty || item.contract_qty || 1;
+        }
+
+        const namaAlat = equipmentInfo.nama_alat || item.nama_alat || 'N/A';
+        const kategori = equipmentInfo.kategori || item.kategori || 'N/A';
+        const collapseId = `collapse-${equipmentId}-${index}`;
+
+        const accordionItem = document.createElement('div');
+        accordionItem.className = 'accordion-item';
+        accordionItem.dataset.equipmentId = equipmentId;
+        accordionItem.dataset.volumePerRegu = requiredQty;
+        accordionItem.dataset.namaAlat = namaAlat;
+        accordionItem.dataset.kategori = kategori;
+        accordionItem.dataset.sourceId = item.id;
+        accordionItem.dataset.source = dataSource;
+
+        accordionItem.innerHTML = `
+            <h2 class="accordion-header">
+                <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#${collapseId}">
+                    <div class="accordion-header-content">
+                        <span class="accordion-header-title">${namaAlat}</span>
+                        <span class="badge bg-secondary nilai-equipment-mobile">-</span>
+                    </div>
+                </button>
+            </h2>
+            <div id="${collapseId}" class="accordion-collapse collapse" data-bs-parent="#equipmentAccordion">
+                <div class="accordion-body">
+                    <div class="equipment-mobile-row">
+                        <span class="equipment-mobile-label">Standar Kontrak</span>
+                        <span class="equipment-mobile-value">${requiredQty}</span>
+                    </div>
+                    <div class="equipment-mobile-row">
+                        <span class="equipment-mobile-label">Realisasi</span>
+                        <input type="number" 
+                               class="form-control equipment-mobile-input realisasi-input-mobile" 
+                               data-equipment-id="${equipmentId}"
+                               data-required-qty="${requiredQty}"
+                               min="0" 
+                               placeholder="-"
+                               value="">
+                    </div>
+                    <div class="equipment-mobile-row">
+                        <span class="equipment-mobile-label">Layak</span>
+                        <input type="number" 
+                               class="form-control equipment-mobile-input layak-input-mobile" 
+                               data-equipment-id="${equipmentId}"
+                               min="0" 
+                               placeholder="-"
+                               value="">
+                    </div>
+                    <div class="equipment-mobile-row" style="display: none;">
+                        <span class="equipment-mobile-label">Tidak Layak</span>
+                        <span class="tidak-layak-value-mobile">0</span>
+                    </div>
+                    <div class="equipment-mobile-row">
+                        <span class="equipment-mobile-label">Berfungsi</span>
+                        <input type="number" 
+                               class="form-control equipment-mobile-input berfungsi-input-mobile" 
+                               data-equipment-id="${equipmentId}"
+                               min="0" 
+                               placeholder="-"
+                               value="">
+                    </div>
+                    <div class="equipment-mobile-row" style="display: none;">
+                        <span class="equipment-mobile-label">Tidak Berfungsi</span>
+                        <span class="tidak-berfungsi-value-mobile">0</span>
+                    </div>
+                </div>
+            </div>
+        `;
+
+        accordion.appendChild(accordionItem);
+    });
+
+    // Add event listeners for mobile inputs - sync with table
+    setupMobileInputListeners();
+}
+
+// Setup mobile input listeners to sync with table
+function setupMobileInputListeners() {
+    // Realisasi mobile inputs
+    document.querySelectorAll('.realisasi-input-mobile').forEach(input => {
+        input.addEventListener('change', function () {
+            const equipmentId = this.dataset.equipmentId;
+            const value = this.value;
+
+            // Sync with table input
+            const tableInput = document.querySelector(`#equipmentTableBody .realisasi-input[data-equipment-id="${equipmentId}"]`);
+            if (tableInput) {
+                tableInput.value = value;
+                FormPenilaianManager.handleRealisasiChange(tableInput);
+            }
+
+            // Update mobile nilai badge
+            updateMobileNilaiBadge(equipmentId);
+        });
+    });
+
+    // Layak mobile inputs
+    document.querySelectorAll('.layak-input-mobile').forEach(input => {
+        input.addEventListener('change', function () {
+            const equipmentId = this.dataset.equipmentId;
+            const value = this.value;
+
+            // Sync with table input
+            const tableInput = document.querySelector(`#equipmentTableBody .layak-input[data-equipment-id="${equipmentId}"]`);
+            if (tableInput) {
+                tableInput.value = value;
+                FormPenilaianManager.handleLayakChange(tableInput);
+            }
+
+            // Update tidak layak value
+            const accordionItem = this.closest('.accordion-item');
+            const realisasiInput = accordionItem.querySelector('.realisasi-input-mobile');
+            const realisasi = parseInt(realisasiInput?.value) || 0;
+            const layak = parseInt(value) || 0;
+            const tidakLayak = Math.max(0, realisasi - layak);
+            const tidakLayakSpan = accordionItem.querySelector('.tidak-layak-value-mobile');
+            if (tidakLayakSpan) tidakLayakSpan.textContent = tidakLayak;
+
+            updateMobileNilaiBadge(equipmentId);
+        });
+    });
+
+    // Berfungsi mobile inputs
+    document.querySelectorAll('.berfungsi-input-mobile').forEach(input => {
+        input.addEventListener('change', function () {
+            const equipmentId = this.dataset.equipmentId;
+            const value = this.value;
+
+            // Sync with table input
+            const tableInput = document.querySelector(`#equipmentTableBody .berfungsi-input[data-equipment-id="${equipmentId}"]`);
+            if (tableInput) {
+                tableInput.value = value;
+                FormPenilaianManager.handleBerfungsiChange(tableInput);
+            }
+
+            // Update tidak berfungsi value
+            const accordionItem = this.closest('.accordion-item');
+            const layakInput = accordionItem.querySelector('.layak-input-mobile');
+            const layak = parseInt(layakInput?.value) || 0;
+            const berfungsi = parseInt(value) || 0;
+            const tidakBerfungsi = Math.max(0, layak - berfungsi);
+            const tidakBerfungsiSpan = accordionItem.querySelector('.tidak-berfungsi-value-mobile');
+            if (tidakBerfungsiSpan) tidakBerfungsiSpan.textContent = tidakBerfungsi;
+
+            updateMobileNilaiBadge(equipmentId);
+        });
+    });
+}
+
+// Update mobile nilai badge based on table calculation
+function updateMobileNilaiBadge(equipmentId) {
+    const tableRow = document.querySelector(`#equipmentTableBody tr[data-equipment-id="${equipmentId}"]`);
+    const accordionItem = document.querySelector(`#equipmentAccordion .accordion-item[data-equipment-id="${equipmentId}"]`);
+
+    if (tableRow && accordionItem) {
+        const tableNilai = tableRow.querySelector('.nilai-equipment');
+        const mobileNilai = accordionItem.querySelector('.nilai-equipment-mobile');
+
+        if (tableNilai && mobileNilai) {
+            mobileNilai.textContent = tableNilai.textContent;
+            mobileNilai.className = tableNilai.className.replace('nilai-equipment', 'nilai-equipment-mobile');
+        }
+
+        // Update completed state
+        if (tableRow.classList.contains('is-complete')) {
+            accordionItem.classList.add('is-complete');
+        } else {
+            accordionItem.classList.remove('is-complete');
+        }
     }
 }
 
@@ -1296,6 +1548,7 @@ function clearVendorDependentFields() {
 function clearEquipmentTable() {
     const tableBody = document.getElementById('equipmentTableBody');
     const countBadge = document.getElementById('equipmentCountBadge');
+    const accordion = document.getElementById('equipmentAccordion');
 
     tableBody.innerHTML = `
         <tr id="loadingRow">
@@ -1308,6 +1561,24 @@ function clearEquipmentTable() {
             </td>
         </tr>
     `;
+
+    // Clear accordion for mobile view
+    if (accordion) {
+        accordion.innerHTML = `
+            <div id="accordionLoadingRow" class="text-center py-5">
+                <div class="d-flex flex-column align-items-center">
+                    <div class="bg-light rounded-circle p-4 mb-3">
+                        <i class="bi bi-inbox fs-1 text-muted"></i>
+                    </div>
+                    <h6 class="text-muted mb-2">Belum Ada Data Peralatan</h6>
+                    <p class="text-muted mb-0 small">
+                        <i class="bi bi-arrow-up me-1"></i>
+                        Lengkapi <strong>Informasi Sesi</strong> dan <strong>Detail Peruntukan</strong>
+                    </p>
+                </div>
+            </div>
+        `;
+    }
 
     if (countBadge) countBadge.textContent = '0 Item';
 
