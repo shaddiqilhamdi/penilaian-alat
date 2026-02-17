@@ -11,7 +11,7 @@
   <meta name="google-site-verification" content="XjBc9_zpgGM-YTmBhNG0GlkDs3JY4CJDoOhKNQmM9-A" />
 
   <!-- Favicons -->
-  <link href="assets/img/favicon.svg" rel="icon">
+  <link href="assets/img/logo-portrait.png" rel="icon">
 
   <!-- Google Fonts -->
   <link href="https://fonts.gstatic.com" rel="preconnect">
@@ -417,7 +417,7 @@
               <div class="card-body py-2 px-3">
                 <div class="d-flex justify-content-between align-items-center">
                   <div>
-                    <small class="text-primary mb-0">Total Kendaraan</small>
+                    <small class="text-primary mb-0">Kendaraan Dinilai</small>
                     <h5 class="mb-0" id="uidTotalRegu">-</h5>
                   </div>
                   <i class="bi bi-truck fs-4 text-primary opacity-50"></i>
@@ -431,7 +431,7 @@
               <div class="card-body py-2 px-3">
                 <div class="d-flex justify-content-between align-items-center">
                   <div>
-                    <small class="text-info mb-0">Total Personil</small>
+                    <small class="text-info mb-0">Personil Dinilai</small>
                     <h5 class="mb-0" id="uidTotalPersonil">-</h5>
                   </div>
                   <i class="bi bi-people fs-4 text-info opacity-50"></i>
@@ -473,7 +473,7 @@
                     <thead class="table-light">
                       <tr>
                         <th scope="col">Unit</th>
-                        <th scope="col" class="text-center">Penilaian</th>
+                        <th scope="col" class="text-center">Equipment</th>
                         <th scope="col" class="text-center">Kendaraan</th>
                         <th scope="col" class="text-center">Personil</th>
                         <th scope="col" class="text-center">Avg Score</th>
@@ -547,11 +547,32 @@
       <!-- UP3 Dashboard -->
       <div id="up3Dashboard" style="display: none;">
 
-        <!-- Row 1: Main Stats Cards -->
-        <div class="row g-3 mb-3">
+        <!-- Row 1: Main Stats Cards (UID Style) -->
+        <div class="row g-2 mb-2">
+          <div class="col-lg-3 col-md-6">
+            <div class="card info-card mb-0 h-100">
+              <div class="card-body py-2 px-3">
+                <h5 class="card-title mb-2">Rata-rata Score <span>| Bulan Ini</span></h5>
+                <div class="d-flex align-items-center">
+                  <div class="card-icon rounded-circle d-flex align-items-center justify-content-center bg-info"
+                    style="width:40px;height:40px;">
+                    <i class="bi bi-star-fill text-white"></i>
+                  </div>
+                  <div class="ps-3">
+                    <h6 class="mb-0" id="up3AvgScore">-</h6>
+                    <div class="d-flex gap-1 mt-1">
+                      <span class="badge bg-primary" id="up3PersonalScoreBadge">P: -</span>
+                      <span class="badge bg-success" id="up3ReguScoreBadge">R: -</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
           <div class="col-lg-3 col-md-6">
             <div class="card info-card sales-card mb-0 h-100">
-              <div class="card-body py-3 px-3">
+              <div class="card-body py-2 px-3">
                 <h5 class="card-title mb-2">Total Penilaian <span>| Bulan Ini</span></h5>
                 <div class="d-flex align-items-center">
                   <div class="card-icon rounded-circle d-flex align-items-center justify-content-center bg-primary"
@@ -569,26 +590,8 @@
 
           <div class="col-lg-3 col-md-6">
             <div class="card info-card revenue-card mb-0 h-100">
-              <div class="card-body py-3 px-3">
-                <h5 class="card-title mb-2">Total Vendor <span>| Unit Saya</span></h5>
-                <div class="d-flex align-items-center">
-                  <div class="card-icon rounded-circle d-flex align-items-center justify-content-center bg-success"
-                    style="width:40px;height:40px;">
-                    <i class="bi bi-building text-white"></i>
-                  </div>
-                  <div class="ps-3">
-                    <h6 class="mb-0" id="up3TotalVendors">-</h6>
-                    <span class="text-muted small">Vendor aktif</span>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <div class="col-lg-3 col-md-6">
-            <div class="card info-card customers-card mb-0 h-100">
-              <div class="card-body py-3 px-3">
-                <h5 class="card-title mb-2">Equipment Dinilai <span>| Bulan Ini</span></h5>
+              <div class="card-body py-2 px-3">
+                <h5 class="card-title mb-2">Total Equipment <span>| Bulan Ini</span></h5>
                 <div class="d-flex align-items-center">
                   <div class="card-icon rounded-circle d-flex align-items-center justify-content-center bg-warning"
                     style="width:40px;height:40px;">
@@ -596,7 +599,7 @@
                   </div>
                   <div class="ps-3">
                     <h6 class="mb-0" id="up3TotalEquipment">-</h6>
-                    <span class="text-muted small">Items</span>
+                    <span class="text-muted small">Item dinilai</span>
                   </div>
                 </div>
               </div>
@@ -605,16 +608,16 @@
 
           <div class="col-lg-3 col-md-6">
             <div class="card info-card mb-0 h-100">
-              <div class="card-body py-3 px-3">
-                <h5 class="card-title mb-2">Rata-rata Score <span>| Unit Saya</span></h5>
+              <div class="card-body py-2 px-3">
+                <h5 class="card-title mb-2">Kesesuaian Kontrak <span>| %</span></h5>
                 <div class="d-flex align-items-center">
-                  <div class="card-icon rounded-circle d-flex align-items-center justify-content-center bg-info"
+                  <div class="card-icon rounded-circle d-flex align-items-center justify-content-center bg-success"
                     style="width:40px;height:40px;">
-                    <i class="bi bi-star-fill text-white"></i>
+                    <i class="bi bi-check-circle text-white"></i>
                   </div>
                   <div class="ps-3">
-                    <h6 class="mb-0" id="up3AvgScore">-</h6>
-                    <span class="text-muted small">dari 2.00</span>
+                    <h6 class="mb-0" id="up3KontrakPct">-</h6>
+                    <span class="text-muted small">Sesuai kontrak</span>
                   </div>
                 </div>
               </div>
@@ -622,25 +625,68 @@
           </div>
         </div>
 
-        <!-- Row 2: Penilaian per Vendor & Peruntukan -->
-        <div class="row g-3 mb-3">
+        <!-- Row 2: Issue Stats Mini Cards -->
+        <div class="row g-2 mb-2">
+          <div class="col-lg-6 col-md-6">
+            <div class="card border-danger mb-0 h-100">
+              <div class="card-body py-2 px-3">
+                <div class="d-flex justify-content-between align-items-center">
+                  <div>
+                    <small class="text-danger mb-0">Tidak Layak Fisik</small>
+                    <h5 class="mb-0" id="up3TidakLayak">-</h5>
+                  </div>
+                  <i class="bi bi-x-circle fs-3 text-danger opacity-50"></i>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="col-lg-6 col-md-6">
+            <div class="card border-warning mb-0 h-100">
+              <div class="card-body py-2 px-3">
+                <div class="d-flex justify-content-between align-items-center">
+                  <div>
+                    <small class="text-warning mb-0">Tidak Berfungsi</small>
+                    <h5 class="mb-0" id="up3TidakBerfungsi">-</h5>
+                  </div>
+                  <i class="bi bi-exclamation-triangle fs-3 text-warning opacity-50"></i>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Row 3: Daily Entry Chart -->
+        <div class="row g-2 mb-2">
           <div class="col-12">
             <div class="card mb-0">
-              <div class="card-body py-3 px-3">
-                <h5 class="card-title mb-2">Rekap Penilaian <span>| Per Vendor & Peruntukan</span></h5>
+              <div class="card-body py-2 px-3">
+                <h5 class="card-title mb-1">Entri Penilaian Harian <span>| 30 Hari Terakhir</span></h5>
+                <div id="up3DailyChart" style="min-height: 200px;"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Row 4: Penilaian per Vendor & Peruntukan -->
+        <div class="row g-2 mb-2">
+          <div class="col-12">
+            <div class="card mb-0">
+              <div class="card-body py-2 px-3">
+                <h5 class="card-title mb-1">Rekap Penilaian <span>| Per Vendor & Peruntukan (Bulan Ini)</span></h5>
                 <div class="table-responsive">
                   <table class="table table-hover table-sm mb-0 small" id="up3VendorRecapTable">
-                    <thead class="table-light">
+                    <thead class="table-light sticky-top">
                       <tr>
                         <th scope="col">Vendor</th>
+                        <th scope="col">Jenis</th>
                         <th scope="col">Peruntukan</th>
-                        <th scope="col" class="text-center">Jml Penilaian</th>
+                        <th scope="col" class="text-center">Jumlah</th>
                         <th scope="col" class="text-center">Equipment</th>
                         <th scope="col" class="text-center">Avg Score</th>
-                        <th scope="col" class="text-center text-success">Layak</th>
-                        <th scope="col" class="text-center text-danger">Tidak Layak</th>
-                        <th scope="col" class="text-center text-success">Berfungsi</th>
-                        <th scope="col" class="text-center text-warning">Tidak Berfungsi</th>
+                        <th scope="col" class="text-center text-danger">TL</th>
+                        <th scope="col" class="text-center text-warning">TB</th>
+                        <th scope="col" class="text-center">%</th>
                       </tr>
                     </thead>
                     <tbody>
@@ -655,53 +701,19 @@
           </div>
         </div>
 
-        <!-- Row 4: Daftar Kendaraan (Teams) dengan Assessment -->
-        <div class="row g-3 mb-3">
+        <!-- Row 5: Equipment Bermasalah -->
+        <div class="row g-2 mb-2">
           <div class="col-12">
             <div class="card mb-0">
-              <div class="card-body py-3 px-3">
-                <h5 class="card-title mb-2">Daftar Kendaraan (Regu) <span>| Penilaian Terakhir</span></h5>
-                <div class="table-responsive" style="max-height: 350px; overflow-y: auto;">
-                  <table class="table table-hover table-sm mb-0 small" id="up3TeamsTable">
-                    <thead class="table-light sticky-top">
-                      <tr>
-                        <th scope="col">No. Polisi</th>
-                        <th scope="col">Kategori</th>
-                        <th scope="col">Vendor</th>
-                        <th scope="col" class="text-center">Jml Penilaian</th>
-                        <th scope="col" class="text-center">Avg Score</th>
-                        <th scope="col" class="text-center text-success">Layak</th>
-                        <th scope="col" class="text-center text-danger">Tidak Layak</th>
-                        <th scope="col" class="text-center text-success">Berfungsi</th>
-                        <th scope="col" class="text-center text-danger">Tidak Berfungsi</th>
-                        <th scope="col" class="text-center">Penilaian Terakhir</th>
-                        <th scope="col" class="text-center">Status</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      <tr>
-                        <td colspan="11" class="text-center text-muted">Loading...</td>
-                      </tr>
-                    </tbody>
-                  </table>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <!-- Row 3: Equipment Bermasalah & Penilaian Terakhir -->
-        <div class="row g-3 mb-3">
-          <div class="col-lg-6">
-            <div class="card mb-0 h-100">
-              <div class="card-body py-3 px-3">
-                <h5 class="card-title mb-2">Equipment Bermasalah <span>| Unit Saya</span></h5>
+              <div class="card-body py-2 px-3">
+                <h5 class="card-title mb-1">Equipment Bermasalah <span>| Unit Saya</span></h5>
                 <div class="table-responsive">
                   <table class="table table-hover table-sm mb-0 small" id="up3IssuesTable">
                     <thead class="table-light sticky-top">
                       <tr>
                         <th scope="col">Tanggal</th>
                         <th scope="col">Vendor</th>
+                        <th scope="col">Tim/Personil</th>
                         <th scope="col">Equipment</th>
                         <th scope="col" class="text-center">Fisik</th>
                         <th scope="col" class="text-center">Fungsi</th>
@@ -710,33 +722,7 @@
                     </thead>
                     <tbody>
                       <tr>
-                        <td colspan="6" class="text-center text-muted">Loading...</td>
-                      </tr>
-                    </tbody>
-                  </table>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <div class="col-lg-6">
-            <div class="card mb-0 h-100">
-              <div class="card-body py-3 px-3">
-                <h5 class="card-title mb-2">Penilaian Terakhir <span>| 10 Terakhir</span></h5>
-                <div class="table-responsive">
-                  <table class="table table-hover table-sm mb-0 small" id="up3RecentTable">
-                    <thead class="table-light sticky-top">
-                      <tr>
-                        <th scope="col">Tanggal</th>
-                        <th scope="col">Vendor</th>
-                        <th scope="col">Peruntukan</th>
-                        <th scope="col" class="text-center">Score</th>
-                        <th scope="col" class="text-center">Status</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      <tr>
-                        <td colspan="5" class="text-center text-muted">Loading...</td>
+                        <td colspan="7" class="text-center text-muted">Loading...</td>
                       </tr>
                     </tbody>
                   </table>
@@ -790,28 +776,59 @@
             <table class="table table-sm table-hover table-bordered mb-0 small">
               <thead class="table-light sticky-top">
                 <tr>
-                  <th class="text-center" style="width: 40px;">#</th>
+                  <th class="text-center" style="width: 35px;">#</th>
                   <th>Peruntukan</th>
                   <th>Tim/Personil</th>
                   <th>Peralatan</th>
-                  <th class="text-center" style="width: 60px;">Standar</th>
-                  <th class="text-center" style="width: 50px;">Qty</th>
-                  <th class="text-center" style="width: 80px;">Fisik</th>
-                  <th class="text-center" style="width: 80px;">Fungsi</th>
-                  <th class="text-center" style="width: 80px;">Kontrak</th>
-                  <th class="text-center" style="width: 60px;">Nilai</th>
-                  <th class="text-center" style="width: 140px;">Penilaian Terakhir</th>
+                  <th class="text-center" style="width: 80px;">Kategori</th>
+                  <th class="text-center" style="width: 45px;">Std.</th>
+                  <th class="text-center" style="width: 45px;">Act.</th>
+                  <th class="text-center" style="width: 70px;">Kondisi</th>
+                  <th class="text-center" style="width: 70px;">Fungsi</th>
+                  <th class="text-center" style="width: 90px;">Kontrak</th>
+                  <th class="text-center" style="width: 55px;">Nilai</th>
+                  <th class="text-center" style="width: 130px;">Tgl. Penilaian</th>
                 </tr>
               </thead>
               <tbody id="tbody-equipment-issues">
                 <tr>
-                  <td colspan="11" class="text-center text-muted py-3">Tidak ada data</td>
+                  <td colspan="12" class="text-center text-muted py-3">Tidak ada data</td>
                 </tr>
               </tbody>
             </table>
           </div>
         </div>
         <div class="modal-footer py-2">
+          <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Tutup</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal Unit Report (Raport Unit) -->
+  <div class="modal fade" id="unitReportModal" tabindex="-1" aria-labelledby="unitReportModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-scrollable" style="max-width: 80%;">
+      <div class="modal-content">
+        <div class="modal-header bg-primary text-white py-2 d-print-none">
+          <h5 class="modal-title" id="unitReportModalLabel">
+            <i class="bi bi-file-earmark-bar-graph me-2"></i>
+            Raport Unit - <span id="reportUnitCode"></span>
+          </h5>
+          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body p-4" id="unitReportContent">
+          <!-- Report content will be rendered here -->
+          <div class="text-center py-5">
+            <div class="spinner-border text-primary" role="status">
+              <span class="visually-hidden">Loading...</span>
+            </div>
+            <p class="mt-2 text-muted">Memuat data...</p>
+          </div>
+        </div>
+        <div class="modal-footer py-2 d-print-none">
+          <button type="button" class="btn btn-outline-primary btn-sm d-none" onclick="printUnitReport()">
+            <i class="bi bi-printer me-1"></i> Cetak
+          </button>
           <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Tutup</button>
         </div>
       </div>

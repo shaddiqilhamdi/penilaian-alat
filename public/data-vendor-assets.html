@@ -10,7 +10,7 @@
     <meta content="" name="keywords">
 
     <!-- Favicons -->
-    <link href="assets/img/favicon.svg" rel="icon">
+    <link href="assets/img/logo-portrait.png" rel="icon">
 
     <!-- Google Fonts -->
     <link href="https://fonts.gstatic.com" rel="preconnect">
@@ -345,34 +345,6 @@
         </div><!-- End Page Title -->
 
         <section class="section">
-            <!-- Stats Row -->
-            <div class="row mb-3" id="statsRow">
-                <div class="col-md-3">
-                    <div class="card stats-card bg-light">
-                        <div class="stats-value text-primary" id="statsTotalAssets">0</div>
-                        <div class="stats-label">Total Aset</div>
-                    </div>
-                </div>
-                <div class="col-md-3">
-                    <div class="card stats-card bg-light">
-                        <div class="stats-value text-success" id="statsGoodAssets">0</div>
-                        <div class="stats-label">Kondisi Baik</div>
-                    </div>
-                </div>
-                <div class="col-md-3">
-                    <div class="card stats-card bg-light">
-                        <div class="stats-value text-warning" id="statsWarningAssets">0</div>
-                        <div class="stats-label">Perlu Perhatian</div>
-                    </div>
-                </div>
-                <div class="col-md-3">
-                    <div class="card stats-card bg-light">
-                        <div class="stats-value text-danger" id="statsBadAssets">0</div>
-                        <div class="stats-label">Tidak Layak</div>
-                    </div>
-                </div>
-            </div>
-
             <div class="row">
                 <div class="col-lg-12">
 
@@ -400,24 +372,28 @@
                                             <option value="">Semua Peruntukan</option>
                                         </select>
                                     </div>
-                                    <div class="col-md-2">
+                                    <div class="col-md-3">
                                         <label for="filterKondisi" class="form-label">Kondisi</label>
                                         <select class="form-select form-select-sm" id="filterKondisi">
                                             <option value="">Semua</option>
-                                            <option value="good">Baik (2)</option>
-                                            <option value="warning">Perhatian (0-1)</option>
-                                            <option value="bad">Tidak Layak (&lt;0)</option>
+                                            <option value="good">Baik</option>
+                                            <option value="warning">Tidak Berfungsi</option>
+                                            <option value="bad">Tidak Layak</option>
                                         </select>
                                     </div>
-                                    <div class="col-md-2">
-                                        <button class="btn btn-primary btn-sm w-100" onclick="applyFilters()">
-                                            <i class="bi bi-funnel"></i> Filter
-                                        </button>
-                                    </div>
-                                    <div class="col-md-2">
-                                        <button class="btn btn-outline-secondary btn-sm w-100" onclick="clearFilters()">
-                                            <i class="bi bi-x-circle"></i> Reset
-                                        </button>
+                                    <div class="col-auto">
+                                        <label class="form-label">&nbsp;</label>
+                                        <div class="d-flex gap-2">
+                                            <button class="btn btn-primary btn-sm" style="height: 31px; width: 40px;"
+                                                onclick="applyFilters()" title="Filter">
+                                                <i class="bi bi-funnel"></i>
+                                            </button>
+                                            <button class="btn btn-outline-secondary btn-sm"
+                                                style="height: 31px; width: 40px;" onclick="clearFilters()"
+                                                title="Reset">
+                                                <i class="bi bi-x-circle"></i>
+                                            </button>
+                                        </div>
                                     </div>
                                 </div>
                             </div>
@@ -452,7 +428,6 @@
                                                 <th class="text-center">Fisik</th>
                                                 <th class="text-center">Fungsi</th>
                                                 <th class="text-center">Kontrak</th>
-                                                <th class="text-center">Nilai</th>
                                                 <th>Penilaian Terakhir</th>
                                             </tr>
                                         </thead>

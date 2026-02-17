@@ -18,7 +18,7 @@ if (typeof window.VendorAssetsAPI === 'undefined') {
                     .from('vendor_assets')
                     .select(`
                         *,
-                        vendors(vendor_name),
+                        vendors(vendor_name, unit_code),
                         peruntukan(jenis, deskripsi),
                         teams(nomor_polisi, category),
                         personnel(nama_personil),

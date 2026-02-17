@@ -98,6 +98,12 @@ async function getCurrentUserWithProfile() {
         }
 
         console.log('✅ User with profile loaded:', user.email);
+
+        // Save role to storage and apply menu permissions
+        if (profile) {
+            saveUserRoleToStorage(profile);
+        }
+
         return {
             ...user,
             profile: profile || null
@@ -200,6 +206,24 @@ function saveUserRoleToStorage(profile) {
         localStorage.setItem('user_role', profile.role || '');
         localStorage.setItem('user_unit_code', profile.unit_code || '');
         localStorage.setItem('user_vendor_id', profile.vendor_id || '');
+
+        // Apply menu permissions based on role
+        applyMenuPermissions(profile.role);
+    }
+}
+
+/**
+ * Apply menu permissions based on user role
+ * Hide certain menu items for specific roles
+ */
+function applyMenuPermissions(role) {
+    // Menu items to hide for UP3 users
+    if (role === 'up3_admin' || role === 'up3_user') {
+        const menuPeruntukan = document.getElementById('menu-peruntukan');
+        const menuPeralatan = document.getElementById('menu-peralatan');
+
+        if (menuPeruntukan) menuPeruntukan.style.display = 'none';
+        if (menuPeralatan) menuPeralatan.style.display = 'none';
     }
 }
 

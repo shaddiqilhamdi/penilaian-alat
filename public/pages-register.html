@@ -10,7 +10,7 @@
     <meta content="" name="keywords">
 
     <!-- Favicons -->
-    <link href="assets/img/favicon.svg" rel="icon">
+    <link href="assets/img/logo-portrait.png" rel="icon">
 
     <!-- Google Fonts -->
     <link href="https://fonts.gstatic.com" rel="preconnect">
@@ -26,122 +26,134 @@
     <link href="assets/css/style.css" rel="stylesheet">
 
     <style>
-        .register-container {
+        .auth-banner {
+            background: linear-gradient(135deg, #1a3a5c 0%, #0d4880 50%, #0a5a96 100%);
+            color: white;
+            padding: 1rem 1.5rem;
+            border-radius: 12px 12px 0 0;
             display: flex;
             align-items: center;
-            justify-content: center;
-            min-height: 100vh;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            gap: 1rem;
         }
 
-        .register-card {
-            width: 100%;
-            max-width: 450px;
-            background: white;
-            border-radius: 10px;
-            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
-            padding: 40px;
+        .auth-banner img {
+            height: 50px;
+            width: auto;
+            flex-shrink: 0;
         }
 
-        .register-header {
-            text-align: center;
-            margin-bottom: 30px;
+        .auth-banner .divider {
+            width: 2px;
+            height: 40px;
+            background: rgba(255, 255, 255, 0.3);
+            flex-shrink: 0;
         }
 
-        .register-header h1 {
-            color: #333;
-            font-size: 24px;
-            margin-bottom: 5px;
-            font-weight: 600;
-        }
-
-        .register-header p {
-            color: #666;
-            font-size: 14px;
-            margin: 0;
-        }
-
-        .form-floating>.form-control:focus~label {
-            color: #667eea;
-        }
-
-        .form-floating>.form-control:focus {
-            border-color: #667eea;
-            box-shadow: 0 0 0 0.2rem rgba(102, 126, 234, 0.25);
-        }
-
-        .btn-register {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            border: none;
-            color: white;
-            font-weight: 600;
-            padding: 12px;
-            border-radius: 5px;
-            width: 100%;
-            margin-top: 10px;
-        }
-
-        .btn-register:hover {
-            background: linear-gradient(135deg, #5568d3 0%, #6a3a8d 100%);
-            color: white;
-            transform: translateY(-2px);
-            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
-        }
-
-        .login-link {
-            text-align: center;
-            margin-top: 15px;
-        }
-
-        .login-link a {
-            color: #667eea;
-            text-decoration: none;
-            font-weight: 600;
-        }
-
-        .login-link a:hover {
-            text-decoration: underline;
-        }
-
-        .alert {
-            margin-bottom: 20px;
-            border-radius: 5px;
-        }
-
-        .loading-spinner {
-            display: none;
-            margin-right: 10px;
-        }
-
-        .register-tabs {
-            display: flex;
-            margin-bottom: 30px;
-            border-bottom: 2px solid #f0f0f0;
-        }
-
-        .register-tabs .tab-btn {
+        .auth-banner .banner-text {
             flex: 1;
-            padding: 10px;
-            background: none;
-            border: none;
-            cursor: pointer;
-            color: #999;
+        }
+
+        .auth-banner .banner-title {
+            font-size: 0.75rem;
             font-weight: 600;
-            border-bottom: 3px solid transparent;
-            transition: all 0.3s;
+            color: #ffd700;
+            margin-bottom: 2px;
+            letter-spacing: 0.5px;
         }
 
-        .register-tabs .tab-btn.active {
-            color: #667eea;
-            border-bottom-color: #667eea;
+        .auth-banner .banner-subtitle {
+            font-size: 1rem;
+            font-weight: 700;
+            margin: 0;
+            line-height: 1.2;
         }
 
-        .tab-content {
-            display: none;
+        .auth-card {
+            border: none;
+            border-radius: 12px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.2);
+            overflow: hidden;
         }
 
-        .tab-content.active {
-            display: block;
+        .auth-body {
+            padding: 1.5rem;
+            background: #fff;
+        }
+
+        .section-title {
+            color: #0d6efd;
+            font-weight: 700;
+            font-size: 0.85rem;
+            border-bottom: 2px solid #0d6efd;
+            padding-bottom: 0.5rem;
+            margin-bottom: 0.75rem;
+        }
+
+        .form-label {
+            font-weight: 600;
+            color: #495057;
+            font-size: 0.8rem;
+            margin-bottom: 0.25rem;
+        }
+
+        .form-control,
+        .form-select {
+            border-radius: 8px;
+            padding: 0.5rem 0.75rem;
+            border: 1px solid #ced4da;
+            font-size: 0.875rem;
+        }
+
+        .form-control:focus,
+        .form-select:focus {
+            border-color: #0d6efd;
+            box-shadow: 0 0 0 3px rgba(13, 110, 253, 0.15);
+        }
+
+        .input-group-text {
+            border-radius: 8px 0 0 8px;
+            background: #f8f9fa;
+            border: 1px solid #ced4da;
+            border-right: none;
+        }
+
+        .input-group .form-control {
+            border-radius: 0 8px 8px 0;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #0d6efd 0%, #0099ff 100%);
+            border: none;
+            border-radius: 8px;
+            padding: 0.75rem 1.5rem;
+            font-weight: 600;
+        }
+
+        .btn-primary:hover {
+            background: linear-gradient(135deg, #0b5ed7 0%, #0077cc 100%);
+            transform: translateY(-1px);
+            box-shadow: 0 5px 15px rgba(13, 110, 253, 0.3);
+        }
+
+        .auth-footer {
+            text-align: center;
+            padding: 1rem 1.5rem;
+            background: #f8f9fa;
+            border-top: 1px solid #dee2e6;
+        }
+
+        .auth-footer a {
+            color: #0d6efd;
+            font-weight: 600;
+            text-decoration: none;
+        }
+
+        .form-check-label {
+            font-size: 0.8rem;
+        }
+
+        .text-muted {
+            font-size: 0.75rem;
         }
     </style>
 
@@ -149,399 +161,495 @@
 
 <body>
 
-    <main class="register-container">
-        <div class="register-card">
-            <div class="register-header">
-                <div style="margin-bottom: 15px;">
-                    <i class="bi bi-shield-check fs-4 text-primary me-2"></i>
+    <main>
+        <div class="container">
+
+            <section
+                class="section register min-vh-100 d-flex flex-column align-items-center justify-content-center py-4">
+                <div class="container">
+                    <div class="row justify-content-center">
+                        <div class="col-lg-6 col-md-8 d-flex flex-column align-items-center justify-content-center">
+
+                            <div class="card mb-3 auth-card">
+
+                                <div class="auth-banner">
+                                    <img src="assets/img/logo-portrait.png" alt="Logo PLN">
+                                    <div class="divider"></div>
+                                    <div class="banner-text">
+                                        <div class="banner-title">K3L & KAM UID JAKARTA RAYA</div>
+                                        <div class="banner-subtitle">DAFTAR AKUN SISTEM PENILAIAN ALAT KERJA</div>
+                                    </div>
+                                </div>
+
+                                <div class="auth-body">
+
+                                    <!-- Alert Container -->
+                                    <div id="alertContainer"></div>
+
+                                    <!-- Loading Indicator -->
+                                    <div id="loadingSpinner" class="text-center mb-3" style="display:none;">
+                                        <div class="spinner-border text-primary" role="status">
+                                            <span class="visually-hidden">Loading...</span>
+                                        </div>
+                                        <p class="small text-muted mt-2">Mendaftarkan akun...</p>
+                                    </div>
+
+                                    <form class="row g-3" id="registerForm" novalidate>
+
+                                        <!-- Data Pribadi -->
+                                        <div class="col-12">
+                                            <h6 class="fw-bold text-primary border-bottom pb-2 mb-0">Data Pribadi</h6>
+                                        </div>
+
+                                        <div class="col-md-6">
+                                            <label for="namaInput" class="form-label">Nama Lengkap <span
+                                                    class="text-danger">*</span></label>
+                                            <input type="text" name="nama" class="form-control" id="namaInput"
+                                                placeholder="Masukkan nama lengkap" required>
+                                            <div class="invalid-feedback">Nama lengkap tidak boleh kosong.</div>
+                                        </div>
+
+                                        <div class="col-md-6">
+                                            <label for="nipInput" class="form-label">NIP <span
+                                                    class="text-danger">*</span></label>
+                                            <input type="text" name="nip" class="form-control" id="nipInput"
+                                                placeholder="Masukkan NIP" required>
+                                            <div class="invalid-feedback">NIP tidak boleh kosong.</div>
+                                        </div>
+
+                                        <div class="col-12">
+                                            <label for="emailInput" class="form-label">Email <span
+                                                    class="text-danger">*</span></label>
+                                            <div class="input-group has-validation">
+                                                <span class="input-group-text">@</span>
+                                                <input type="email" name="email" class="form-control" id="emailInput"
+                                                    placeholder="user@example.com" required>
+                                                <div class="invalid-feedback">Email tidak valid.</div>
+                                            </div>
+                                        </div>
+
+                                        <!-- Data Organisasi -->
+                                        <div class="col-12 mt-2">
+                                            <h6 class="fw-bold text-primary border-bottom pb-2 mb-0">Data Organisasi
+                                            </h6>
+                                        </div>
+
+                                        <div class="col-md-6">
+                                            <label for="unitInput" class="form-label">Unit <span
+                                                    class="text-danger">*</span></label>
+                                            <select class="form-select" id="unitInput" name="unit_code" required>
+                                                <option value="">Pilih Unit</option>
+                                            </select>
+                                            <div class="invalid-feedback">Unit harus dipilih.</div>
+                                        </div>
+
+                                        <div class="col-md-6">
+                                            <label for="jabatanInput" class="form-label">Jabatan <span
+                                                    class="text-danger">*</span></label>
+                                            <input type="text" name="jabatan" class="form-control" id="jabatanInput"
+                                                placeholder="Masukkan jabatan" required>
+                                            <div class="invalid-feedback">Jabatan tidak boleh kosong.</div>
+                                        </div>
+
+                                        <!-- Akun Pengguna -->
+                                        <div class="col-12 mt-2">
+                                            <h6 class="fw-bold text-primary border-bottom pb-2 mb-0">Akun Pengguna</h6>
+                                        </div>
+
+                                        <div class="col-md-6">
+                                            <label for="passwordInput" class="form-label">Password <span
+                                                    class="text-danger">*</span></label>
+                                            <input type="password" name="password" class="form-control"
+                                                id="passwordInput" placeholder="Minimal 8 karakter" required
+                                                minlength="8">
+                                            <div class="invalid-feedback">Password minimal 8 karakter.</div>
+                                            <small class="text-muted">Minimal 8 karakter</small>
+                                        </div>
+
+                                        <div class="col-md-6">
+                                            <label for="confirmPasswordInput" class="form-label">Konfirmasi Password
+                                                <span class="text-danger">*</span></label>
+                                            <input type="password" name="confirmPassword" class="form-control"
+                                                id="confirmPasswordInput" placeholder="Ulangi password" required>
+                                            <div class="invalid-feedback" id="confirmPasswordError">Password tidak
+                                                cocok.</div>
+                                        </div>
+
+                                        <div class="col-12">
+                                            <div class="form-check">
+                                                <input class="form-check-input" type="checkbox" id="agreeTerms"
+                                                    required>
+                                                <label class="form-check-label" for="agreeTerms">
+                                                    Saya setuju dengan <a href="#" class="text-decoration-none">Syarat &
+                                                        Ketentuan</a>
+                                                </label>
+                                                <div class="invalid-feedback">Anda harus menyetujui syarat & ketentuan.
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <div class="col-12 mb-3">
+                                            <button class="btn btn-primary w-100" id="registerBtn" type="submit">
+                                                <span id="registerBtnText">Daftar</span>
+                                                <span id="registerBtnSpinner"
+                                                    class="spinner-border spinner-border-sm ms-2" role="status"
+                                                    style="display:none;">
+                                                    <span class="visually-hidden">Loading...</span>
+                                                </span>
+                                            </button>
+                                        </div>
+
+                                        <div class="col-12">
+                                            <p class="small mb-0 text-center">Sudah punya akun? <a
+                                                    href="pages-login.html">Login di sini</a></p>
+                                        </div>
+
+                                    </form>
+
+                                </div>
+                            </div>
+
+                        </div>
+                    </div>
                 </div>
-                <h1>Daftar Akun</h1>
-                <p>Sistem Penilaian Alat Kerja PLN</p>
-            </div>
 
-            <!-- Tabs for Vendor/Public Registration -->
-            <div class="register-tabs">
-                <button class="tab-btn active" data-tab="vendor-register">Vendor</button>
-                <button class="tab-btn" data-tab="admin-register">Admin</button>
-            </div>
-
-            <!-- Alert Messages -->
-            <div id="alertContainer"></div>
-
-            <!-- VENDOR REGISTRATION -->
-            <div id="vendor-register" class="tab-content active">
-                <form id="vendorRegisterForm" novalidate>
-                    <p class="text-muted small mb-3">Gunakan kode akses yang diberikan oleh PLN untuk mendaftar</p>
-
-                    <div class="form-floating mb-3">
-                        <input type="text" class="form-control" id="vendorKodeAkses" placeholder="Kode Akses" required>
-                        <label for="vendorKodeAkses">Kode Akses Vendor *</label>
-                        <small class="text-danger d-none" id="vendorKodeAksesError"></small>
-                    </div>
-
-                    <div class="form-floating mb-3">
-                        <input type="email" class="form-control" id="vendorEmail" placeholder="Email" required>
-                        <label for="vendorEmail">Email *</label>
-                        <small class="text-danger d-none" id="vendorEmailError"></small>
-                    </div>
-
-                    <div class="form-floating mb-3">
-                        <input type="text" class="form-control" id="vendorFirstName" placeholder="Nama Depan" required>
-                        <label for="vendorFirstName">Nama Depan *</label>
-                    </div>
-
-                    <div class="form-floating mb-3">
-                        <input type="text" class="form-control" id="vendorLastName" placeholder="Nama Belakang">
-                        <label for="vendorLastName">Nama Belakang</label>
-                    </div>
-
-                    <div class="form-floating mb-3">
-                        <input type="tel" class="form-control" id="vendorPhone" placeholder="Nomor Telepon">
-                        <label for="vendorPhone">Nomor Telepon</label>
-                    </div>
-
-                    <div class="form-floating mb-3">
-                        <input type="password" class="form-control" id="vendorPassword" placeholder="Password" required>
-                        <label for="vendorPassword">Password *</label>
-                        <small class="text-muted d-block mt-1">Min. 8 karakter, kombinasi huruf, angka, dan
-                            simbol</small>
-                    </div>
-
-                    <div class="form-floating mb-3">
-                        <input type="password" class="form-control" id="vendorConfirmPassword"
-                            placeholder="Konfirmasi Password" required>
-                        <label for="vendorConfirmPassword">Konfirmasi Password *</label>
-                        <small class="text-danger d-none" id="vendorConfirmError"></small>
-                    </div>
-
-                    <div class="form-check mb-3">
-                        <input class="form-check-input" type="checkbox" id="vendorAgree" required>
-                        <label class="form-check-label" for="vendorAgree">
-                            Saya setuju dengan <a href="#" class="text-decoration-none">Syarat & Ketentuan</a>
-                        </label>
-                    </div>
-
-                    <button type="submit" class="btn btn-register" id="vendorSubmitBtn">
-                        <span class="loading-spinner" id="vendorLoadingSpinner">
-                            <span class="spinner-border spinner-border-sm"></span>
-                        </span>
-                        <span id="vendorSubmitText">Daftar sebagai Vendor</span>
-                    </button>
-
-                    <div class="login-link">
-                        Sudah punya akun? <a href="pages-login.html">Login di sini</a>
-                    </div>
-                </form>
-            </div>
-
-            <!-- ADMIN REGISTRATION (untuk internal PLN) -->
-            <div id="admin-register" class="tab-content">
-                <form id="adminRegisterForm" novalidate>
-                    <p class="text-muted small mb-3">Pendaftaran akun admin hanya oleh administrator sistem</p>
-
-                    <div class="alert alert-info" role="alert">
-                        <i class="bi bi-info-circle"></i> Hubungi administrator sistem untuk mendaftar akun admin
-                    </div>
-
-                    <div class="form-floating mb-3">
-                        <input type="email" class="form-control" id="adminEmail" placeholder="Email" required>
-                        <label for="adminEmail">Email Admin *</label>
-                    </div>
-
-                    <div class="form-floating mb-3">
-                        <input type="text" class="form-control" id="adminFirstName" placeholder="Nama Depan" required>
-                        <label for="adminFirstName">Nama Depan *</label>
-                    </div>
-
-                    <div class="form-floating mb-3">
-                        <input type="text" class="form-control" id="adminLastName" placeholder="Nama Belakang" required>
-                        <label for="adminLastName">Nama Belakang *</label>
-                    </div>
-
-                    <div class="form-floating mb-3">
-                        <select class="form-control" id="adminUnit" required>
-                            <option value="">-- Pilih Unit --</option>
-                        </select>
-                        <label for="adminUnit">Unit Kerja *</label>
-                    </div>
-
-                    <div class="form-floating mb-3">
-                        <select class="form-control" id="adminRole" required>
-                            <option value="">-- Pilih Role --</option>
-                            <option value="admin">Admin (Full Access)</option>
-                            <option value="user">Supervisor (Limited Access)</option>
-                        </select>
-                        <label for="adminRole">Role *</label>
-                    </div>
-
-                    <div class="form-floating mb-3">
-                        <input type="password" class="form-control" id="adminPassword" placeholder="Password" required>
-                        <label for="adminPassword">Password *</label>
-                    </div>
-
-                    <button type="submit" class="btn btn-register" id="adminSubmitBtn" disabled>
-                        <span class="loading-spinner" id="adminLoadingSpinner">
-                            <span class="spinner-border spinner-border-sm"></span>
-                        </span>
-                        <span id="adminSubmitText">Daftar sebagai Admin</span>
-                    </button>
-
-                    <div class="alert alert-warning mt-3" role="alert">
-                        <small>Admin registration dinonaktifkan. Hubungi super admin untuk akses.</small>
-                    </div>
-                </form>
-            </div>
+            </section>
 
         </div>
     </main>
 
-    <!-- Vendor JS Files -->
+    <!-- Supabase Library (load first) -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <script src="assets/vendor/bootstrap/js/bootstrap.bundle.min.js"></script>
 
-    <!-- Supabase Config & Auth Module -->
-    <script src="assets/js/config/supabase-config.js"></script>
-    <script src="assets/js/auth/auth.js"></script>
+    <!-- Supabase Client Config -->
+    <script src="assets/js/config/supabase-client.js"></script>
 
-    <!-- Registration Handler -->
+    <!-- API Modules -->
+    <script src="assets/js/api/profiles.js"></script>
+    <script src="assets/js/api/units.js"></script>
+
+    <!-- Auth Module -->
+    <script src="assets/js/auth/supabase-auth.js"></script>
+
+    <!-- Registration Script -->
     <script>
-        // Initialize
-        let authManager = null;
-
         document.addEventListener('DOMContentLoaded', async function () {
-            // Initialize AuthManager
-            authManager = new AuthManager(supabaseClient);
+            const registerForm = document.getElementById('registerForm');
+            const registerBtn = document.getElementById('registerBtn');
+            const registerBtnText = document.getElementById('registerBtnText');
+            const registerBtnSpinner = document.getElementById('registerBtnSpinner');
+            const namaInput = document.getElementById('namaInput');
+            const nipInput = document.getElementById('nipInput');
+            const emailInput = document.getElementById('emailInput');
+            const unitInput = document.getElementById('unitInput');
+            const jabatanInput = document.getElementById('jabatanInput');
+            const passwordInput = document.getElementById('passwordInput');
+            const confirmPasswordInput = document.getElementById('confirmPasswordInput');
+            const agreeTerms = document.getElementById('agreeTerms');
+            const alertContainer = document.getElementById('alertContainer');
+            const loadingSpinner = document.getElementById('loadingSpinner');
 
-            // Wait for initialization
-            await new Promise(resolve => {
-                const checkInit = setInterval(() => {
-                    if (authManager.isInitialized) {
-                        clearInterval(checkInit);
-                        resolve();
-                    }
-                }, 100);
-            });
-
-            // Load units for admin form
+            // Load units dropdown
             await loadUnits();
 
-            // Setup event listeners
-            setupTabSwitching();
-            setupFormHandlers();
-        });
+            // Real-time password match validation
+            confirmPasswordInput.addEventListener('input', validatePasswordMatch);
+            passwordInput.addEventListener('input', validatePasswordMatch);
 
-        /**
-         * Load units from database
-         */
-        async function loadUnits() {
-            try {
-                const { data, error } = await supabaseClient
-                    .from('unit')
-                    .select('kode_unit, unit')
-                    .order('unit');
-
-                if (error) throw error;
-
-                const unitSelect = document.getElementById('adminUnit');
-                data.forEach(unit => {
-                    const option = document.createElement('option');
-                    option.value = unit.kode_unit;
-                    option.textContent = unit.unit;
-                    unitSelect.appendChild(option);
-                });
-            } catch (error) {
-                console.error('Error loading units:', error);
-                showAlert('Gagal memuat daftar unit', 'error');
+            function validatePasswordMatch() {
+                if (confirmPasswordInput.value && passwordInput.value !== confirmPasswordInput.value) {
+                    confirmPasswordInput.setCustomValidity('Password tidak cocok');
+                } else {
+                    confirmPasswordInput.setCustomValidity('');
+                }
             }
-        }
 
-        /**
-         * Setup tab switching
-         */
-        function setupTabSwitching() {
-            const tabBtns = document.querySelectorAll('.tab-btn');
-            const tabContents = document.querySelectorAll('.tab-content');
+            /**
+             * Load units from database
+             */
+            async function loadUnits() {
+                try {
+                    // Wait for supabase client
+                    let waitCount = 0;
+                    while (typeof getSupabaseClient === 'undefined' && waitCount < 10) {
+                        await new Promise(resolve => setTimeout(resolve, 200));
+                        waitCount++;
+                    }
 
-            tabBtns.forEach(btn => {
-                btn.addEventListener('click', () => {
-                    // Remove active class from all
-                    tabBtns.forEach(b => b.classList.remove('active'));
-                    tabContents.forEach(c => c.classList.remove('active'));
+                    const supabase = getSupabaseClient();
+                    const { data, error } = await supabase
+                        .from('units')
+                        .select('unit_code, unit_name, unit_tipe')
+                        .order('unit_name');
 
-                    // Add active class to clicked tab
-                    btn.classList.add('active');
-                    const tabId = btn.getAttribute('data-tab');
-                    document.getElementById(tabId).classList.add('active');
+                    if (error) throw error;
 
-                    // Clear previous errors
-                    document.getElementById('alertContainer').innerHTML = '';
-                });
-            });
-        }
+                    if (data && data.length > 0) {
+                        data.forEach(unit => {
+                            const option = document.createElement('option');
+                            option.value = unit.unit_code;
+                            option.textContent = `${unit.unit_name} (${unit.unit_tipe})`;
+                            option.dataset.unitTipe = unit.unit_tipe; // Store unit_tipe for role determination
+                            unitInput.appendChild(option);
+                        });
+                    }
+                } catch (error) {
+                    console.error('Error loading units:', error);
+                }
+            }
 
-        /**
-         * Setup form handlers
-         */
-        function setupFormHandlers() {
-            // Vendor registration form
-            const vendorForm = document.getElementById('vendorRegisterForm');
-            vendorForm.addEventListener('submit', async (e) => {
+            registerForm.addEventListener('submit', async function (e) {
                 e.preventDefault();
-                await handleVendorRegistration();
-            });
 
-            // Admin registration form
-            const adminForm = document.getElementById('adminRegisterForm');
-            adminForm.addEventListener('submit', async (e) => {
-                e.preventDefault();
-                showAlert('Admin registration dinonaktifkan. Hubungi super admin.', 'warning');
-            });
+                // Validate form
+                if (!registerForm.checkValidity()) {
+                    e.stopPropagation();
+                    registerForm.classList.add('was-validated');
+                    return;
+                }
 
-            // Real-time validation
-            document.getElementById('vendorPassword').addEventListener('input', validatePassword);
-            document.getElementById('vendorConfirmPassword').addEventListener('input', validatePasswordMatch);
-        }
+                // Additional validation
+                const nama = namaInput.value.trim();
+                const nip = nipInput.value.trim();
+                const email = emailInput.value.trim();
+                const unitCode = unitInput.value;
+                const jabatan = jabatanInput.value.trim();
+                const password = passwordInput.value;
+                const confirmPassword = confirmPasswordInput.value;
 
-        /**
-         * Handle vendor registration
-         */
-        async function handleVendorRegistration() {
-            const kodeAkses = document.getElementById('vendorKodeAkses').value.trim();
-            const email = document.getElementById('vendorEmail').value.trim();
-            const firstName = document.getElementById('vendorFirstName').value.trim();
-            const lastName = document.getElementById('vendorLastName').value.trim();
-            const phone = document.getElementById('vendorPhone').value.trim();
-            const password = document.getElementById('vendorPassword').value;
-            const confirmPassword = document.getElementById('vendorConfirmPassword').value;
-            const agree = document.getElementById('vendorAgree').checked;
+                if (!nama || !nip || !email || !unitCode || !jabatan || !password || !confirmPassword) {
+                    showAlert('Harap isi semua field yang wajib', 'danger');
+                    return;
+                }
 
-            // Validation
-            if (!kodeAkses || !email || !firstName || !password || !confirmPassword) {
-                showAlert('Harap isi semua field yang wajib', 'warning');
-                return;
-            }
+                if (password !== confirmPassword) {
+                    showAlert('Password dan konfirmasi password tidak cocok', 'danger');
+                    return;
+                }
 
-            if (!agree) {
-                showAlert('Anda harus menyetujui Syarat & Ketentuan', 'warning');
-                return;
-            }
+                if (password.length < 8) {
+                    showAlert('Password minimal 8 karakter', 'danger');
+                    return;
+                }
 
-            if (password !== confirmPassword) {
-                showAlert('Password dan konfirmasi password tidak cocok', 'error');
-                return;
-            }
+                if (!agreeTerms.checked) {
+                    showAlert('Anda harus menyetujui Syarat & Ketentuan', 'warning');
+                    return;
+                }
 
-            if (password.length < 8) {
-                showAlert('Password minimal 8 karakter', 'error');
-                return;
-            }
+                // Show loading state
+                setLoading(true);
 
-            // Disable button
-            const submitBtn = document.getElementById('vendorSubmitBtn');
-            const loadingSpinner = document.getElementById('vendorLoadingSpinner');
-            const submitText = document.getElementById('vendorSubmitText');
+                try {
+                    // Wait for supabase client
+                    let waitCount = 0;
+                    while (typeof getSupabaseClient === 'undefined' && waitCount < 10) {
+                        await new Promise(resolve => setTimeout(resolve, 200));
+                        waitCount++;
+                    }
 
-            submitBtn.disabled = true;
-            loadingSpinner.style.display = 'inline-block';
-            submitText.textContent = 'Mendaftar...';
+                    const supabase = getSupabaseClient();
+                    console.log('📧 Attempting registration for:', email);
 
-            try {
-                const result = await authManager.signUpVendor(email, password, kodeAkses, {
-                    first_name: firstName,
-                    last_name: lastName,
-                    phone: phone
-                });
+                    // Determine role based on unit_tipe BEFORE signup
+                    const selectedOption = unitInput.options[unitInput.selectedIndex];
+                    const unitTipe = selectedOption.dataset.unitTipe;
+                    const userRole = unitTipe === 'UP3' ? 'up3_user' : 'uid_user';
 
-                if (result.success) {
-                    showAlert(result.message, 'success');
-                    // Redirect after 2 seconds
+                    // Step 1: Create auth user
+                    const { data: authData, error: authError } = await supabase.auth.signUp({
+                        email: email,
+                        password: password,
+                        options: {
+                            data: {
+                                nama: nama,
+                                nip: nip
+                            }
+                        }
+                    });
+
+                    console.log('🔐 SignUp response:', { authData, authError });
+
+                    if (authError) {
+                        console.error('❌ Auth Error:', authError);
+                        throw new Error(authError.message);
+                    }
+
+                    if (!authData.user) {
+                        console.error('❌ No user returned from signUp');
+                        throw new Error('Gagal membuat akun - tidak ada data user');
+                    }
+
+                    // Check if user already exists (identities will be empty if email confirmation pending for existing user)
+                    if (authData.user.identities && authData.user.identities.length === 0) {
+                        throw new Error('Email sudah terdaftar. Silakan login atau gunakan email lain.');
+                    }
+
+                    console.log('✅ Auth user created:', authData.user.id);
+
+                    // Check if we have a session (email confirmation OFF = has session)
+                    const hasSession = authData.session !== null;
+                    console.log('Has Session:', hasSession);
+
+                    // Step 2: Create complete profile with ALL form data
+                    const profileData = {
+                        id: authData.user.id,
+                        email: email,
+                        nama: nama,
+                        nip: nip,
+                        unit_code: unitCode,
+                        jabatan: jabatan,
+                        role: userRole,
+                        is_active: false // User needs admin approval
+                    };
+
+                    console.log('📝 Creating profile with ALL data:', profileData);
+
+                    // Insert profile - use upsert in case trigger created basic profile
+                    const { data: profileResult, error: profileError } = await supabase
+                        .from('profiles')
+                        .upsert(profileData, {
+                            onConflict: 'id',
+                            ignoreDuplicates: false // Update if exists
+                        })
+                        .select()
+                        .single();
+
+                    if (profileError) {
+                        console.error('❌ Profile creation error:', profileError);
+                        // Delete auth user if profile fails (cleanup)
+                        // Note: This requires admin API, so we just log the error
+                        throw new Error('Gagal menyimpan data profil: ' + profileError.message);
+                    }
+
+                    console.log('✅ Profile created successfully:', profileResult);
+
+                    // Verify all data was saved
+                    console.log('📋 Saved data verification:');
+                    console.log('   - ID:', profileResult.id);
+                    console.log('   - Email:', profileResult.email);
+                    console.log('   - Nama:', profileResult.nama);
+                    console.log('   - NIP:', profileResult.nip);
+                    console.log('   - Unit:', profileResult.unit_code);
+                    console.log('   - Jabatan:', profileResult.jabatan);
+                    console.log('   - Role:', profileResult.role);
+                    console.log('   - Active:', profileResult.is_active);
+
+                    // Sign out immediately so user doesn't auto-login (needs admin approval)
+                    if (hasSession) {
+                        await supabase.auth.signOut();
+                        console.log('🔒 User signed out (needs admin approval)');
+                    }
+
+                    // Success message - admin approval only (no email verification)
+                    showAlert(`
+                        <strong><i class="bi bi-check-circle me-1"></i>Pendaftaran berhasil!</strong><br>
+                        Akun Anda telah dibuat dengan role <strong>${userRole === 'up3_user' ? 'UP3 User' : 'UID User'}</strong>.<br>
+                        <span class="text-warning"><i class="bi bi-hourglass-split me-1"></i>Akun Anda perlu diaktifkan oleh Admin sebelum dapat login.</span><br>
+                        Silakan hubungi Admin untuk proses aktivasi.
+                    `, 'success');
+
+                    // Reset form
+                    registerForm.reset();
+                    registerForm.classList.remove('was-validated');
+
+                    // Redirect after 5 seconds (longer to read message)
                     setTimeout(() => {
                         window.location.href = 'pages-login.html';
-                    }, 2000);
-                } else {
-                    showAlert(result.error, 'error');
+                    }, 5000);
+
+                } catch (error) {
+                    console.error('❌ Registration error:', error);
+                    console.error('Error details:', JSON.stringify(error, null, 2));
+
+                    // Handle specific errors
+                    let errorMessage = 'Terjadi kesalahan saat mendaftar.';
+                    if (error.message.includes('already registered') || error.message.includes('sudah terdaftar')) {
+                        errorMessage = 'Email sudah terdaftar. Silakan gunakan email lain atau login.';
+                    } else if (error.message.includes('invalid email')) {
+                        errorMessage = 'Format email tidak valid.';
+                    } else if (error.message.includes('weak password')) {
+                        errorMessage = 'Password terlalu lemah. Gunakan kombinasi huruf, angka, dan simbol.';
+                    } else if (error.message.includes('Unable to validate email')) {
+                        errorMessage = 'Email tidak dapat divalidasi. Pastikan email aktif dan benar.';
+                    } else if (error.message.includes('Signup requires a valid password')) {
+                        errorMessage = 'Password tidak valid.';
+                    } else if (error.message) {
+                        errorMessage = error.message;
+                    }
+
+                    showAlert(errorMessage, 'danger');
+                } finally {
+                    setLoading(false);
                 }
-            } catch (error) {
-                console.error('Registration error:', error);
-                showAlert('Terjadi kesalahan saat mendaftar. Coba lagi.', 'error');
-            } finally {
-                submitBtn.disabled = false;
-                loadingSpinner.style.display = 'none';
-                submitText.textContent = 'Daftar sebagai Vendor';
+            });
+
+            function setLoading(isLoading) {
+                registerBtn.disabled = isLoading;
+                if (isLoading) {
+                    registerBtnText.textContent = 'Mendaftar...';
+                    registerBtnSpinner.style.display = 'inline-block';
+                    loadingSpinner.style.display = 'block';
+                } else {
+                    registerBtnText.textContent = 'Daftar';
+                    registerBtnSpinner.style.display = 'none';
+                    loadingSpinner.style.display = 'none';
+                }
             }
-        }
 
-        /**
-         * Validate password strength
-         */
-        function validatePassword() {
-            const password = document.getElementById('vendorPassword').value;
-            const strength = {
-                hasUpper: /[A-Z]/.test(password),
-                hasLower: /[a-z]/.test(password),
-                hasNumber: /[0-9]/.test(password),
-                hasSpecial: /[!@#$%^&*]/.test(password),
-                minLength: password.length >= 8
-            };
+            function showAlert(message, type = 'info') {
+                const alertClass = {
+                    'success': 'alert-success',
+                    'danger': 'alert-danger',
+                    'warning': 'alert-warning',
+                    'info': 'alert-info'
+                }[type] || 'alert-info';
 
-            const isStrong = Object.values(strength).filter(v => v).length >= 3;
-            const element = document.getElementById('vendorPassword');
+                const iconClass = {
+                    'success': 'bi-check-circle',
+                    'danger': 'bi-exclamation-octagon',
+                    'warning': 'bi-exclamation-triangle',
+                    'info': 'bi-info-circle'
+                }[type] || 'bi-info-circle';
 
-            if (password.length === 0) {
-                element.classList.remove('is-invalid', 'is-valid');
-            } else if (isStrong) {
-                element.classList.remove('is-invalid');
-                element.classList.add('is-valid');
-            } else {
-                element.classList.remove('is-valid');
-                element.classList.add('is-invalid');
+                alertContainer.innerHTML = `
+                    <div class="alert ${alertClass} alert-dismissible fade show" role="alert">
+                        <i class="bi ${iconClass} me-1"></i>
+                        ${message}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                    </div>
+                `;
             }
-        }
 
-        /**
-         * Validate password match
-         */
-        function validatePasswordMatch() {
-            const password = document.getElementById('vendorPassword').value;
-            const confirmPassword = document.getElementById('vendorConfirmPassword').value;
-            const element = document.getElementById('vendorConfirmPassword');
-            const errorMsg = document.getElementById('vendorConfirmError');
+            // Check if already logged in
+            checkAuthStatus();
 
-            if (confirmPassword.length === 0) {
-                element.classList.remove('is-invalid', 'is-valid');
-                errorMsg.classList.add('d-none');
-            } else if (password === confirmPassword) {
-                element.classList.remove('is-invalid');
-                element.classList.add('is-valid');
-                errorMsg.classList.add('d-none');
-            } else {
-                element.classList.remove('is-valid');
-                element.classList.add('is-invalid');
-                errorMsg.classList.remove('d-none');
-                errorMsg.textContent = 'Password tidak cocok';
+            async function checkAuthStatus() {
+                // Wait for config to load
+                let waitCount = 0;
+                while (typeof getSupabaseClient === 'undefined' && waitCount < 10) {
+                    await new Promise(resolve => setTimeout(resolve, 200));
+                    waitCount++;
+                }
+
+                if (typeof getSupabaseClient === 'undefined') {
+                    console.error('Supabase client not loaded');
+                    return;
+                }
+
+                try {
+                    const supabase = getSupabaseClient();
+                    const { data: { user } } = await supabase.auth.getUser();
+
+                    if (user) {
+                        // Already logged in, redirect to dashboard
+                        window.location.href = 'index.html';
+                    }
+                } catch (error) {
+                    console.log('Not logged in');
+                }
             }
-        }
-
-        /**
-         * Show alert message
-         */
-        function showAlert(message, type = 'info') {
-            const alertClass = {
-                'success': 'alert-success',
-                'error': 'alert-danger',
-                'warning': 'alert-warning',
-                'info': 'alert-info'
-            }[type] || 'alert-info';
-
-            const alertHtml = `
-        <div class="alert ${alertClass} alert-dismissible fade show" role="alert">
-          <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-          <strong>${type === 'error' ? 'Error!' : type === 'success' ? 'Sukses!' : 'Info!'}</strong> ${message}
-        </div>
-      `;
-
-            document.getElementById('alertContainer').innerHTML = alertHtml;
-        }
+        });
     </script>
 
 </body>

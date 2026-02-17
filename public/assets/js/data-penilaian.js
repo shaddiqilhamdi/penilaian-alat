@@ -279,6 +279,21 @@ function renderAssessmentDetail(assessment) {
     const statusColor = STATUS_COLORS[status] || 'bg-secondary';
     const totalScore = assessment.total_score?.toFixed(2) || '0.00';
 
+    // Build personnel list for "Personal/Regu" type assessments
+    const personnelList = assessment.assessment_personnel || [];
+    const personnelNames = personnelList
+        .map(ap => ap.personnel?.nama_personil)
+        .filter(name => name) // Remove null/undefined
+        .join(', ') || '-';
+
+    // Show personnel row only if there are personnel
+    const petugasRow = personnelList.length > 0 ? `
+        <tr>
+            <td><strong>Petugas</strong></td>
+            <td>${personnelNames}</td>
+        </tr>
+    ` : '';
+
     // Build items table
     const items = assessment.assessment_items || [];
     const itemsTableRows = items.map((item, index) => {
@@ -365,6 +380,7 @@ function renderAssessmentDetail(assessment) {
                                 <td><strong>Kendaraan</strong></td>
                                 <td>${teamNopol} ${teamCategory !== '-' ? '(' + teamCategory + ')' : ''}</td>
                             </tr>
+                            ${petugasRow}
                         </table>
                     </div>
                 </div>

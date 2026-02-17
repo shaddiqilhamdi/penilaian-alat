@@ -10,7 +10,7 @@
   <meta content="" name="keywords">
 
   <!-- Favicons -->
-  <link href="assets/img/favicon.svg" rel="icon">
+  <link href="assets/img/logo-portrait.png" rel="icon">
 
   <!-- Google Fonts -->
   <link href="https://fonts.gstatic.com" rel="preconnect">
@@ -25,6 +25,117 @@
   <!-- Template Main CSS File -->
   <link href="assets/css/style.css" rel="stylesheet">
 
+  <style>
+    .auth-banner {
+      background: linear-gradient(135deg, #1a3a5c 0%, #0d4880 50%, #0a5a96 100%);
+      color: white;
+      padding: 1rem 1.5rem;
+      border-radius: 12px 12px 0 0;
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+    }
+
+    .auth-banner img {
+      height: 50px;
+      width: auto;
+      flex-shrink: 0;
+    }
+
+    .auth-banner .divider {
+      width: 2px;
+      height: 40px;
+      background: rgba(255, 255, 255, 0.3);
+      flex-shrink: 0;
+    }
+
+    .auth-banner .banner-text {
+      flex: 1;
+    }
+
+    .auth-banner .banner-title {
+      font-size: 0.7rem;
+      font-weight: 600;
+      color: #ffd700;
+      margin-bottom: 2px;
+      letter-spacing: 0.5px;
+    }
+
+    .auth-banner .banner-subtitle {
+      font-size: 0.9rem;
+      font-weight: 700;
+      margin: 0;
+      line-height: 1.2;
+    }
+
+    .auth-card {
+      border: none;
+      border-radius: 12px;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.2);
+      overflow: hidden;
+    }
+
+    .auth-body {
+      padding: 1.5rem;
+      background: #fff;
+    }
+
+    .form-label {
+      font-weight: 600;
+      color: #495057;
+      font-size: 0.875rem;
+    }
+
+    .form-control {
+      border-radius: 8px;
+      padding: 0.625rem 1rem;
+      border: 1px solid #ced4da;
+    }
+
+    .form-control:focus {
+      border-color: #0d6efd;
+      box-shadow: 0 0 0 3px rgba(13, 110, 253, 0.15);
+    }
+
+    .input-group-text {
+      border-radius: 8px 0 0 8px;
+      background: #f8f9fa;
+      border: 1px solid #ced4da;
+      border-right: none;
+    }
+
+    .input-group .form-control {
+      border-radius: 0 8px 8px 0;
+    }
+
+    .btn-primary {
+      background: linear-gradient(135deg, #0d6efd 0%, #0099ff 100%);
+      border: none;
+      border-radius: 8px;
+      padding: 0.75rem 1.5rem;
+      font-weight: 600;
+    }
+
+    .btn-primary:hover {
+      background: linear-gradient(135deg, #0b5ed7 0%, #0077cc 100%);
+      transform: translateY(-1px);
+      box-shadow: 0 5px 15px rgba(13, 110, 253, 0.3);
+    }
+
+    .auth-footer {
+      text-align: center;
+      padding: 1rem 1.5rem;
+      background: #f8f9fa;
+      border-top: 1px solid #dee2e6;
+    }
+
+    .auth-footer a {
+      color: #0d6efd;
+      font-weight: 600;
+      text-decoration: none;
+    }
+  </style>
+
 </head>
 
 <body>
@@ -37,14 +148,18 @@
           <div class="row justify-content-center">
             <div class="col-lg-4 col-md-6 d-flex flex-column align-items-center justify-content-center">
 
-              <div class="card mb-3">
+              <div class="card mb-3 auth-card">
 
-                <div class="card-body">
-
-                  <div class="pt-4 pb-2">
-                    <h5 class="card-title text-center pb-0 fs-4">Penilaian Alat Kerja</h5>
-                    <p class="text-center small">Sistem Penilaian APD</p>
+                <div class="auth-banner">
+                  <img src="assets/img/logo-portrait.png" alt="Logo PLN">
+                  <div class="divider"></div>
+                  <div class="banner-text">
+                    <div class="banner-title">K3L & KAM UID JAKARTA RAYA</div>
+                    <div class="banner-subtitle">LOGIN SISTEM PENILAIAN ALAT KERJA</div>
                   </div>
+                </div>
+
+                <div class="auth-body">
 
                   <!-- Error Alert -->
                   <div id="alertContainer" style="display:none;">
@@ -80,10 +195,9 @@
                       <div class="invalid-feedback">Please enter your password!</div>
                     </div>
 
-                    <div class="col-12 mb-4">
+                    <div class="col-12 mb-1">
                       <div class="form-check">
-                        <input class="form-check-input" type="checkbox" name="remember" value="true" id="rememberMe">
-                        <label class="form-check-label" for="rememberMe">Remember me</label>
+
                       </div>
                     </div>
 
@@ -152,12 +266,24 @@
           if (result.success) {
             console.log('✅ Login berhasil');
 
-            // Get user profile to check role
+            // Get user profile to check role and active status
             const userWithProfile = await getCurrentUserWithProfile();
             if (userWithProfile && userWithProfile.profile) {
-              const role = userWithProfile.profile.role;
+              const profile = userWithProfile.profile;
+
+              // Check if account is active
+              if (profile.is_active === false) {
+                console.log('⚠️ Akun belum aktif, logout');
+                // Sign out immediately
+                const client = getSupabaseClient();
+                await client.auth.signOut();
+                showError('Akun Anda belum diaktifkan. Silakan hubungi Admin untuk aktivasi akun.');
+                return;
+              }
+
+              const role = profile.role;
               // Save role to localStorage
-              saveUserRoleToStorage(userWithProfile.profile);
+              saveUserRoleToStorage(profile);
 
               // Redirect based on role
               if (role === 'petugas') {
@@ -169,11 +295,20 @@
                 window.location.href = 'index.html';
               }
             } else {
-              // Fallback to dashboard if no profile
-              window.location.href = 'index.html';
+              // No profile found - sign out and show error
+              const client = getSupabaseClient();
+              await client.auth.signOut();
+              showError('Profil pengguna tidak ditemukan. Silakan hubungi Admin.');
             }
           } else {
-            showError(result.error || 'Login gagal');
+            // Handle specific error messages
+            let errorMsg = result.error || 'Login gagal';
+            if (errorMsg.includes('Email not confirmed')) {
+              errorMsg = 'Email belum diverifikasi. Silakan cek inbox email Anda dan klik link verifikasi.';
+            } else if (errorMsg.includes('Invalid login credentials')) {
+              errorMsg = 'Email atau password salah.';
+            }
+            showError(errorMsg);
           }
         } catch (error) {
           showError('Terjadi kesalahan: ' + error.message);

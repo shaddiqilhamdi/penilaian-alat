@@ -72,7 +72,7 @@ async function handleFormSubmission(event) {
             personnelIds = [...new Set([...personnelIds, ...newIds])];
         }
 
-        // Untuk vendor_assets, simpan personnel pertama (atau null)
+        // For backward compatibility with single personnel_id (first one)
         const personnelId = personnelIds.length > 0 ? personnelIds[0] : null;
 
         // Prepare items for edge function
@@ -93,7 +93,8 @@ async function handleFormSubmission(event) {
             vendor_id: formData.vendor_id,
             peruntukan_id: formData.peruntukan_id,
             team_id: teamId || null,
-            personnel_id: personnelId || null,
+            personnel_id: personnelId || null,        // Single personnel (backward compatibility)
+            personnel_ids: personnelIds || [],        // All personnel for regu
             assessor_id: currentUser?.id,
             items: items,
             jumlah_item_peralatan: items.length,

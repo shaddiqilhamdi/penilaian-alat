@@ -8,6 +8,7 @@ let currentUser = null;
 let currentProfile = null;
 let usersList = [];
 let selectedUserId = null;
+let currentFilter = 'all'; // 'all' or 'pending'
 
 // Initialize page
 document.addEventListener('DOMContentLoaded', async function () {
@@ -167,7 +168,8 @@ async function loadUsers() {
 
         if (usersToDisplay.length > 0) {
             usersList = usersToDisplay;
-            displayUsers(usersList);
+            updatePendingCount();
+            displayUsers(filterUsersList());
             if (tableContainerEl) tableContainerEl.style.display = 'block';
         } else {
             if (emptyStateEl) emptyStateEl.style.display = 'block';
@@ -181,6 +183,55 @@ async function loadUsers() {
     } finally {
         const loadingEl = document.getElementById('loadingUsers');
         if (loadingEl) loadingEl.style.display = 'none';
+    }
+}
+
+// Filter users based on current filter
+function filterUsersList() {
+    if (currentFilter === 'pending') {
+        return usersList.filter(u => u.is_active === false);
+    }
+    return usersList;
+}
+
+// Update pending count badge
+function updatePendingCount() {
+    const pendingUsers = usersList.filter(u => u.is_active === false);
+    const pendingCountEl = document.getElementById('pendingCount');
+    if (pendingCountEl) {
+        pendingCountEl.textContent = pendingUsers.length;
+        // Show/hide pending badge based on count
+        pendingCountEl.style.display = pendingUsers.length > 0 ? 'inline' : 'none';
+    }
+}
+
+// Filter users (called from filter buttons)
+function filterUsers(filter) {
+    currentFilter = filter;
+
+    // Update button states
+    const filterAll = document.getElementById('filterAll');
+    const filterPending = document.getElementById('filterPending');
+
+    if (filterAll && filterPending) {
+        if (filter === 'all') {
+            filterAll.classList.add('active');
+            filterPending.classList.remove('active');
+        } else {
+            filterAll.classList.remove('active');
+            filterPending.classList.add('active');
+        }
+    }
+
+    // Display filtered users
+    const filteredUsers = filterUsersList();
+    if (filteredUsers.length > 0) {
+        displayUsers(filteredUsers);
+        document.getElementById('usersTableContainer').style.display = 'block';
+        document.getElementById('emptyState').style.display = 'none';
+    } else {
+        document.getElementById('usersTableContainer').style.display = 'none';
+        document.getElementById('emptyState').style.display = 'block';
     }
 }
 
@@ -207,6 +258,29 @@ function displayUsers(users) {
         // Get unit name from units relation (if available)
         const unitName = user.units?.unit_name || user.unit_code || '-';
 
+        // Status badge
+        const isActive = user.is_active !== false; // Default to true if undefined
+        const statusBadge = isActive
+            ? '<span class="badge bg-success">Aktif</span>'
+            : '<span class="badge bg-warning text-dark">Pending</span>';
+
+        // Action buttons based on permissions and status
+        const role = currentProfile.role;
+        const canApprove = ['uid_admin', 'uid_user', 'up3_admin'].includes(role);
+
+        let actionButtons = `
+            <button class="btn btn-info btn-sm" onclick="viewUser('${user.id}')" title="Lihat Detail">
+                <i class="bi bi-eye"></i>
+            </button>`;
+
+        // Show approve button for pending users
+        if (!isActive && canApprove && user.id !== currentProfile.id) {
+            actionButtons += `
+            <button class="btn btn-success btn-sm" onclick="approveUser('${user.id}')" title="Approve">
+                <i class="bi bi-check-lg"></i>
+            </button>`;
+        }
+
         row.innerHTML = `
       <td>
         <div class="d-flex align-items-center">
@@ -223,11 +297,10 @@ function displayUsers(users) {
       <td>
         <span class="badge ${roleBadgeClass} badge-role">${roleLabel}</span>
       </td>
+      <td>${statusBadge}</td>
       <td>
         <div class="action-buttons">
-          <button class="btn btn-info btn-sm" onclick="viewUser('${user.id}')" title="Lihat Detail">
-            <i class="bi bi-eye"></i>
-          </button>
+          ${actionButtons}
         </div>
       </td>
     `;
@@ -285,7 +358,16 @@ function viewUser(userId) {
     document.getElementById('modalUserUnit').textContent = unitName;
     document.getElementById('modalUserJabatan').textContent = user.jabatan || '-';
     document.getElementById('modalUserBidang').textContent = user.bidang || '-';
-    document.getElementById('modalUserPhone').textContent = user.no_hp || '-';
+    document.getElementById('modalUserSubBidang').textContent = user.sub_bidang || '-';
+
+    // Status display
+    const isActive = user.is_active !== false;
+    const statusEl = document.getElementById('modalUserStatus');
+    if (statusEl) {
+        statusEl.innerHTML = isActive
+            ? '<span class="badge bg-success">Aktif</span>'
+            : '<span class="badge bg-warning text-dark">Pending Approval</span>';
+    }
 
     // Show/hide edit and delete buttons based on role
     const editBtn = document.getElementById('modalEditBtn');
@@ -328,6 +410,15 @@ function viewUser(userId) {
     if (editBtn) editBtn.style.display = canEdit ? 'inline-block' : 'none';
     if (deleteBtn) deleteBtn.style.display = canDelete ? 'inline-block' : 'none';
 
+    // Show/hide approve/reject buttons for pending users
+    const approveBtn = document.getElementById('modalApproveBtn');
+    const rejectBtn = document.getElementById('modalRejectBtn');
+    const canApprove = ['uid_admin', 'uid_user', 'up3_admin'].includes(role);
+    const isPending = user.is_active === false;
+
+    if (approveBtn) approveBtn.style.display = (canApprove && isPending && !isOwnProfile) ? 'inline-block' : 'none';
+    if (rejectBtn) rejectBtn.style.display = (canApprove && isPending && !isOwnProfile) ? 'inline-block' : 'none';
+
     // Show modal
     const modal = new bootstrap.Modal(document.getElementById('userDetailModal'));
     modal.show();
@@ -359,10 +450,36 @@ function openEditModal(userId) {
     document.getElementById('editNip').value = user.nip || '';
     document.getElementById('editJabatan').value = user.jabatan || '';
     document.getElementById('editBidang').value = user.bidang || '';
-    document.getElementById('editNoHp').value = user.no_hp || '';
+    document.getElementById('editSubBidang').value = user.sub_bidang || '';
 
     // Check if editing own profile
     const isOwnProfile = user.id === currentProfile.id;
+
+    // Set is_active toggle
+    const isActiveContainer = document.getElementById('editIsActiveContainer');
+    const isActiveCheckbox = document.getElementById('editIsActive');
+    const isActiveLabel = document.getElementById('editIsActiveLabel');
+
+    // Show is_active toggle only for admins editing others (not self)
+    const canToggleActive = ['uid_admin', 'uid_user', 'up3_admin'].includes(currentProfile.role) && !isOwnProfile;
+    if (isActiveContainer) {
+        isActiveContainer.style.display = canToggleActive ? 'block' : 'none';
+    }
+    if (isActiveCheckbox) {
+        isActiveCheckbox.checked = user.is_active !== false;
+    }
+    if (isActiveLabel) {
+        isActiveLabel.textContent = user.is_active !== false ? 'Aktif' : 'Tidak Aktif';
+    }
+
+    // Update label on checkbox change
+    if (isActiveCheckbox) {
+        isActiveCheckbox.onchange = function () {
+            if (isActiveLabel) {
+                isActiveLabel.textContent = this.checked ? 'Aktif' : 'Tidak Aktif';
+            }
+        };
+    }
 
     // Populate role dropdown based on current user's role
     populateRoleDropdown(user.role, isOwnProfile);
@@ -445,8 +562,13 @@ async function saveUserEdit() {
     const nip = document.getElementById('editNip').value.trim();
     const jabatan = document.getElementById('editJabatan').value.trim();
     const bidang = document.getElementById('editBidang').value.trim();
-    const noHp = document.getElementById('editNoHp').value.trim();
+    const subBidang = document.getElementById('editSubBidang').value.trim();
     const role = document.getElementById('editRole').value;
+
+    // Get is_active if the container is visible
+    const isActiveContainer = document.getElementById('editIsActiveContainer');
+    const isActiveCheckbox = document.getElementById('editIsActive');
+    const isActiveVisible = isActiveContainer && isActiveContainer.style.display !== 'none';
 
     // Validation
     if (!nama) {
@@ -465,9 +587,14 @@ async function saveUserEdit() {
             nip: nip || null,
             jabatan: jabatan || null,
             bidang: bidang || null,
-            no_hp: noHp || null,
+            sub_bidang: subBidang || null,
             role: role
         };
+
+        // Include is_active only if admin is editing others
+        if (isActiveVisible && isActiveCheckbox) {
+            updates.is_active = isActiveCheckbox.checked;
+        }
 
         const result = await ProfilesAPI.update(userId, updates);
 
@@ -532,26 +659,103 @@ async function deleteUserFromModal() {
     await deleteUser(selectedUserId, user.nama);
 }
 
+// Approve user (activate account)
+async function approveUser(userId) {
+    const user = usersList.find(u => u.id === userId);
+    if (!user) return;
+
+    const result = await Swal.fire({
+        title: 'Aktifkan Akun?',
+        html: `Approve pengguna <strong>${user.nama}</strong>?<br><small class="text-muted">Pengguna akan bisa login setelah diapprove.</small>`,
+        icon: 'question',
+        showCancelButton: true,
+        confirmButtonColor: '#28a745',
+        cancelButtonColor: '#6c757d',
+        confirmButtonText: 'Ya, Approve',
+        cancelButtonText: 'Batal'
+    });
+
+    if (!result.isConfirmed) return;
+
+    try {
+        const updateResult = await ProfilesAPI.update(userId, { is_active: true });
+
+        if (updateResult.success) {
+            showAlert('alertContainer', `Pengguna "${user.nama}" berhasil diaktifkan`, 'success');
+            await loadUsers();
+        } else {
+            showAlert('alertContainer', 'Gagal mengaktifkan pengguna: ' + (updateResult.error || 'Unknown error'), 'danger');
+        }
+    } catch (error) {
+        console.error('Error approving user:', error);
+        showAlert('alertContainer', 'Terjadi kesalahan: ' + error.message, 'danger');
+    }
+}
+
+// Approve user from modal
+async function approveUserFromModal() {
+    if (!selectedUserId) return;
+
+    // Close modal first
+    const modal = bootstrap.Modal.getInstance(document.getElementById('userDetailModal'));
+    if (modal) modal.hide();
+
+    await approveUser(selectedUserId);
+}
+
+// Reject user (delete pending account)
+async function rejectUserFromModal() {
+    const user = usersList.find(u => u.id === selectedUserId);
+    if (!user) return;
+
+    const result = await Swal.fire({
+        title: 'Tolak Pendaftaran?',
+        html: `Tolak pendaftaran <strong>${user.nama}</strong>?<br><small class="text-muted">Akun akan dihapus dan pengguna harus mendaftar ulang.</small>`,
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#d33',
+        cancelButtonColor: '#6c757d',
+        confirmButtonText: 'Ya, Tolak',
+        cancelButtonText: 'Batal'
+    });
+
+    if (!result.isConfirmed) return;
+
+    // Close modal first
+    const modal = bootstrap.Modal.getInstance(document.getElementById('userDetailModal'));
+    if (modal) modal.hide();
+
+    // Delete the user
+    await deleteUser(selectedUserId, user.nama);
+}
+
 // Edit user (opens edit modal)
 function editUser(userId) {
     openEditModal(userId);
 }
 
-// Delete user
+// Delete user (uses database function to delete from both profiles and auth.users)
 async function deleteUser(userId, userName) {
     try {
         const client = getSupabaseClient();
-        const { error } = await client
-            .from('profiles')
-            .delete()
-            .eq('id', userId);
+
+        // Call the delete_user RPC function
+        const { data, error } = await client.rpc('delete_user', {
+            target_user_id: userId
+        });
 
         if (error) {
             showAlert('alertContainer', 'Gagal menghapus pengguna: ' + error.message, 'danger');
-        } else {
-            showAlert('alertContainer', 'Pengguna berhasil dihapus', 'success');
+            return;
+        }
+
+        // Check result from function
+        if (data && data.success) {
+            showAlert('alertContainer', `Pengguna "${userName}" berhasil dihapus`, 'success');
             // Reload users
             await loadUsers();
+        } else {
+            showAlert('alertContainer', 'Gagal menghapus pengguna: ' + (data?.error || 'Unknown error'), 'danger');
         }
 
     } catch (error) {

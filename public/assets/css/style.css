@@ -1601,3 +1601,129 @@ html.role-petugas .hide-for-petugas {
 #menu-log {
   display: none !important;
 }
+
+/*--------------------------------------------------------------
+# Print Styles for Reports
+--------------------------------------------------------------*/
+@media print {
+
+  /* Hide non-printable elements */
+  .d-print-none,
+  .sidebar,
+  .header,
+  .footer,
+  .back-to-top,
+  .modal-header,
+  .modal-footer,
+  .btn,
+  nav,
+  .pagetitle {
+    display: none !important;
+  }
+
+  /* Show print-only elements */
+  .d-print-block {
+    display: block !important;
+  }
+
+  /* Modal adjustments for print */
+  .modal {
+    position: static !important;
+    display: block !important;
+    overflow: visible !important;
+  }
+
+  .modal-dialog {
+    max-width: 100% !important;
+    margin: 0 !important;
+    position: static !important;
+    transform: none !important;
+  }
+
+  .modal-content {
+    border: none !important;
+    box-shadow: none !important;
+  }
+
+  .modal-body {
+    padding: 0 !important;
+    overflow: visible !important;
+  }
+
+  .modal-backdrop {
+    display: none !important;
+  }
+
+  /* Page setup */
+  body {
+    font-size: 11pt !important;
+    line-height: 1.4 !important;
+    background: white !important;
+    color: black !important;
+  }
+
+  /* Table print styles */
+  .table {
+    font-size: 9pt !important;
+    border-collapse: collapse !important;
+  }
+
+  .table th,
+  .table td {
+    border: 1px solid #333 !important;
+    padding: 4px 8px !important;
+  }
+
+  .table-bordered {
+    border: 1px solid #333 !important;
+  }
+
+  /* Badge print styles - make them visible in print */
+  .badge {
+    border: 1px solid #333 !important;
+    padding: 2px 6px !important;
+  }
+
+  .badge.bg-success {
+    background-color: #d4edda !important;
+    color: #155724 !important;
+  }
+
+  .badge.bg-danger {
+    background-color: #f8d7da !important;
+    color: #721c24 !important;
+  }
+
+  .badge.bg-warning {
+    background-color: #fff3cd !important;
+    color: #856404 !important;
+  }
+
+  .badge.bg-info {
+    background-color: #d1ecf1 !important;
+    color: #0c5460 !important;
+  }
+
+  /* Progress bar print */
+  .progress {
+    border: 1px solid #333 !important;
+    background: #eee !important;
+  }
+
+  .progress-bar {
+    background: #666 !important;
+  }
+
+  /* Avoid page breaks inside elements */
+  .table,
+  .card,
+  .border {
+    page-break-inside: avoid !important;
+  }
+
+  /* Page margins */
+  @page {
+    margin: 1cm;
+    size: A4;
+  }
+}

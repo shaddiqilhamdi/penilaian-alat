@@ -73,6 +73,10 @@ if (typeof window.AssessmentsAPI === 'undefined') {
                         assessment_items(
                             *,
                             equipment_master(id, nama_alat, kategori, satuan)
+                        ),
+                        assessment_personnel(
+                            id,
+                            personnel(id, nama_personil)
                         )
                     `)
                     .eq('id', assessmentId)

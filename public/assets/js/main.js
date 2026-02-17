@@ -3,6 +3,21 @@
   "use strict";
 
   /**
+   * Apply menu permissions based on user role from localStorage
+   * This runs immediately to hide menus before they're visible
+   */
+  (function applyMenuPermissionsFromStorage() {
+    const role = localStorage.getItem('user_role');
+    if (role === 'up3_admin' || role === 'up3_user') {
+      const menuPeruntukan = document.getElementById('menu-peruntukan');
+      const menuPeralatan = document.getElementById('menu-peralatan');
+
+      if (menuPeruntukan) menuPeruntukan.style.display = 'none';
+      if (menuPeralatan) menuPeralatan.style.display = 'none';
+    }
+  })();
+
+  /**
    * Easy selector helper function
    */
   const select = (el, all = false) => {

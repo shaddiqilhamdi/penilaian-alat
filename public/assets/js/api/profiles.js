@@ -247,16 +247,21 @@ if (typeof window.ProfilesAPI === 'undefined') {
                     .from('profiles')
                     .update(updates)
                     .eq('id', profileId)
-                    .select()
-                    .single();
+                    .select();
 
                 if (error) {
                     console.error('❌ Failed to update profile:', error);
                     return { success: false, error: error.message };
                 }
 
+                // Check if any row was updated
+                if (!data || data.length === 0) {
+                    console.error('❌ No profile updated - check RLS policies or if profile exists');
+                    return { success: false, error: 'Profile not found or no permission to update' };
+                }
+
                 console.log('✅ Profile updated:', profileId);
-                return { success: true, data };
+                return { success: true, data: data[0] };
             } catch (error) {
                 console.error('❌ Error updating profile:', error);
                 return { success: false, error: error.message };

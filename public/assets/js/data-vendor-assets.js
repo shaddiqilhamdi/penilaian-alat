@@ -7,6 +7,7 @@
 let allAssets = [];
 let vendors = [];
 let peruntukanList = [];
+let currentUserProfile = null;
 
 document.addEventListener('DOMContentLoaded', async function () {
     // Wait for Supabase client
@@ -54,6 +55,7 @@ async function checkAuth() {
         // Load profile for navbar
         const userWithProfile = await getCurrentUserWithProfile();
         if (userWithProfile?.profile) {
+            currentUserProfile = userWithProfile.profile;
             updateNavbar(userWithProfile.profile);
         }
     } catch (error) {
@@ -90,6 +92,17 @@ async function loadVendors() {
         const result = await VendorsAPI.getAll();
         if (result.success && result.data) {
             vendors = result.data;
+
+            // Filter by unit_code for UP3 users
+            if (currentUserProfile) {
+                const role = currentUserProfile.role;
+                const unitCode = currentUserProfile.unit_code;
+
+                if ((role === 'up3_admin' || role === 'up3_user') && unitCode) {
+                    vendors = vendors.filter(v => v.unit_code === unitCode);
+                }
+            }
+
             // Sort by unit_code then vendor_name
             vendors.sort((a, b) => {
                 const unitCompare = (a.unit_code || '').localeCompare(b.unit_code || '');
@@ -135,9 +148,20 @@ async function loadAllAssets() {
             throw new Error(result.error || 'Failed to load assets');
         }
 
-        allAssets = result.data || [];
+        let assets = result.data || [];
+
+        // Filter by unit_code for UP3 users
+        if (currentUserProfile) {
+            const role = currentUserProfile.role;
+            const unitCode = currentUserProfile.unit_code;
+
+            if ((role === 'up3_admin' || role === 'up3_user') && unitCode) {
+                assets = assets.filter(a => a.vendors?.unit_code === unitCode);
+            }
+        }
+
+        allAssets = assets;
         renderAssets(allAssets);
-        updateStats(allAssets);
 
     } catch (error) {
         console.error('Error loading assets:', error);
@@ -173,7 +197,6 @@ function renderAssets(assets) {
         const fisik = asset.kondisi_fisik;
         const fungsi = asset.kondisi_fungsi;
         const kontrak = asset.kesesuaian_kontrak;
-        const nilai = asset.nilai ?? (kontrak + fisik + fungsi);
 
         // Score badges
         const fisikBadge = fisik === 0
@@ -185,16 +208,6 @@ function renderAssets(assets) {
         const kontrakBadge = kontrak === 2
             ? '<span class="badge bg-success">Sesuai</span>'
             : '<span class="badge bg-danger">Tidak</span>';
-
-        // Nilai badge
-        let nilaiBadge = '';
-        if (nilai >= 2) {
-            nilaiBadge = `<span class="badge bg-success">${nilai}</span>`;
-        } else if (nilai >= 0) {
-            nilaiBadge = `<span class="badge bg-warning">${nilai}</span>`;
-        } else {
-            nilaiBadge = `<span class="badge bg-danger">${nilai}</span>`;
-        }
 
         // Last assessment date
         const lastDate = asset.last_assessment_date
@@ -212,28 +225,10 @@ function renderAssets(assets) {
                 <td class="text-center">${fisikBadge}</td>
                 <td class="text-center">${fungsiBadge}</td>
                 <td class="text-center">${kontrakBadge}</td>
-                <td class="text-center">${nilaiBadge}</td>
                 <td><small>${lastDate}</small></td>
             </tr>
         `;
     }).join('');
-}
-
-// Update stats cards
-function updateStats(assets) {
-    let good = 0, warning = 0, bad = 0;
-
-    assets.forEach(asset => {
-        const nilai = asset.nilai ?? 0;
-        if (nilai >= 2) good++;
-        else if (nilai >= 0) warning++;
-        else bad++;
-    });
-
-    document.getElementById('statsTotalAssets').textContent = assets.length;
-    document.getElementById('statsGoodAssets').textContent = good;
-    document.getElementById('statsWarningAssets').textContent = warning;
-    document.getElementById('statsBadAssets').textContent = bad;
 }
 
 // Apply filters
@@ -254,16 +249,16 @@ function applyFilters() {
 
     if (kondisi) {
         filtered = filtered.filter(a => {
-            const nilai = a.nilai ?? 0;
-            if (kondisi === 'good') return nilai >= 2;
-            if (kondisi === 'warning') return nilai >= 0 && nilai < 2;
-            if (kondisi === 'bad') return nilai < 0;
+            const fisik = a.kondisi_fisik ?? 0;
+            const fungsi = a.kondisi_fungsi ?? 0;
+            if (kondisi === 'good') return fisik === 0 && fungsi === 0;
+            if (kondisi === 'warning') return fisik === 0 && fungsi === -1;
+            if (kondisi === 'bad') return fisik === -1;
             return true;
         });
     }
 
     renderAssets(filtered);
-    updateStats(filtered);
 }
 
 // Clear filters
@@ -272,7 +267,6 @@ function clearFilters() {
     document.getElementById('filterPeruntukan').value = '';
     document.getElementById('filterKondisi').value = '';
     renderAssets(allAssets);
-    updateStats(allAssets);
 }
 
 // Show loading state

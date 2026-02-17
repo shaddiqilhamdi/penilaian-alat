@@ -322,7 +322,8 @@ async function handleFormSubmit(form) {
             sub_bidang: userData.sub_bidang,
             jabatan: userData.jabatan,
             role: userData.role,
-            vendor_id: userData.vendor_id
+            vendor_id: userData.vendor_id,
+            is_active: true // User added by admin: auto-active, no approval needed
         };
 
         const profileResult = await ProfilesAPI.upsert(profileData);

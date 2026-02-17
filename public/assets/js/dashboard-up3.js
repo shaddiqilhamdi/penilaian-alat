@@ -8,17 +8,14 @@ async function loadUP3Dashboard() {
         // Load basic stats
         await loadUP3Stats();
 
+        // Load daily entry chart
+        await loadUP3DailyChart();
+
         // Load vendor recap per peruntukan
         await loadUP3VendorRecap();
 
         // Load equipment issues for this unit
         await loadUP3EquipmentIssues();
-
-        // Load recent assessments
-        await loadUP3RecentAssessments();
-
-        // Load teams with assessments
-        await loadUP3TeamsWithAssessments();
     } catch (error) {
         // Dashboard error
     }
@@ -54,13 +51,22 @@ async function loadUP3Stats() {
 
         if (vendorIds.length === 0) {
             document.getElementById('up3TotalAssessments').textContent = '0';
-            document.getElementById('up3TotalVendors').textContent = '0';
             document.getElementById('up3TotalEquipment').textContent = '0';
             document.getElementById('up3AvgScore').textContent = '0.00';
+            document.getElementById('up3PersonalScoreBadge').textContent = 'P: 0.00';
+            document.getElementById('up3ReguScoreBadge').textContent = 'R: 0.00';
+            document.getElementById('up3TidakLayak').textContent = '0';
+            document.getElementById('up3TidakBerfungsi').textContent = '0';
+            document.getElementById('up3KontrakPct').textContent = '0%';
+            window.up3VendorIds = [];
             return;
         }
 
-        // Query assessments for vendors and current month
+        // Store vendorIds early for other functions
+        window.up3VendorIds = vendorIds;
+        console.log('UP3 vendorIds set:', vendorIds);
+
+        // Query assessments for vendors and current month (for assessment count)
         const { data: assessments, error: assessmentsError } = await client
             .from('assessments')
             .select('id, vendor_id')
@@ -70,42 +76,64 @@ async function loadUP3Stats() {
 
         if (assessmentsError) throw assessmentsError;
 
-        // Calculate stats
+        // Calculate assessment stats
         const totalAssessments = assessments?.length || 0;
-        const uniqueVendors = new Set(assessments?.map(a => a.vendor_id) || []).size;
 
-        // Get assessment items for this month
-        const assessmentIds = assessments?.map(a => a.id) || [];
+        // Get vendor_assets for equipment stats (current month) with peruntukan info
+        const { data: vendorAssets, error: assetsError } = await client
+            .from('vendor_assets')
+            .select(`
+                id, nilai, kondisi_fisik, kondisi_fungsi, kesesuaian_kontrak,
+                peruntukan(jenis)
+            `)
+            .in('vendor_id', vendorIds)
+            .gte('last_assessment_date', firstDayOfMonth.toISOString())
+            .lte('last_assessment_date', lastDayOfMonth.toISOString());
 
-        let items = [];
-        if (assessmentIds.length > 0) {
-            const { data: itemsData, error: itemsError } = await client
-                .from('assessment_items')
-                .select('id, score_item')
-                .in('assessment_id', assessmentIds);
+        if (assetsError) throw assetsError;
 
-            if (itemsError) throw itemsError;
-            items = itemsData || [];
-        }
-
-        const totalEquipment = items.length;
-        const avgScore = items.length > 0
-            ? (items.reduce((sum, item) => sum + (item.score_item || 0), 0) / items.length)
+        const totalEquipment = vendorAssets?.length || 0;
+        const avgScore = totalEquipment > 0
+            ? (vendorAssets.reduce((sum, asset) => sum + (asset.nilai || 0), 0) / totalEquipment)
             : 0;
+
+        // Calculate Personal vs Regu scores
+        const personalAssets = vendorAssets?.filter(a => a.peruntukan?.jenis === 'Personal') || [];
+        const reguAssets = vendorAssets?.filter(a => a.peruntukan?.jenis === 'Regu') || [];
+        const avgPersonal = personalAssets.length > 0
+            ? (personalAssets.reduce((sum, a) => sum + (a.nilai || 0), 0) / personalAssets.length)
+            : 0;
+        const avgRegu = reguAssets.length > 0
+            ? (reguAssets.reduce((sum, a) => sum + (a.nilai || 0), 0) / reguAssets.length)
+            : 0;
+
+        // Calculate TL and TB counts
+        const tidakLayak = vendorAssets?.filter(a => a.kondisi_fisik === -1).length || 0;
+        const tidakBerfungsi = vendorAssets?.filter(a => a.kondisi_fungsi === -1).length || 0;
+
+        // Calculate contract fulfillment percentage
+        const kontrakOk = vendorAssets?.filter(a => a.kesesuaian_kontrak === 2).length || 0;
+        const kontrakPct = totalEquipment > 0 ? (kontrakOk / totalEquipment * 100) : 0;
 
         // Update UI
         document.getElementById('up3TotalAssessments').textContent = totalAssessments;
-        document.getElementById('up3TotalVendors').textContent = uniqueVendors;
         document.getElementById('up3TotalEquipment').textContent = totalEquipment;
         document.getElementById('up3AvgScore').textContent = avgScore.toFixed(2);
-
-        // Store for other functions
-        window.up3VendorIds = vendorIds;
+        document.getElementById('up3PersonalScoreBadge').textContent = 'P: ' + avgPersonal.toFixed(2);
+        document.getElementById('up3ReguScoreBadge').textContent = 'R: ' + avgRegu.toFixed(2);
+        document.getElementById('up3TidakLayak').textContent = tidakLayak;
+        document.getElementById('up3TidakBerfungsi').textContent = tidakBerfungsi;
+        document.getElementById('up3KontrakPct').textContent = kontrakPct.toFixed(0) + '%';
     } catch (error) {
+        console.error('Error loading UP3 stats:', error);
         document.getElementById('up3TotalAssessments').textContent = 'Error';
-        document.getElementById('up3TotalVendors').textContent = 'Error';
         document.getElementById('up3TotalEquipment').textContent = 'Error';
         document.getElementById('up3AvgScore').textContent = 'Error';
+        document.getElementById('up3PersonalScoreBadge').textContent = 'P: -';
+        document.getElementById('up3ReguScoreBadge').textContent = 'R: -';
+        document.getElementById('up3TidakLayak').textContent = '-';
+        document.getElementById('up3TidakBerfungsi').textContent = '-';
+        document.getElementById('up3KontrakPct').textContent = '-';
     }
 }
 
@@ -115,6 +143,7 @@ async function loadUP3VendorRecap() {
 
     try {
         const vendorIds = window.up3VendorIds || [];
+        console.log('VendorRecap - vendorIds:', vendorIds);
         if (vendorIds.length === 0) {
             tbody.innerHTML = '<tr><td colspan="9" class="text-center text-muted">Tidak ada vendor</td></tr>';
             return;
@@ -125,99 +154,136 @@ async function loadUP3VendorRecap() {
         const firstDayOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
         const lastDayOfMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0, 23, 59, 59);
 
-        // Get assessments with vendor and peruntukan info
-        const { data: assessments, error: assessError } = await client
-            .from('assessments')
+        // Get equipment_standards for these vendors (to show all peruntukan that should exist)
+        const { data: standards, error: standardsError } = await client
+            .from('equipment_standards')
             .select(`
-                id, vendor_id, peruntukan_id,
+                id, vendor_id, peruntukan_id, required_qty, contract_qty,
                 vendors(vendor_name),
                 peruntukan(jenis, deskripsi)
             `)
+            .in('vendor_id', vendorIds);
+
+        if (standardsError) throw standardsError;
+
+        // Get count of teams per vendor+peruntukan
+        const { data: teams, error: teamsError } = await client
+            .from('teams')
+            .select('id, vendor_id, peruntukan_id')
+            .in('vendor_id', vendorIds);
+
+        if (teamsError) throw teamsError;
+
+        // Get count of personnel per vendor+peruntukan
+        const { data: personnel, error: personnelError } = await client
+            .from('personnel')
+            .select('id, vendor_id, peruntukan_id')
+            .in('vendor_id', vendorIds);
+
+        if (personnelError) throw personnelError;
+
+        // Get vendor_assets for current month
+        const { data: vendorAssets, error: assetsError } = await client
+            .from('vendor_assets')
+            .select(`
+                id, vendor_id, peruntukan_id, nilai, kondisi_fisik, kondisi_fungsi, kesesuaian_kontrak
+            `)
             .in('vendor_id', vendorIds)
-            .gte('tanggal_penilaian', firstDayOfMonth.toISOString())
-            .lte('tanggal_penilaian', lastDayOfMonth.toISOString());
+            .not('last_assessment_date', 'is', null)
+            .gte('last_assessment_date', firstDayOfMonth.toISOString())
+            .lte('last_assessment_date', lastDayOfMonth.toISOString());
 
-        if (assessError) throw assessError;
+        if (assetsError) throw assetsError;
 
-        if (!assessments || assessments.length === 0) {
-            tbody.innerHTML = '<tr><td colspan="9" class="text-center text-muted">Tidak ada penilaian bulan ini</td></tr>';
-            return;
-        }
-
-        // Get all assessment items
-        const assessmentIds = assessments.map(a => a.id);
-        const { data: items, error: itemsError } = await client
-            .from('assessment_items')
-            .select('assessment_id, score_item, kondisi_fisik, kondisi_fungsi, layak, tidak_layak, berfungsi, tidak_berfungsi')
-            .in('assessment_id', assessmentIds);
-
-        if (itemsError) throw itemsError;
-
-        // Group by vendor + peruntukan
+        // Group standards by vendor + peruntukan
         const recap = {};
-        assessments.forEach(a => {
-            const key = `${a.vendor_id}_${a.peruntukan_id}`;
+        standards?.forEach(std => {
+            const key = `${std.vendor_id}_${std.peruntukan_id}`;
             if (!recap[key]) {
                 recap[key] = {
-                    vendorName: a.vendors?.vendor_name || '-',
-                    peruntukan: a.peruntukan?.deskripsi || a.peruntukan?.jenis || '-',
-                    assessmentCount: 0,
+                    vendorId: std.vendor_id,
+                    vendorName: std.vendors?.vendor_name || '-',
+                    peruntukanId: std.peruntukan_id,
+                    jenis: std.peruntukan?.jenis || '-',
+                    peruntukan: std.peruntukan?.deskripsi || '-',
+                    jumlah: 0,
                     equipmentCount: 0,
-                    totalScore: 0,
-                    layak: 0,
+                    totalNilai: 0,
                     tidakLayak: 0,
-                    berfungsi: 0,
-                    tidakBerfungsi: 0
+                    tidakBerfungsi: 0,
+                    kontrakOk: 0
                 };
             }
-            recap[key].assessmentCount++;
+        });
 
-            // Add items for this assessment
-            const assessmentItems = items?.filter(i => i.assessment_id === a.id) || [];
-            assessmentItems.forEach(item => {
+        // Count teams per vendor+peruntukan
+        teams?.forEach(team => {
+            const key = `${team.vendor_id}_${team.peruntukan_id}`;
+            if (recap[key]) {
+                recap[key].jumlah++;
+            }
+        });
+
+        // Count personnel per vendor+peruntukan (for Personal type)
+        personnel?.forEach(person => {
+            const key = `${person.vendor_id}_${person.peruntukan_id}`;
+            if (recap[key] && recap[key].jenis === 'Personal') {
+                recap[key].jumlah++;
+            }
+        });
+
+        // Aggregate vendor_assets data
+        vendorAssets?.forEach(asset => {
+            const key = `${asset.vendor_id}_${asset.peruntukan_id}`;
+            if (recap[key]) {
                 recap[key].equipmentCount++;
-                recap[key].totalScore += item.score_item || 0;
-                recap[key].layak += item.layak || 0;
-                recap[key].tidakLayak += item.tidak_layak || 0;
-                recap[key].berfungsi += item.berfungsi || 0;
-                recap[key].tidakBerfungsi += item.tidak_berfungsi || 0;
-            });
+                recap[key].totalNilai += asset.nilai || 0;
+                if (asset.kondisi_fisik === -1) recap[key].tidakLayak++;
+                if (asset.kondisi_fungsi === -1) recap[key].tidakBerfungsi++;
+                if (asset.kesesuaian_kontrak === 2) recap[key].kontrakOk++;
+            }
         });
 
         // Render table
-        const rows = Object.values(recap).map(r => {
-            const avgScore = r.equipmentCount > 0 ? (r.totalScore / r.equipmentCount).toFixed(2) : '-';
-            const scoreClass = avgScore >= 1.5 ? 'success' : avgScore >= 0 ? 'warning' : 'danger';
+        const rows = Object.values(recap)
+            .sort((a, b) => a.vendorName.localeCompare(b.vendorName) || a.jenis.localeCompare(b.jenis))
+            .map(r => {
+                const avgScore = r.equipmentCount > 0 ? (r.totalNilai / r.equipmentCount).toFixed(2) : '-';
+                const scoreClass = avgScore >= 1.5 ? 'success' : avgScore >= 0 ? 'warning' : 'danger';
+                const kontrakPct = r.equipmentCount > 0 ? (r.kontrakOk / r.equipmentCount * 100).toFixed(0) : 0;
+                const kontrakClass = kontrakPct >= 80 ? 'success' : kontrakPct >= 50 ? 'warning' : 'danger';
+                const jenisClass = r.jenis === 'Personal' ? 'info' : 'warning';
 
-            return `
-                <tr>
-                    <td><strong>${r.vendorName}</strong></td>
-                    <td>${r.peruntukan}</td>
-                    <td class="text-center">${r.assessmentCount}</td>
-                    <td class="text-center">${r.equipmentCount}</td>
-                    <td class="text-center"><span class="badge bg-${scoreClass}">${avgScore}</span></td>
-                    <td class="text-center text-success">${r.layak || 0}</td>
-                    <td class="text-center text-danger">${r.tidakLayak || 0}</td>
-                    <td class="text-center text-success">${r.berfungsi || 0}</td>
-                    <td class="text-center text-warning">${r.tidakBerfungsi || 0}</td>
-                </tr>
-            `;
-        }).join('');
+                return `
+                    <tr>
+                        <td><strong>${r.vendorName}</strong></td>
+                        <td><span class="badge bg-${jenisClass}">${r.jenis}</span></td>
+                        <td>${r.peruntukan}</td>
+                        <td class="text-center">${r.jumlah || '-'}</td>
+                        <td class="text-center">${r.equipmentCount || '-'}</td>
+                        <td class="text-center">${avgScore !== '-' ? `<span class="badge bg-${scoreClass}">${avgScore}</span>` : '-'}</td>
+                        <td class="text-center">${r.tidakLayak || '-'}</td>
+                        <td class="text-center">${r.tidakBerfungsi || '-'}</td>
+                        <td class="text-center">${r.equipmentCount > 0 ? `<span class="badge bg-${kontrakClass}">${kontrakPct}%</span>` : '-'}</td>
+                    </tr>
+                `;
+            }).join('');
 
         tbody.innerHTML = rows || '<tr><td colspan="9" class="text-center text-muted">Tidak ada data</td></tr>';
     } catch (error) {
+        console.error('Error loading UP3 vendor recap:', error);
         tbody.innerHTML = '<tr><td colspan="9" class="text-center text-danger">Error loading data</td></tr>';
     }
 }
 
 async function loadUP3EquipmentIssues() {
     const tbody = document.querySelector('#up3IssuesTable tbody');
-    tbody.innerHTML = '<tr><td colspan="6" class="text-center text-muted">Loading...</td></tr>';
+    tbody.innerHTML = '<tr><td colspan="7" class="text-center text-muted">Loading...</td></tr>';
 
     try {
         const vendorIds = window.up3VendorIds || [];
         if (vendorIds.length === 0) {
-            tbody.innerHTML = '<tr><td colspan="6" class="text-center text-muted">Tidak ada vendor</td></tr>';
+            tbody.innerHTML = '<tr><td colspan="7" class="text-center text-muted">Tidak ada vendor</td></tr>';
             return;
         }
 
@@ -235,7 +301,10 @@ async function loadUP3EquipmentIssues() {
                 nilai,
                 last_assessment_date,
                 vendors(vendor_name),
-                equipment_master(nama_alat)
+                equipment_master(nama_alat),
+                peruntukan(jenis),
+                teams(nomor_polisi),
+                personnel(nama_personil)
             `)
             .in('vendor_id', vendorIds)
             .or('kondisi_fisik.eq.-1,kondisi_fungsi.eq.-1')
@@ -246,7 +315,7 @@ async function loadUP3EquipmentIssues() {
         if (error) throw error;
 
         if (!issueAssets || issueAssets.length === 0) {
-            tbody.innerHTML = '<tr><td colspan="6" class="text-center text-muted">Tidak ada equipment bermasalah 🎉</td></tr>';
+            tbody.innerHTML = '<tr><td colspan="7" class="text-center text-muted">Tidak ada equipment bermasalah 🎉</td></tr>';
             return;
         }
 
@@ -267,10 +336,19 @@ async function loadUP3EquipmentIssues() {
             const scoreClass = nilaiScore >= 1 ? 'success' : nilaiScore >= 0 ? 'warning' : 'danger';
             const nilaiDisplay = asset.nilai !== null && asset.nilai !== undefined ? asset.nilai : '-';
 
+            // Determine Tim/Personil display based on peruntukan type
+            let timPersonil = '-';
+            if (asset.peruntukan?.jenis === 'Regu' && asset.teams?.nomor_polisi) {
+                timPersonil = `<i class="bi bi-truck"></i> ${asset.teams.nomor_polisi}`;
+            } else if (asset.peruntukan?.jenis === 'Personal' && asset.personnel?.nama_personil) {
+                timPersonil = `<i class="bi bi-person"></i> ${asset.personnel.nama_personil}`;
+            }
+
             return `
                 <tr>
                     <td>${tanggal}</td>
                     <td>${asset.vendors?.vendor_name || '-'}</td>
+                    <td>${timPersonil}</td>
                     <td>${asset.equipment_master?.nama_alat || '-'}</td>
                     <td class="text-center">${kondisiFisik}</td>
                     <td class="text-center">${kondisiFungsi}</td>
@@ -279,208 +357,106 @@ async function loadUP3EquipmentIssues() {
             `;
         }).join('');
 
-        tbody.innerHTML = rows || '<tr><td colspan="6" class="text-center text-muted">Tidak ada data</td></tr>';
+        tbody.innerHTML = rows || '<tr><td colspan="7" class="text-center text-muted">Tidak ada data</td></tr>';
     } catch (error) {
         console.error('Error loading UP3 equipment issues:', error);
-        tbody.innerHTML = '<tr><td colspan="6" class="text-center text-danger">Error loading data</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="7" class="text-center text-danger">Error loading data</td></tr>';
     }
 }
 
-async function loadUP3RecentAssessments() {
-    const tbody = document.querySelector('#up3RecentTable tbody');
-    tbody.innerHTML = '<tr><td colspan="5" class="text-center text-muted">Loading...</td></tr>';
+async function loadUP3DailyChart() {
+    const chartEl = document.getElementById('up3DailyChart');
+    if (!chartEl) return;
 
     try {
         const vendorIds = window.up3VendorIds || [];
         if (vendorIds.length === 0) {
-            tbody.innerHTML = '<tr><td colspan="5" class="text-center text-muted">Tidak ada vendor</td></tr>';
+            chartEl.innerHTML = '<p class="text-center text-muted py-4">Tidak ada vendor</p>';
             return;
         }
 
         const client = getSupabaseClient();
+        const now = new Date();
+        const days = [];
 
-        // Get recent assessments with all needed info
+        // Generate last 30 days
+        for (let i = 29; i >= 0; i--) {
+            const date = new Date(now);
+            date.setDate(date.getDate() - i);
+            date.setHours(0, 0, 0, 0);
+            const endDate = new Date(date);
+            endDate.setHours(23, 59, 59, 999);
+            days.push({
+                label: String(date.getDate()).padStart(2, '0') + '/' + String(date.getMonth() + 1).padStart(2, '0'),
+                start: date,
+                end: endDate
+            });
+        }
+
+        // Get all assessments for vendor IDs in last 30 days
+        const thirtyDaysAgo = new Date(now);
+        thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 29);
+        thirtyDaysAgo.setHours(0, 0, 0, 0);
+
         const { data: assessments, error } = await client
             .from('assessments')
-            .select(`
-                id, tanggal_penilaian, vendor_id, peruntukan_id,
-                vendors(vendor_name),
-                peruntukan(jenis, deskripsi)
-            `)
+            .select('id, tanggal_penilaian')
             .in('vendor_id', vendorIds)
-            .order('tanggal_penilaian', { ascending: false })
-            .limit(10);
+            .gte('tanggal_penilaian', thirtyDaysAgo.toISOString())
+            .lte('tanggal_penilaian', now.toISOString());
 
         if (error) throw error;
 
-        if (!assessments || assessments.length === 0) {
-            tbody.innerHTML = '<tr><td colspan="5" class="text-center text-muted">Belum ada penilaian</td></tr>';
-            return;
-        }
-
-        // Get scores for each assessment
-        const assessmentIds = assessments.map(a => a.id);
-        const { data: items } = await client
-            .from('assessment_items')
-            .select('assessment_id, score_item')
-            .in('assessment_id', assessmentIds);
-
-        // Calculate avg score per assessment
-        const scoreMap = {};
-        assessmentIds.forEach(id => {
-            const assessmentItems = items?.filter(i => i.assessment_id === id) || [];
-            if (assessmentItems.length > 0) {
-                scoreMap[id] = assessmentItems.reduce((sum, i) => sum + (i.score_item || 0), 0) / assessmentItems.length;
-            } else {
-                scoreMap[id] = 0;
-            }
+        // Count assessments per day
+        const dailyData = days.map(day => {
+            return assessments?.filter(a => {
+                const assessDate = new Date(a.tanggal_penilaian);
+                return assessDate >= day.start && assessDate <= day.end;
+            }).length || 0;
         });
 
-        const rows = assessments.map(item => {
-            const tanggalDate = new Date(item.tanggal_penilaian);
-            const tanggal = String(tanggalDate.getDate()).padStart(2, '0') + '-' + String(tanggalDate.getMonth() + 1).padStart(2, '0') + '-' + tanggalDate.getFullYear();
-            const avgScore = scoreMap[item.id]?.toFixed(2) || '0.00';
-            const scoreClass = avgScore >= 1.5 ? 'success' : avgScore >= 0 ? 'warning' : 'danger';
-            const status = avgScore >= 1.5 ? 'Baik' : avgScore >= 0 ? 'Cukup' : 'Buruk';
-            const statusClass = avgScore >= 1.5 ? 'success' : avgScore >= 0 ? 'warning' : 'danger';
+        const options = {
+            series: [{ name: 'Entri Penilaian', data: dailyData }],
+            chart: {
+                height: 200,
+                type: 'bar',
+                toolbar: { show: false },
+                fontFamily: 'inherit',
+                sparkline: { enabled: false }
+            },
+            colors: ['#4154f1'],
+            plotOptions: {
+                bar: { borderRadius: 2, columnWidth: '60%' }
+            },
+            dataLabels: { enabled: false },
+            xaxis: {
+                categories: days.map(d => d.label),
+                labels: {
+                    rotate: -45,
+                    rotateAlways: true,
+                    style: { fontSize: '9px' }
+                },
+                tickAmount: 10
+            },
+            yaxis: {
+                min: 0,
+                forceNiceScale: true,
+                labels: { style: { fontSize: '10px' } }
+            },
+            tooltip: {
+                y: { formatter: (val) => val + ' penilaian' }
+            },
+            grid: { padding: { left: 10, right: 10 } }
+        };
 
-            return `
-                <tr>
-                    <td>${tanggal}</td>
-                    <td>${item.vendors?.vendor_name || '-'}</td>
-                    <td>${item.peruntukan?.deskripsi || item.peruntukan?.jenis || '-'}</td>
-                    <td class="text-center"><span class="badge bg-${scoreClass}">${avgScore}</span></td>
-                    <td class="text-center"><span class="badge bg-${statusClass}">${status}</span></td>
-                </tr>
-            `;
-        }).join('');
-
-        tbody.innerHTML = rows;
+        // Destroy existing chart to prevent memory leak
+        if (window.up3DailyChart) {
+            try { window.up3DailyChart.destroy(); } catch (e) { }
+        }
+        window.up3DailyChart = new ApexCharts(chartEl, options);
+        window.up3DailyChart.render();
     } catch (error) {
-        tbody.innerHTML = '<tr><td colspan="5" class="text-center text-danger">Error loading data</td></tr>';
-    }
-}
-
-async function loadUP3TeamsWithAssessments() {
-    const tbody = document.querySelector('#up3TeamsTable tbody');
-    tbody.innerHTML = '<tr><td colspan="11" class="text-center text-muted">Loading...</td></tr>';
-
-    try {
-        const vendorIds = window.up3VendorIds || [];
-        if (vendorIds.length === 0) {
-            tbody.innerHTML = '<tr><td colspan="11" class="text-center text-muted">Tidak ada vendor</td></tr>';
-            return;
-        }
-
-        const client = getSupabaseClient();
-
-        // Get teams for these vendors
-        const { data: teams, error: teamsError } = await client
-            .from('teams')
-            .select('id, nomor_polisi, category, vendor_id, vendors(vendor_name)')
-            .in('vendor_id', vendorIds)
-            .order('nomor_polisi');
-
-        if (teamsError) throw teamsError;
-
-        if (!teams || teams.length === 0) {
-            tbody.innerHTML = '<tr><td colspan="11" class="text-center text-muted">Tidak ada kendaraan terdaftar</td></tr>';
-            return;
-        }
-
-        // Get assessments for these teams
-        const teamIds = teams.map(t => t.id);
-        const { data: assessments, error: assessError } = await client
-            .from('assessments')
-            .select('id, team_id, tanggal_penilaian')
-            .in('team_id', teamIds)
-            .order('tanggal_penilaian', { ascending: false });
-
-        if (assessError) throw assessError;
-
-        // Get assessment items for scores
-        const assessmentIds = assessments?.map(a => a.id) || [];
-        let items = [];
-        if (assessmentIds.length > 0) {
-            const { data: itemsData } = await client
-                .from('assessment_items')
-                .select('assessment_id, score_item, layak, tidak_layak, berfungsi, tidak_berfungsi')
-                .in('assessment_id', assessmentIds);
-            items = itemsData || [];
-        }
-
-        // Build team stats
-        const teamStats = {};
-        teams.forEach(t => {
-            teamStats[t.id] = {
-                ...t,
-                assessmentCount: 0,
-                totalScore: 0,
-                itemCount: 0,
-                layak: 0,
-                tidakLayak: 0,
-                berfungsi: 0,
-                tidakBerfungsi: 0,
-                lastAssessment: null
-            };
-        });
-
-        assessments?.forEach(a => {
-            if (teamStats[a.team_id]) {
-                // Only take the latest (first) assessment per team
-                if (teamStats[a.team_id].lastAssessment) return;
-
-                teamStats[a.team_id].assessmentCount = 1;
-                teamStats[a.team_id].lastAssessment = a.tanggal_penilaian;
-
-                // Add items from latest assessment only
-                const assessmentItems = items.filter(i => i.assessment_id === a.id);
-                assessmentItems.forEach(item => {
-                    teamStats[a.team_id].itemCount++;
-                    teamStats[a.team_id].totalScore += item.score_item || 0;
-                    teamStats[a.team_id].layak += item.layak || 0;
-                    teamStats[a.team_id].tidakLayak += item.tidak_layak || 0;
-                    teamStats[a.team_id].berfungsi += item.berfungsi || 0;
-                    teamStats[a.team_id].tidakBerfungsi += item.tidak_berfungsi || 0;
-                });
-            }
-        });
-
-        // Render table
-        const rows = Object.values(teamStats).map(t => {
-            const avgScore = t.itemCount > 0 ? (t.totalScore / t.itemCount).toFixed(2) : '-';
-            const scoreClass = avgScore >= 1.5 ? 'success' : avgScore >= 0 ? 'warning' : 'danger';
-            let lastDate = '-';
-            if (t.lastAssessment) {
-                const lastDateObj = new Date(t.lastAssessment);
-                lastDate = String(lastDateObj.getDate()).padStart(2, '0') + '-' + String(lastDateObj.getMonth() + 1).padStart(2, '0') + '-' + lastDateObj.getFullYear();
-            }
-            const status = t.assessmentCount > 0
-                ? (avgScore >= 1.5 ? 'Baik' : avgScore >= 0 ? 'Cukup' : 'Buruk')
-                : 'Belum Dinilai';
-            const statusClass = t.assessmentCount > 0
-                ? (avgScore >= 1.5 ? 'success' : avgScore >= 0 ? 'warning' : 'danger')
-                : 'secondary';
-
-            return `
-                <tr>
-                    <td><strong>${t.nomor_polisi || '-'}</strong></td>
-                    <td>${t.category || '-'}</td>
-                    <td>${t.vendors?.vendor_name || '-'}</td>
-                    <td class="text-center">${t.assessmentCount}</td>
-                    <td class="text-center"><span class="badge bg-${scoreClass}">${avgScore}</span></td>
-                    <td class="text-center text-success">${t.layak || 0}</td>
-                    <td class="text-center text-danger">${t.tidakLayak || 0}</td>
-                    <td class="text-center text-success">${t.berfungsi || 0}</td>
-                    <td class="text-center text-danger">${t.tidakBerfungsi || 0}</td>
-                    <td class="text-center">${lastDate}</td>
-                    <td class="text-center"><span class="badge bg-${statusClass}">${status}</span></td>
-                </tr>
-            `;
-        }).join('');
-
-        tbody.innerHTML = rows || '<tr><td colspan="11" class="text-center text-muted">Tidak ada data</td></tr>';
-    } catch (error) {
-        tbody.innerHTML = '<tr><td colspan="11" class="text-center text-danger">Error loading data</td></tr>';
+        console.error('Error loading UP3 daily chart:', error);
+        chartEl.innerHTML = '<p class="text-center text-muted py-4">Gagal memuat chart</p>';
     }
 }

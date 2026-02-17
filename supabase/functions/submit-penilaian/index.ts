@@ -28,7 +28,8 @@ interface SubmitRequest {
     vendor_id: string
     peruntukan_id: string
     team_id: string | null
-    personnel_id: string | null
+    personnel_id: string | null           // Single personnel (backward compatibility)
+    personnel_ids: string[] | null        // Multiple personnel for regu
     assessor_id: string
 
     // Assessment items
@@ -156,6 +157,35 @@ serve(async (req) => {
                 JSON.stringify({ success: false, error: `Failed to create assessment items: ${itemsError.message}` }),
                 { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
             )
+        }
+
+        // ========== STEP 2.5: Insert Assessment Personnel (for multiple personnel/regu) ==========
+        // Combine personnel_ids array with single personnel_id for backward compatibility
+        let allPersonnelIds: string[] = []
+        if (body.personnel_ids && body.personnel_ids.length > 0) {
+            allPersonnelIds = [...body.personnel_ids]
+        }
+        if (body.personnel_id && !allPersonnelIds.includes(body.personnel_id)) {
+            allPersonnelIds.push(body.personnel_id)
+        }
+
+        // Insert into assessment_personnel junction table
+        if (allPersonnelIds.length > 0) {
+            const personnelRecords = allPersonnelIds.map(pid => ({
+                assessment_id: assessment.id,
+                personnel_id: pid
+            }))
+
+            const { error: personnelError } = await supabaseClient
+                .from('assessment_personnel')
+                .insert(personnelRecords)
+
+            if (personnelError) {
+                console.warn('Failed to insert assessment_personnel:', personnelError)
+                // Not a critical error, continue
+            } else {
+                console.log(`Inserted ${personnelRecords.length} personnel records for assessment ${assessment.id}`)
+            }
         }
 
         // ========== STEP 3: Upsert Vendor Assets ==========

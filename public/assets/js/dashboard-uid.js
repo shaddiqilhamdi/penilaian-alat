@@ -23,6 +23,7 @@ async function loadUIDComprehensiveStats() {
         const firstDayOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
         const lastDayOfMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0, 23, 59, 59);
 
+        // ========== DATA DARI ASSESSMENTS (untuk Total Penilaian, Vendor, Unit, Kendaraan, Personil) ==========
         const { data: assessments, error: assessmentsError } = await client
             .from('assessments')
             .select(`
@@ -48,36 +49,41 @@ async function loadUIDComprehensiveStats() {
         const uniqueTeams = new Set(assessments?.map(a => a.team_id).filter(Boolean) || []).size;
         const uniquePersonnel = new Set(assessments?.map(a => a.personnel_id).filter(Boolean) || []).size;
 
-        const assessmentIds = assessments?.map(a => a.id) || [];
-        let items = [], personalItems = [], reguItems = [];
+        // ========== DATA DARI VENDOR_ASSETS (untuk Rata-rata, Tidak Layak, Tidak Berfungsi) ==========
+        const { data: assets, error: assetsError } = await client
+            .from('vendor_assets')
+            .select(`
+                id, nilai, kondisi_fisik, kondisi_fungsi,
+                peruntukan(jenis)
+            `)
+            .gte('last_assessment_date', firstDayOfMonth.toISOString())
+            .lte('last_assessment_date', lastDayOfMonth.toISOString());
 
-        if (assessmentIds.length > 0) {
-            const { data: itemsData, error: itemsError } = await client
-                .from('assessment_items')
-                .select('score_item, kondisi_fisik, kondisi_fungsi, assessment_id')
-                .in('assessment_id', assessmentIds);
+        if (assetsError) throw assetsError;
 
-            if (itemsError) throw itemsError;
-            items = itemsData || [];
+        const personalAssets = assets?.filter(a => a.peruntukan?.jenis === 'Personal') || [];
+        const reguAssets = assets?.filter(a => a.peruntukan?.jenis === 'Regu') || [];
 
-            const personalIds = new Set(personalAssessments.map(a => a.id));
-            const reguIds = new Set(reguAssessments.map(a => a.id));
+        // Hitung rata-rata dari vendor_assets.nilai
+        const avgScore = assets?.length > 0
+            ? (assets.reduce((sum, a) => sum + (a.nilai || 0), 0) / assets.length)
+            : 0;
+        const avgPersonal = personalAssets.length > 0
+            ? (personalAssets.reduce((sum, a) => sum + (a.nilai || 0), 0) / personalAssets.length)
+            : 0;
+        const avgRegu = reguAssets.length > 0
+            ? (reguAssets.reduce((sum, a) => sum + (a.nilai || 0), 0) / reguAssets.length)
+            : 0;
 
-            personalItems = items.filter(i => personalIds.has(i.assessment_id));
-            reguItems = items.filter(i => reguIds.has(i.assessment_id));
-        }
+        // Hitung tidak layak dan tidak berfungsi dari vendor_assets
+        const tidakLayak = assets?.filter(a => a.kondisi_fisik === -1).length || 0;
+        const tidakBerfungsi = assets?.filter(a => a.kondisi_fungsi === -1).length || 0;
+        const tidakLayakPersonal = personalAssets.filter(a => a.kondisi_fisik === -1).length;
+        const tidakLayakRegu = reguAssets.filter(a => a.kondisi_fisik === -1).length;
+        const tidakBerfungsiPersonal = personalAssets.filter(a => a.kondisi_fungsi === -1).length;
+        const tidakBerfungsiRegu = reguAssets.filter(a => a.kondisi_fungsi === -1).length;
 
-        const avgScore = items.length > 0 ? (items.reduce((sum, i) => sum + (i.score_item || 0), 0) / items.length) : 0;
-        const avgPersonal = personalItems.length > 0 ? (personalItems.reduce((sum, i) => sum + (i.score_item || 0), 0) / personalItems.length) : 0;
-        const avgRegu = reguItems.length > 0 ? (reguItems.reduce((sum, i) => sum + (i.score_item || 0), 0) / reguItems.length) : 0;
-
-        const tidakLayak = items.filter(i => i.kondisi_fisik === -1).length;
-        const tidakBerfungsi = items.filter(i => i.kondisi_fungsi === -1).length;
-        const tidakLayakPersonal = personalItems.filter(i => i.kondisi_fisik === -1).length;
-        const tidakLayakRegu = reguItems.filter(i => i.kondisi_fisik === -1).length;
-        const tidakBerfungsiPersonal = personalItems.filter(i => i.kondisi_fungsi === -1).length;
-        const tidakBerfungsiRegu = reguItems.filter(i => i.kondisi_fungsi === -1).length;
-
+        // Update DOM
         document.getElementById('uidTotalAssessments').textContent = totalAssessments;
         document.getElementById('uidPersonalCount').textContent = `P: ${personalAssessments.length}`;
         document.getElementById('uidReguCount').textContent = `R: ${reguAssessments.length}`;
@@ -97,7 +103,7 @@ async function loadUIDComprehensiveStats() {
         document.getElementById('uidTotalRegu').textContent = uniqueTeams;
         document.getElementById('uidTotalPersonil').textContent = uniquePersonnel;
 
-        window.uidDashboardData = { assessments, personalAssessments, reguAssessments, items, personalItems, reguItems };
+        window.uidDashboardData = { assessments, personalAssessments, reguAssessments, assets, personalAssets, reguAssets };
     } catch (error) {
         ['uidTotalAssessments', 'uidTotalVendors', 'uidTotalUnits', 'uidAvgScore'].forEach(id => {
             const el = document.getElementById(id);
@@ -116,68 +122,92 @@ async function loadUIDUnitRecapTable() {
         const firstDayOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
         const lastDayOfMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0, 23, 59, 59);
 
+        // Get all units
         const { data: units } = await client.from('units').select('unit_code, unit_name').order('unit_name');
 
-        const { data: assessments, error } = await client
-            .from('assessments')
-            .select(`id, vendor_id, peruntukan_id, team_id, personnel_id, vendors(unit_code), peruntukan(jenis, deskripsi)`)
-            .gte('tanggal_penilaian', firstDayOfMonth.toISOString())
-            .lte('tanggal_penilaian', lastDayOfMonth.toISOString());
+        // Query dari vendor_assets dengan filter last_assessment_date bulan ini
+        const { data: assets, error } = await client
+            .from('vendor_assets')
+            .select(`
+                id,
+                vendor_id,
+                team_id,
+                personnel_id,
+                peruntukan_id,
+                kondisi_fisik,
+                kondisi_fungsi,
+                kesesuaian_kontrak,
+                nilai,
+                last_assessment_date,
+                vendors(unit_code, unit_name),
+                peruntukan(jenis)
+            `)
+            .gte('last_assessment_date', firstDayOfMonth.toISOString())
+            .lte('last_assessment_date', lastDayOfMonth.toISOString());
 
         if (error) throw error;
 
-        const assessmentIds = assessments?.map(a => a.id) || [];
-        let items = [];
-        if (assessmentIds.length > 0) {
-            const { data: itemsData } = await client
-                .from('assessment_items')
-                .select('score_item, kondisi_fisik, kondisi_fungsi, assessment_id, kesesuaian_kontrak')
-                .in('assessment_id', assessmentIds);
-            items = itemsData || [];
-        }
-
+        // Initialize stats per unit
         const unitStats = {};
         units?.forEach(u => {
             unitStats[u.unit_code] = {
-                name: u.unit_name, assessments: 0, teams: new Set(), personnel: new Set(),
-                personalAssessments: 0, reguAssessments: 0, items: [], personalItems: [], reguItems: []
+                name: u.unit_name,
+                totalEquipment: 0,
+                teams: new Set(),
+                personnel: new Set(),
+                personalItems: [],
+                reguItems: [],
+                allItems: []
             };
         });
 
-        assessments?.forEach(a => {
-            const unitCode = a.vendors?.unit_code;
+        // Process vendor_assets data
+        assets?.forEach(asset => {
+            const unitCode = asset.vendors?.unit_code;
             if (unitCode && unitStats[unitCode]) {
-                unitStats[unitCode].assessments++;
-                if (a.team_id) unitStats[unitCode].teams.add(a.team_id);
-                if (a.personnel_id) unitStats[unitCode].personnel.add(a.personnel_id);
+                unitStats[unitCode].totalEquipment++;
 
-                const isPersonal = a.peruntukan?.jenis === 'Personal';
-                if (isPersonal) unitStats[unitCode].personalAssessments++;
-                else unitStats[unitCode].reguAssessments++;
+                if (asset.team_id) unitStats[unitCode].teams.add(asset.team_id);
+                if (asset.personnel_id) unitStats[unitCode].personnel.add(asset.personnel_id);
 
-                const assessmentItems = items.filter(i => i.assessment_id === a.id);
-                unitStats[unitCode].items.push(...assessmentItems);
-                if (isPersonal) unitStats[unitCode].personalItems.push(...assessmentItems);
-                else unitStats[unitCode].reguItems.push(...assessmentItems);
+                const isPersonal = asset.peruntukan?.jenis === 'Personal';
+                const itemData = {
+                    nilai: asset.nilai,
+                    kondisi_fisik: asset.kondisi_fisik,
+                    kondisi_fungsi: asset.kondisi_fungsi,
+                    kesesuaian_kontrak: asset.kesesuaian_kontrak
+                };
+
+                unitStats[unitCode].allItems.push(itemData);
+                if (isPersonal) unitStats[unitCode].personalItems.push(itemData);
+                else unitStats[unitCode].reguItems.push(itemData);
             }
         });
 
+        // Render rows
         const rows = Object.entries(unitStats)
-            .filter(([_, stats]) => stats.assessments > 0)
-            .sort((a, b) => b[1].assessments - a[1].assessments)
+            .filter(([_, stats]) => stats.totalEquipment > 0)
+            .sort((a, b) => b[1].totalEquipment - a[1].totalEquipment)
             .map(([code, stats]) => {
-                const avgScore = stats.items.length > 0 ? (stats.items.reduce((s, i) => s + (i.score_item || 0), 0) / stats.items.length).toFixed(2) : '-';
-                const avgPersonal = stats.personalItems.length > 0 ? (stats.personalItems.reduce((s, i) => s + (i.score_item || 0), 0) / stats.personalItems.length).toFixed(2) : '-';
-                const avgRegu = stats.reguItems.length > 0 ? (stats.reguItems.reduce((s, i) => s + (i.score_item || 0), 0) / stats.reguItems.length).toFixed(2) : '-';
-                const tlFisik = stats.items.filter(i => i.kondisi_fisik === -1).length;
-                const tbFungsi = stats.items.filter(i => i.kondisi_fungsi === -1).length;
-                const kontrakOk = stats.items.filter(i => i.kesesuaian_kontrak >= 2).length;
-                const kontrakPct = stats.items.length > 0 ? ((kontrakOk / stats.items.length) * 100).toFixed(0) : 0;
+                const avgScore = stats.allItems.length > 0
+                    ? (stats.allItems.reduce((s, i) => s + (i.nilai || 0), 0) / stats.allItems.length).toFixed(2)
+                    : '-';
+                const avgPersonal = stats.personalItems.length > 0
+                    ? (stats.personalItems.reduce((s, i) => s + (i.nilai || 0), 0) / stats.personalItems.length).toFixed(2)
+                    : '-';
+                const avgRegu = stats.reguItems.length > 0
+                    ? (stats.reguItems.reduce((s, i) => s + (i.nilai || 0), 0) / stats.reguItems.length).toFixed(2)
+                    : '-';
+
+                const tlFisik = stats.allItems.filter(i => i.kondisi_fisik === -1).length;
+                const tbFungsi = stats.allItems.filter(i => i.kondisi_fungsi === -1).length;
+                const kontrakOk = stats.allItems.filter(i => i.kesesuaian_kontrak >= 2).length;
+                const kontrakPct = stats.allItems.length > 0 ? ((kontrakOk / stats.allItems.length) * 100).toFixed(0) : 0;
                 const scoreClass = avgScore >= 1.5 ? 'success' : avgScore >= 0 ? 'warning' : 'danger';
 
-                return `<tr>
+                return `<tr style="cursor: pointer;" onclick="showUnitReportModal('${code}', '${stats.name}')">
                     <td><strong>${code}</strong><br><small class="text-muted">${stats.name}</small></td>
-                    <td class="text-center">${stats.assessments}</td>
+                    <td class="text-center">${stats.totalEquipment}</td>
                     <td class="text-center">${stats.teams.size}</td>
                     <td class="text-center">${stats.personnel.size}</td>
                     <td class="text-center"><span class="badge bg-${scoreClass}">${avgScore}</span></td>
@@ -191,6 +221,7 @@ async function loadUIDUnitRecapTable() {
 
         tbody.innerHTML = rows || '<tr><td colspan="10" class="text-center text-muted">Tidak ada data</td></tr>';
     } catch (error) {
+        console.error('Error loading unit recap:', error);
         tbody.innerHTML = '<tr><td colspan="10" class="text-center text-danger">Error loading data</td></tr>';
     }
 }
@@ -227,6 +258,7 @@ async function loadUIDEquipmentIssuesByUnit() {
                 nilai,
                 realisasi_qty,
                 last_assessment_date,
+                last_assessment_id,
                 vendors(id, vendor_name, unit_code, unit_name),
                 peruntukan(id, jenis, deskripsi),
                 teams(id, nomor_polisi, category),
@@ -298,6 +330,7 @@ async function loadUIDEquipmentIssuesByUnit() {
             unitIssuesDetail[unitCode].push({
                 id: asset.id,
                 equipmentName: asset.equipment_master?.nama_alat || 'Unknown',
+                kategori: asset.equipment_master?.kategori || '-',
                 vendorName: asset.vendors?.vendor_name || 'Unknown',
                 unitCode: unitCode,
                 unitName: unitName,
@@ -313,7 +346,10 @@ async function loadUIDEquipmentIssuesByUnit() {
                 kondisiFisik: asset.kondisi_fisik,
                 kondisiFungsi: asset.kondisi_fungsi,
                 kesesuaianKontrak: asset.kesesuaian_kontrak,
-                scoreItem: asset.nilai
+                scoreItem: asset.nilai,
+                // Untuk detail jumlah tidak layak/tidak berfungsi
+                last_assessment_id: asset.last_assessment_id,
+                equipment_id: asset.equipment_id
             });
 
             // Hitung item unik
@@ -359,7 +395,7 @@ async function loadUIDEquipmentIssuesByUnit() {
 }
 
 // Function to show equipment issues modal
-function showEquipmentIssuesModal(unitCode) {
+async function showEquipmentIssuesModal(unitCode) {
     const data = window.uidEquipmentIssuesData[unitCode];
     if (!data || data.length === 0) return;
 
@@ -367,53 +403,121 @@ function showEquipmentIssuesModal(unitCode) {
     document.getElementById('modalUnitCode').textContent = unitCode;
     document.getElementById('modalTotalItems').textContent = data.length + ' item';
 
-    // Render table rows
     const tbody = document.getElementById('tbody-equipment-issues');
+    tbody.innerHTML = '<tr><td colspan="12" class="text-center text-muted">Loading detail...</td></tr>';
 
-    const rows = data.map((item, index) => {
-        const fisikClass = item.kondisiFisik === 0 ? 'success' : 'danger';
-        const fisikText = item.kondisiFisik === 0 ? 'Layak' : 'Tidak Layak';
-        const fungsiClass = item.kondisiFungsi === 0 ? 'success' : 'warning';
-        const fungsiText = item.kondisiFungsi === 0 ? 'Baik' : 'Tidak Baik';
-        const kontrakClass = item.kesesuaianKontrak >= 2 ? 'success' : 'danger';
-        const kontrakText = item.kesesuaianKontrak >= 2 ? 'Sesuai' : 'Tidak Sesuai';
-
-        // Handle nilai dari vendor_assets (bisa null) - format 2 decimal
-        const nilaiScore = item.scoreItem ?? 0;
-        const nilaiClass = nilaiScore >= 1 ? 'success' : nilaiScore >= 0 ? 'warning' : 'danger';
-        const nilaiDisplay = item.scoreItem !== null && item.scoreItem !== undefined
-            ? Number(item.scoreItem).toFixed(2)
-            : '-';
-
-        // Format standar dan qty
-        const standarDisplay = item.standar !== null && item.standar !== undefined ? item.standar : 0;
-        const qtyDisplay = item.qty !== null && item.qty !== undefined ? item.qty : 0;
-
-        const tanggalFormatted = item.tanggal ? new Date(item.tanggal).toLocaleDateString('id-ID', {
-            day: '2-digit', month: '2-digit', year: 'numeric',
-            hour: '2-digit', minute: '2-digit'
-        }) : '-';
-
-        return `<tr>
-            <td class="text-center">${index + 1}</td>
-            <td>${item.peruntukan}</td>
-            <td>${item.targetName}</td>
-            <td>${item.equipmentName}</td>
-            <td class="text-center">${standarDisplay}</td>
-            <td class="text-center">${qtyDisplay}</td>
-            <td class="text-center"><span class="badge bg-${fisikClass}">${fisikText}</span></td>
-            <td class="text-center"><span class="badge bg-${fungsiClass}">${fungsiText}</span></td>
-            <td class="text-center"><span class="badge bg-${kontrakClass}">${kontrakText}</span></td>
-            <td class="text-center"><span class="badge bg-${nilaiClass}">${nilaiDisplay}</span></td>
-            <td class="text-center text-success"><small>${tanggalFormatted}</small></td>
-        </tr>`;
-    }).join('');
-
-    tbody.innerHTML = rows || '<tr><td colspan="11" class="text-center text-muted py-3">Tidak ada data</td></tr>';
-
-    // Show modal
+    // Show modal first
     const modal = new bootstrap.Modal(document.getElementById('equipmentIssuesModal'));
     modal.show();
+
+    try {
+        // Fetch assessment_items untuk mendapatkan detail jumlah tidak layak/tidak berfungsi
+        const client = getSupabaseClient();
+        const assessmentIds = [...new Set(data.map(d => d.last_assessment_id).filter(Boolean))];
+
+        let itemsMap = {};
+        if (assessmentIds.length > 0) {
+            const { data: items } = await client
+                .from('assessment_items')
+                .select('assessment_id, equipment_id, tidak_layak, tidak_berfungsi, layak, berfungsi')
+                .in('assessment_id', assessmentIds);
+
+            (items || []).forEach(item => {
+                const key = `${item.assessment_id}_${item.equipment_id}`;
+                itemsMap[key] = item;
+            });
+        }
+
+        // Render table rows
+        const rows = data.map((item, index) => {
+            // Get detail dari assessment_items
+            const itemKey = `${item.last_assessment_id}_${item.equipment_id}`;
+            const assessmentItem = itemsMap[itemKey] || {};
+
+            const tidakLayak = assessmentItem.tidak_layak || 0;
+            const tidakBerfungsi = assessmentItem.tidak_berfungsi || 0;
+            const layak = assessmentItem.layak || 0;
+            const berfungsi = assessmentItem.berfungsi || 0;
+
+            // Kondisi Fisik: tampilkan jumlah tidak layak
+            const kondisiClass = tidakLayak === 0 ? 'success' : 'danger';
+            const kondisiText = tidakLayak === 0 ? 'OK' : `${tidakLayak} TL`;
+
+            // Fungsi: tampilkan jumlah tidak berfungsi
+            const fungsiClass = tidakBerfungsi === 0 ? 'success' : 'warning';
+            const fungsiText = tidakBerfungsi === 0 ? 'OK' : `${tidakBerfungsi} TB`;
+
+            // Kontrak: Sesuai / Tidak Sesuai
+            const kontrakClass = item.kesesuaianKontrak >= 2 ? 'success' : 'danger';
+            const kontrakText = item.kesesuaianKontrak >= 2 ? 'Sesuai' : 'Tidak Sesuai';
+
+            // Handle nilai
+            const nilaiScore = item.scoreItem ?? 0;
+            const nilaiClass = nilaiScore >= 1 ? 'success' : nilaiScore >= 0 ? 'warning' : 'danger';
+            const nilaiDisplay = item.scoreItem !== null && item.scoreItem !== undefined
+                ? Number(item.scoreItem).toFixed(2)
+                : '-';
+
+            // Format standar dan qty
+            const standarDisplay = item.standar ?? 0;
+            const qtyDisplay = item.qty ?? 0;
+
+            const tanggalFormatted = item.tanggal ? new Date(item.tanggal).toLocaleDateString('id-ID', {
+                day: '2-digit', month: '2-digit', year: 'numeric',
+                hour: '2-digit', minute: '2-digit'
+            }) : '-';
+
+            return `<tr>
+                <td class="text-center">${index + 1}</td>
+                <td>${item.peruntukan}</td>
+                <td>${item.targetName}</td>
+                <td>${item.equipmentName}</td>
+                <td class="text-center"><small>${item.kategori}</small></td>
+                <td class="text-center">${standarDisplay}</td>
+                <td class="text-center">${qtyDisplay}</td>
+                <td class="text-center"><span class="badge bg-${kondisiClass}">${kondisiText}</span></td>
+                <td class="text-center"><span class="badge bg-${fungsiClass}">${fungsiText}</span></td>
+                <td class="text-center"><span class="badge bg-${kontrakClass}">${kontrakText}</span></td>
+                <td class="text-center"><span class="badge bg-${nilaiClass}">${nilaiDisplay}</span></td>
+                <td class="text-center"><small>${tanggalFormatted}</small></td>
+            </tr>`;
+        }).join('');
+
+        tbody.innerHTML = rows || '<tr><td colspan="12" class="text-center text-muted py-3">Tidak ada data</td></tr>';
+    } catch (error) {
+        console.error('Error loading assessment items detail:', error);
+        // Fallback: render tanpa detail assessment_items
+        const rows = data.map((item, index) => {
+            const kondisiClass = item.kondisiFisik === 0 ? 'success' : 'danger';
+            const kondisiText = item.kondisiFisik === 0 ? 'OK' : 'TL';
+            const fungsiClass = item.kondisiFungsi === 0 ? 'success' : 'warning';
+            const fungsiText = item.kondisiFungsi === 0 ? 'OK' : 'TB';
+            const kontrakClass = item.kesesuaianKontrak >= 2 ? 'success' : 'danger';
+            const kontrakText = item.kesesuaianKontrak >= 2 ? 'Sesuai' : 'Tidak Sesuai';
+            const nilaiScore = item.scoreItem ?? 0;
+            const nilaiClass = nilaiScore >= 1 ? 'success' : nilaiScore >= 0 ? 'warning' : 'danger';
+            const nilaiDisplay = item.scoreItem !== null ? Number(item.scoreItem).toFixed(2) : '-';
+            const tanggalFormatted = item.tanggal ? new Date(item.tanggal).toLocaleDateString('id-ID', {
+                day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit'
+            }) : '-';
+
+            return `<tr>
+                <td class="text-center">${index + 1}</td>
+                <td>${item.peruntukan}</td>
+                <td>${item.targetName}</td>
+                <td>${item.equipmentName}</td>
+                <td class="text-center"><small>${item.kategori}</small></td>
+                <td class="text-center">${item.standar ?? 0}</td>
+                <td class="text-center">${item.qty ?? 0}</td>
+                <td class="text-center"><span class="badge bg-${kondisiClass}">${kondisiText}</span></td>
+                <td class="text-center"><span class="badge bg-${fungsiClass}">${fungsiText}</span></td>
+                <td class="text-center"><span class="badge bg-${kontrakClass}">${kontrakText}</span></td>
+                <td class="text-center"><span class="badge bg-${nilaiClass}">${nilaiDisplay}</span></td>
+                <td class="text-center"><small>${tanggalFormatted}</small></td>
+            </tr>`;
+        }).join('');
+        tbody.innerHTML = rows || '<tr><td colspan="12" class="text-center text-muted py-3">Tidak ada data</td></tr>';
+    }
 }
 
 async function loadUIDComparisonChart() {
@@ -550,8 +654,326 @@ async function loadUIDTrendChart() {
             tooltip: { y: { formatter: (val) => val + ' penilaian' } }
         };
 
-        new ApexCharts(chartEl, options).render();
+        // Destroy existing chart to prevent memory leak
+        if (window.uidTrendChart) {
+            try { window.uidTrendChart.destroy(); } catch (e) { }
+        }
+        window.uidTrendChart = new ApexCharts(chartEl, options);
+        window.uidTrendChart.render();
     } catch (error) {
         chartEl.innerHTML = '<p class="text-center text-muted py-4">Gagal memuat chart</p>';
     }
+}
+
+/**
+ * Show Unit Report Modal - Raport detail per unit
+ */
+async function showUnitReportModal(unitCode, unitName) {
+    const modal = new bootstrap.Modal(document.getElementById('unitReportModal'));
+    document.getElementById('reportUnitCode').textContent = unitCode;
+    document.getElementById('unitReportContent').innerHTML = `
+        <div class="text-center py-5">
+            <div class="spinner-border text-primary" role="status">
+                <span class="visually-hidden">Loading...</span>
+            </div>
+            <p class="mt-2 text-muted">Memuat data raport...</p>
+        </div>
+    `;
+    modal.show();
+
+    try {
+        const client = getSupabaseClient();
+        const now = new Date();
+        const firstDayOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+        const lastDayOfMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0, 23, 59, 59);
+        const periodLabel = now.toLocaleDateString('id-ID', { month: 'long', year: 'numeric' });
+
+        // Query vendor_assets untuk unit ini
+        const { data: assets, error } = await client
+            .from('vendor_assets')
+            .select(`
+                id, vendor_id, team_id, personnel_id, peruntukan_id, equipment_id,
+                kondisi_fisik, kondisi_fungsi, kesesuaian_kontrak, nilai, realisasi_qty,
+                last_assessment_date,
+                vendors(id, vendor_name, unit_code),
+                peruntukan(id, jenis, deskripsi),
+                equipment_master(id, nama_alat, kategori)
+            `)
+            .eq('vendors.unit_code', unitCode)
+            .gte('last_assessment_date', firstDayOfMonth.toISOString())
+            .lte('last_assessment_date', lastDayOfMonth.toISOString());
+
+        if (error) throw error;
+
+        // Filter karena eq pada relasi bisa tidak bekerja sempurna
+        const unitAssets = assets?.filter(a => a.vendors?.unit_code === unitCode) || [];
+
+        // Hitung statistik
+        const totalEquipment = unitAssets.length;
+        const personalAssets = unitAssets.filter(a => a.peruntukan?.jenis === 'Personal');
+        const reguAssets = unitAssets.filter(a => a.peruntukan?.jenis === 'Regu');
+
+        const avgScore = totalEquipment > 0 ? (unitAssets.reduce((s, a) => s + (a.nilai || 0), 0) / totalEquipment) : 0;
+        const avgPersonal = personalAssets.length > 0 ? (personalAssets.reduce((s, a) => s + (a.nilai || 0), 0) / personalAssets.length) : 0;
+        const avgRegu = reguAssets.length > 0 ? (reguAssets.reduce((s, a) => s + (a.nilai || 0), 0) / reguAssets.length) : 0;
+
+        const tlFisik = unitAssets.filter(a => a.kondisi_fisik === -1).length;
+        const tbFungsi = unitAssets.filter(a => a.kondisi_fungsi === -1).length;
+        const kontrakOk = unitAssets.filter(a => a.kesesuaian_kontrak >= 2).length;
+        const kontrakPct = totalEquipment > 0 ? ((kontrakOk / totalEquipment) * 100) : 0;
+
+        const uniqueTeams = new Set(unitAssets.map(a => a.team_id).filter(Boolean)).size;
+        const uniquePersonnel = new Set(unitAssets.map(a => a.personnel_id).filter(Boolean)).size;
+
+        // Group by Peruntukan
+        const peruntukanStats = {};
+        unitAssets.forEach(a => {
+            const key = a.peruntukan?.deskripsi || a.peruntukan_id || 'Lainnya';
+            if (!peruntukanStats[key]) {
+                peruntukanStats[key] = { jenis: a.peruntukan?.jenis || '-', count: 0, totalNilai: 0, tlFisik: 0, tbFungsi: 0 };
+            }
+            peruntukanStats[key].count++;
+            peruntukanStats[key].totalNilai += a.nilai || 0;
+            if (a.kondisi_fisik === -1) peruntukanStats[key].tlFisik++;
+            if (a.kondisi_fungsi === -1) peruntukanStats[key].tbFungsi++;
+        });
+
+        // Group by Vendor
+        const vendorStats = {};
+        unitAssets.forEach(a => {
+            const vendorName = a.vendors?.vendor_name || 'Unknown';
+            if (!vendorStats[vendorName]) {
+                vendorStats[vendorName] = { count: 0, totalNilai: 0, tlFisik: 0, tbFungsi: 0 };
+            }
+            vendorStats[vendorName].count++;
+            vendorStats[vendorName].totalNilai += a.nilai || 0;
+            if (a.kondisi_fisik === -1) vendorStats[vendorName].tlFisik++;
+            if (a.kondisi_fungsi === -1) vendorStats[vendorName].tbFungsi++;
+        });
+
+        // Equipment bermasalah
+        const issueEquipments = unitAssets.filter(a => a.kondisi_fisik === -1 || a.kondisi_fungsi === -1);
+
+        // Grade calculation
+        const getGrade = (score) => {
+            if (score >= 1.5) return { grade: 'A', class: 'success', label: 'Sangat Baik' };
+            if (score >= 1.0) return { grade: 'B', class: 'info', label: 'Baik' };
+            if (score >= 0.5) return { grade: 'C', class: 'warning', label: 'Cukup' };
+            if (score >= 0) return { grade: 'D', class: 'warning', label: 'Kurang' };
+            return { grade: 'E', class: 'danger', label: 'Buruk' };
+        };
+
+        const overallGrade = getGrade(avgScore);
+
+        // Render report
+        const reportHTML = `
+            <!-- Print Header -->
+            <div class="d-none d-print-block text-center mb-4">
+                <h4 class="mb-1">RAPORT PENILAIAN ALAT KERJA</h4>
+                <h5 class="mb-3">${unitCode} - ${unitName}</h5>
+                <p class="text-muted">Periode: ${periodLabel}</p>
+                <hr>
+            </div>
+
+            <!-- Unit Header -->
+            <div class="row mb-3">
+                <div class="col-12">
+                    <div class="bg-light rounded p-2">
+                        <div class="row align-items-center">
+                            <div class="col-md-8">
+                                <h5 class="mb-0">${unitCode} - ${unitName}</h5>
+                                <small class="text-muted">Periode: ${periodLabel}</small>
+                            </div>
+                            <div class="col-md-4 text-end">
+                                <div class="h2 mb-0 fw-bold text-${overallGrade.class}">${avgScore.toFixed(2)}</div>
+                                <small class="text-muted">Rata-rata Score</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Summary Stats - Compact -->
+            <div class="row g-2 mb-3">
+                <div class="col-12">
+                    <h6 class="border-bottom pb-1 mb-2"><i class="bi bi-bar-chart me-2"></i>Ringkasan Penilaian</h6>
+                </div>
+                <div class="col-md-2 col-4">
+                    <div class="border rounded p-2 text-center h-100">
+                        <small class="text-muted d-block" style="font-size: 0.7rem;">Equipment</small>
+                        <h5 class="mb-0">${totalEquipment}</h5>
+                        <small style="font-size: 0.65rem;">&nbsp;</small>
+                    </div>
+                </div>
+                <div class="col-md-2 col-4">
+                    <div class="border rounded p-2 text-center h-100">
+                        <small class="text-muted d-block" style="font-size: 0.7rem;">Avg Nilai</small>
+                        <h5 class="mb-0 text-${overallGrade.class}">${avgScore.toFixed(2)}</h5>
+                        <small style="font-size: 0.65rem;">&nbsp;</small>
+                    </div>
+                </div>
+                <div class="col-md-2 col-4">
+                    <div class="border rounded p-2 text-center h-100">
+                        <small class="text-muted d-block" style="font-size: 0.7rem;">Personal</small>
+                        <h5 class="mb-0 text-info">${avgPersonal.toFixed(2)}</h5>
+                        <small class="text-muted" style="font-size: 0.65rem;">${personalAssets.length} eq</small>
+                    </div>
+                </div>
+                <div class="col-md-2 col-4">
+                    <div class="border rounded p-2 text-center h-100">
+                        <small class="text-muted d-block" style="font-size: 0.7rem;">Regu</small>
+                        <h5 class="mb-0 text-warning">${avgRegu.toFixed(2)}</h5>
+                        <small class="text-muted" style="font-size: 0.65rem;">${reguAssets.length} eq</small>
+                    </div>
+                </div>
+                <div class="col-md-2 col-4">
+                    <div class="border rounded p-2 text-center h-100">
+                        <small class="text-muted d-block" style="font-size: 0.7rem;">Kontrak</small>
+                        <h5 class="mb-0 ${kontrakPct >= 80 ? 'text-success' : kontrakPct >= 50 ? 'text-warning' : 'text-danger'}">${kontrakPct.toFixed(0)}%</h5>
+                        <small class="text-muted" style="font-size: 0.65rem;">${kontrakOk}/${totalEquipment}</small>
+                    </div>
+                </div>
+                <div class="col-md-1 col-2">
+                    <div class="border border-danger rounded p-2 text-center h-100">
+                        <small class="text-danger d-block" style="font-size: 0.7rem;">TL</small>
+                        <h5 class="mb-0 text-danger">${tlFisik}</h5>
+                        <small style="font-size: 0.65rem;">&nbsp;</small>
+                    </div>
+                </div>
+                <div class="col-md-1 col-2">
+                    <div class="border border-warning rounded p-2 text-center h-100">
+                        <small class="text-warning d-block" style="font-size: 0.7rem;">TB</small>
+                        <h5 class="mb-0 text-warning">${tbFungsi}</h5>
+                        <small style="font-size: 0.65rem;">&nbsp;</small>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Breakdown by Peruntukan -->
+            <div class="mb-3">
+                <h6 class="border-bottom pb-1 mb-2"><i class="bi bi-list-check me-2"></i>Breakdown per Peruntukan</h6>
+                <div class="table-responsive">
+                    <table class="table table-sm table-bordered mb-0">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Peruntukan</th>
+                                <th class="text-center">Jenis</th>
+                                <th class="text-center">Equipment</th>
+                                <th class="text-center">Avg Nilai</th>
+                                <th class="text-center text-danger">TL</th>
+                                <th class="text-center text-warning">TB</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${Object.entries(peruntukanStats).map(([name, stat]) => {
+            const avg = stat.count > 0 ? (stat.totalNilai / stat.count).toFixed(2) : '-';
+            const avgClass = avg >= 1.5 ? 'success' : avg >= 0 ? 'warning' : 'danger';
+            return `<tr>
+                                    <td>${name}</td>
+                                    <td class="text-center"><span class="badge bg-${stat.jenis === 'Personal' ? 'info' : 'warning'}">${stat.jenis}</span></td>
+                                    <td class="text-center">${stat.count}</td>
+                                    <td class="text-center"><span class="badge bg-${avgClass}">${avg}</span></td>
+                                    <td class="text-center text-danger">${stat.tlFisik || '-'}</td>
+                                    <td class="text-center text-warning">${stat.tbFungsi || '-'}</td>
+                                </tr>`;
+        }).join('')}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Breakdown by Vendor -->
+            <div class="mb-3">
+                <h6 class="border-bottom pb-1 mb-2"><i class="bi bi-building me-2"></i>Breakdown per Vendor</h6>
+                <div class="table-responsive">
+                    <table class="table table-sm table-bordered mb-0">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Vendor</th>
+                                <th class="text-center">Equipment</th>
+                                <th class="text-center">Avg Nilai</th>
+                                <th class="text-center text-danger">TL</th>
+                                <th class="text-center text-warning">TB</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${Object.entries(vendorStats).sort((a, b) => b[1].count - a[1].count).map(([name, stat]) => {
+            const avg = stat.count > 0 ? (stat.totalNilai / stat.count).toFixed(2) : '-';
+            const avgClass = avg >= 1.5 ? 'success' : avg >= 0 ? 'warning' : 'danger';
+            return `<tr>
+                                    <td>${name}</td>
+                                    <td class="text-center">${stat.count}</td>
+                                    <td class="text-center"><span class="badge bg-${avgClass}">${avg}</span></td>
+                                    <td class="text-center text-danger">${stat.tlFisik || '-'}</td>
+                                    <td class="text-center text-warning">${stat.tbFungsi || '-'}</td>
+                                </tr>`;
+        }).join('')}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Equipment Issues List -->
+            ${issueEquipments.length > 0 ? `
+            <div class="mb-3">
+                <h6 class="border-bottom pb-1 mb-2 text-danger"><i class="bi bi-exclamation-triangle me-2"></i>Daftar Equipment Bermasalah (${issueEquipments.length})</h6>
+                <div class="table-responsive">
+                    <table class="table table-sm table-bordered mb-0 small">
+                        <thead class="table-light">
+                            <tr>
+                                <th>#</th>
+                                <th>Peralatan</th>
+                                <th>Vendor</th>
+                                <th>Peruntukan</th>
+                                <th class="text-center">Kondisi</th>
+                                <th class="text-center">Fungsi</th>
+                                <th class="text-center">Nilai</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${issueEquipments.slice(0, 20).map((eq, idx) => {
+            const kondisiClass = eq.kondisi_fisik === -1 ? 'danger' : 'success';
+            const fungsiClass = eq.kondisi_fungsi === -1 ? 'warning' : 'success';
+            return `<tr>
+                                    <td>${idx + 1}</td>
+                                    <td>${eq.equipment_master?.nama_alat || '-'}</td>
+                                    <td>${eq.vendors?.vendor_name || '-'}</td>
+                                    <td>${eq.peruntukan?.deskripsi || '-'}</td>
+                                    <td class="text-center"><span class="badge bg-${kondisiClass}">${eq.kondisi_fisik === -1 ? 'TL' : 'OK'}</span></td>
+                                    <td class="text-center"><span class="badge bg-${fungsiClass}">${eq.kondisi_fungsi === -1 ? 'TB' : 'OK'}</span></td>
+                                    <td class="text-center">${eq.nilai?.toFixed(2) || '-'}</td>
+                                </tr>`;
+        }).join('')}
+                            ${issueEquipments.length > 20 ? `<tr><td colspan="7" class="text-center text-muted">... dan ${issueEquipments.length - 20} item lainnya</td></tr>` : ''}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            ` : ''}
+
+            <!-- Footer -->
+            <div class="text-center text-muted small mt-3 pt-2 border-top">
+                <p class="mb-1">Dicetak pada: ${new Date().toLocaleString('id-ID')}</p>
+                <p class="mb-0">Sistem Penilaian Alat Kerja</p>
+            </div>
+        `;
+
+        document.getElementById('unitReportContent').innerHTML = reportHTML;
+
+    } catch (error) {
+        console.error('Error loading unit report:', error);
+        document.getElementById('unitReportContent').innerHTML = `
+            <div class="text-center py-5 text-danger">
+                <i class="bi bi-exclamation-circle" style="font-size: 3rem;"></i>
+                <p class="mt-2">Gagal memuat data raport</p>
+            </div>
+        `;
+    }
+}
+
+/**
+ * Print Unit Report
+ */
+function printUnitReport() {
+    window.print();
 }

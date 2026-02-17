@@ -57,6 +57,7 @@
 - `jabatan` (TEXT) - Jabatan
 - `role` (USER-DEFINED) - Role: 'uid_admin', 'uid_user', 'up3_admin', 'up3_user', 'vendor_k3', 'petugas'
 - `vendor_id` (UUID) - FK ke vendors.id
+- `is_active` (BOOLEAN) - Status akun aktif (default: false untuk user baru, perlu approval admin)
 - `created_at` (TIMESTAMP) - Waktu pembuatan
 
 **Status:** ✅ Tabel sudah ada
@@ -240,6 +241,25 @@ kondisi_fisik = IF (tidak_layak == 0) THEN 0 ELSE -1
 kondisi_fungsi = IF (tidak_berfungsi == 0) THEN 0 ELSE -1
 score_item = kesesuaian_kontrak + kondisi_fisik + kondisi_fungsi
 ```
+
+---
+
+### 12. Table 'assessment_personnel' (Junction Table - Multiple Personnel per Assessment)
+**Primary Key:** `id (UUID)`
+**Foreign Keys:**
+- `assessment_id` → `assessments(id)` ON DELETE CASCADE
+- `personnel_id` → `personnel(id)` ON DELETE CASCADE
+
+- `id` (UUID) - Primary key
+- `assessment_id` (UUID) - FK ke assessments.id
+- `personnel_id` (UUID) - FK ke personnel.id
+- `created_at` (TIMESTAMP) - Waktu pembuatan
+
+**Unique Constraint:** (assessment_id, personnel_id)
+
+**Status:** ✅ Tabel sudah ada
+
+**Fungsi:** Menyimpan multiple personnel per assessment, terutama untuk tipe penilaian "regu" dimana satu penilaian dapat melibatkan beberapa petugas.
 
 ---
 
