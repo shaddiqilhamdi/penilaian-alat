@@ -36,11 +36,16 @@ Sebelumnya, proses penilaian APD & alat kerja vendor dilakukan secara **manual**
 
 ## 🎯 Apa itu Aplikasi Ini?
 
+> **Objektif Utama:**
+> *"Memastikan setiap pekerja di lapangan terlindungi dengan APD & peralatan kerja yang layak, lengkap, dan berfungsi — melalui sistem monitoring digital real-time, sehingga seluruh ketidaksesuaian dapat terdeteksi dini dan ditindaklanjuti segera."*
+
 Aplikasi **Penilaian Alat Kerja** adalah sistem digital untuk:
-- ✅ Mencatat penilaian kelengkapan APD & alat kerja vendor
-- ✅ Memantau kelayakan dan fungsi peralatan keselamatan kerja
-- ✅ Menghasilkan laporan dan skor penilaian secara otomatis
-- ✅ Memastikan kepatuhan standar K3 di lapangan
+- ✅ **Deteksi Dini** — Mengetahui secara cepat jika ada alat yang rusak, hilang, atau tidak layak pakai
+- ✅ **Monitoring Real-Time** — Memantau kondisi APD & peralatan kerja setiap regu/personil secara langsung
+- ✅ **Tindak Lanjut Cepat** — Data tercatat langsung bisa ditindaklanjuti untuk penggantian atau perbaikan
+- ✅ **Zero Incident Target** — Mendukung budaya K3 dengan memastikan tidak ada pekerja bekerja dengan peralatan tidak standar
+
+> 🎯 *"Pantau Alat, Lindungi Pekerja — Real-Time, Setiap Saat"*
 
 ### Manfaat Utama:
 

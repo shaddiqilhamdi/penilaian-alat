@@ -1,0 +1,1348 @@
+<!DOCTYPE html>
+<html lang="id">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Materi Sosialisasi - Sistem Penilaian Alat Kerja K3</title>
+    <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <link href="assets/vendor/bootstrap/css/bootstrap.min.css" rel="stylesheet">
+    <link href="assets/vendor/bootstrap-icons/bootstrap-icons.css" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #4154f1;
+            --secondary: #717ff5;
+            --success: #2eca6a;
+            --warning: #ff771d;
+            --danger: #e63946;
+            --dark: #012970;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Nunito', sans-serif;
+            line-height: 1.6;
+            color: #444;
+            background: #f6f9ff;
+        }
+
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        /* Header */
+        .header {
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            color: white;
+            padding: 60px 20px;
+            text-align: center;
+            border-radius: 0 0 30px 30px;
+            margin-bottom: 40px;
+        }
+
+        .header h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 10px;
+        }
+
+        .header h2 {
+            font-size: 1.5rem;
+            font-weight: 400;
+            opacity: 0.9;
+        }
+
+        .header .subtitle {
+            margin-top: 15px;
+            font-size: 1.1rem;
+            opacity: 0.8;
+        }
+
+        /* Sections */
+        .section {
+            background: white;
+            border-radius: 15px;
+            padding: 30px;
+            margin-bottom: 30px;
+            box-shadow: 0 2px 15px rgba(0, 0, 0, 0.08);
+        }
+
+        .section-title {
+            color: var(--dark);
+            font-size: 1.5rem;
+            font-weight: 700;
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 3px solid var(--primary);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .section-title i {
+            color: var(--primary);
+            font-size: 1.3rem;
+        }
+
+        /* Tables */
+        .table-custom {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 15px 0;
+        }
+
+        .table-custom th {
+            background: var(--primary);
+            color: white;
+            padding: 12px 15px;
+            text-align: left;
+            font-weight: 600;
+        }
+
+        .table-custom td {
+            padding: 12px 15px;
+            border-bottom: 1px solid #eee;
+        }
+
+        .table-custom tr:nth-child(even) {
+            background: #f8f9fa;
+        }
+
+        .table-custom tr:hover {
+            background: #e8f4ff;
+        }
+
+        /* Cards */
+        .card-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin: 20px 0;
+        }
+
+        .info-card {
+            background: linear-gradient(135deg, #f8f9fa, #fff);
+            border-radius: 12px;
+            padding: 20px;
+            text-align: center;
+            border: 1px solid #eee;
+            transition: transform 0.3s, box-shadow 0.3s;
+        }
+
+        .info-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
+        }
+
+        .info-card i {
+            font-size: 2.5rem;
+            color: var(--primary);
+            margin-bottom: 10px;
+        }
+
+        .info-card h4 {
+            color: var(--dark);
+            margin-bottom: 5px;
+        }
+
+        .info-card p {
+            color: #666;
+            font-size: 0.9rem;
+        }
+
+        /* Steps */
+        .step-list {
+            counter-reset: step;
+        }
+
+        .step-item {
+            position: relative;
+            padding-left: 60px;
+            margin-bottom: 25px;
+        }
+
+        .step-item::before {
+            counter-increment: step;
+            content: counter(step);
+            position: absolute;
+            left: 0;
+            top: 0;
+            width: 40px;
+            height: 40px;
+            background: var(--primary);
+            color: white;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            font-size: 1.1rem;
+        }
+
+        .step-item h4 {
+            color: var(--dark);
+            margin-bottom: 8px;
+        }
+
+        /* Alert boxes */
+        .alert-box {
+            padding: 15px 20px;
+            border-radius: 10px;
+            margin: 15px 0;
+            display: flex;
+            align-items: flex-start;
+            gap: 15px;
+        }
+
+        .alert-box i {
+            font-size: 1.5rem;
+            margin-top: 3px;
+        }
+
+        .alert-info {
+            background: #e7f3ff;
+            border-left: 4px solid var(--primary);
+        }
+
+        .alert-info i {
+            color: var(--primary);
+        }
+
+        .alert-success {
+            background: #e8f8ee;
+            border-left: 4px solid var(--success);
+        }
+
+        .alert-success i {
+            color: var(--success);
+        }
+
+        .alert-warning {
+            background: #fff5e6;
+            border-left: 4px solid var(--warning);
+        }
+
+        .alert-warning i {
+            color: var(--warning);
+        }
+
+        .alert-danger {
+            background: #ffe8ea;
+            border-left: 4px solid var(--danger);
+        }
+
+        .alert-danger i {
+            color: var(--danger);
+        }
+
+        /* URL Box */
+        .url-box {
+            background: var(--dark);
+            color: white;
+            padding: 20px 30px;
+            border-radius: 10px;
+            text-align: center;
+            font-size: 1.3rem;
+            font-family: monospace;
+            margin: 20px 0;
+        }
+
+        /* Score colors */
+        .score-good {
+            color: var(--success);
+            font-weight: 700;
+        }
+
+        .score-warning {
+            color: var(--warning);
+            font-weight: 700;
+        }
+
+        .score-bad {
+            color: var(--danger);
+            font-weight: 700;
+        }
+
+        /* Badge */
+        .badge-custom {
+            display: inline-block;
+            padding: 5px 12px;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            font-weight: 600;
+        }
+
+        .badge-primary {
+            background: var(--primary);
+            color: white;
+        }
+
+        .badge-success {
+            background: var(--success);
+            color: white;
+        }
+
+        .badge-warning {
+            background: var(--warning);
+            color: white;
+        }
+
+        .badge-danger {
+            background: var(--danger);
+            color: white;
+        }
+
+        /* Diagram box */
+        .diagram-box {
+            background: #f8f9fa;
+            border: 2px dashed #ddd;
+            border-radius: 10px;
+            padding: 20px;
+            margin: 20px 0;
+            font-family: monospace;
+            font-size: 0.85rem;
+            overflow-x: auto;
+            white-space: pre;
+        }
+
+        /* Two column */
+        .two-col {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+
+        @media (max-width: 768px) {
+            .two-col {
+                grid-template-columns: 1fr;
+            }
+
+            .header h1 {
+                font-size: 1.8rem;
+            }
+        }
+
+        /* Checklist */
+        .checklist {
+            list-style: none;
+            padding: 0;
+        }
+
+        .checklist li {
+            padding: 10px 0;
+            padding-left: 35px;
+            position: relative;
+            border-bottom: 1px solid #eee;
+        }
+
+        .checklist li::before {
+            content: "✓";
+            position: absolute;
+            left: 0;
+            color: var(--success);
+            font-weight: 700;
+            font-size: 1.2rem;
+        }
+
+        .checklist-x li::before {
+            content: "✗";
+            color: var(--danger);
+        }
+
+        /* Quick ref card */
+        .quick-ref {
+            background: linear-gradient(135deg, var(--dark), #1a3a6e);
+            color: white;
+            padding: 30px;
+            border-radius: 15px;
+            margin: 20px 0;
+        }
+
+        .quick-ref h3 {
+            text-align: center;
+            margin-bottom: 20px;
+            font-size: 1.3rem;
+        }
+
+        .quick-ref-item {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            padding: 10px 0;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .quick-ref-item i {
+            font-size: 1.3rem;
+            width: 30px;
+        }
+
+        /* Footer */
+        .footer {
+            text-align: center;
+            padding: 40px 20px;
+            color: #666;
+        }
+
+        .footer h3 {
+            color: var(--dark);
+            margin-bottom: 10px;
+        }
+
+        /* Print styles */
+        @media print {
+            body {
+                background: white;
+            }
+
+            .section {
+                box-shadow: none;
+                border: 1px solid #ddd;
+                page-break-inside: avoid;
+            }
+
+            .header {
+                background: var(--primary) !important;
+                -webkit-print-color-adjust: exact;
+                print-color-adjust: exact;
+            }
+        }
+
+        /* Scenario box */
+        .scenario-box {
+            background: #f0f4ff;
+            border-radius: 12px;
+            padding: 20px;
+            margin: 15px 0;
+            border-left: 4px solid var(--primary);
+        }
+
+        .scenario-box h4 {
+            color: var(--dark);
+            margin-bottom: 10px;
+        }
+
+        .scenario-box .situation {
+            background: white;
+            padding: 12px 15px;
+            border-radius: 8px;
+            margin-bottom: 15px;
+            font-style: italic;
+        }
+
+        /* Flow diagram */
+        .flow-box {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-wrap: wrap;
+            gap: 10px;
+            padding: 20px;
+            background: #f8f9fa;
+            border-radius: 10px;
+            margin: 15px 0;
+        }
+
+        .flow-item {
+            background: white;
+            padding: 15px 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+            text-align: center;
+            min-width: 120px;
+        }
+
+        .flow-item i {
+            font-size: 1.5rem;
+            color: var(--primary);
+            display: block;
+            margin-bottom: 5px;
+        }
+
+        .flow-arrow {
+            font-size: 1.5rem;
+            color: var(--primary);
+        }
+    </style>
+</head>
+
+<body>
+    <!-- Header -->
+    <div class="header">
+        <h1>📋 SOSIALISASI APLIKASI</h1>
+        <h2>Sistem Penilaian Alat Kerja K3</h2>
+        <p class="subtitle">PLN Unit Induk Distribusi</p>
+    </div>
+
+    <div class="container">
+        <!-- Latar Belakang -->
+        <div class="section">
+            <h3 class="section-title"><i class="bi bi-book"></i> Latar Belakang</h3>
+
+            <h4 style="color: var(--dark); margin-bottom: 15px;">Mengapa Aplikasi Ini Dibuat?</h4>
+            <p>Sebelumnya, proses penilaian APD & alat kerja vendor dilakukan secara <strong>manual</strong> dengan
+                berbagai kendala:</p>
+
+            <table class="table-custom">
+                <thead>
+                    <tr>
+                        <th>Masalah Lama</th>
+                        <th>Dampak</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>Pencatatan di kertas/Excel</td>
+                        <td>Data tersebar, sulit dikompilasi</td>
+                    </tr>
+                    <tr>
+                        <td>Tidak ada standarisasi</td>
+                        <td>Format berbeda tiap UP3</td>
+                    </tr>
+                    <tr>
+                        <td>Proses pelaporan lambat</td>
+                        <td>Butuh waktu lama untuk rekap</td>
+                    </tr>
+                    <tr>
+                        <td>Sulit monitoring real-time</td>
+                        <td>Tidak bisa pantau kondisi terkini</td>
+                    </tr>
+                    <tr>
+                        <td>Rawan human error</td>
+                        <td>Kesalahan input & perhitungan</td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <h4 style="color: var(--dark); margin: 25px 0 15px;">Solusi dengan Aplikasi Digital:</h4>
+
+            <div class="flow-box">
+                <div class="flow-item">
+                    <i class="bi bi-pencil-square"></i>
+                    <small>Manual</small>
+                </div>
+                <span class="flow-arrow">→</span>
+                <div class="flow-item">
+                    <i class="bi bi-file-earmark-excel"></i>
+                    <small>Excel</small>
+                </div>
+                <span class="flow-arrow">→</span>
+                <div class="flow-item">
+                    <i class="bi bi-envelope"></i>
+                    <small>Email</small>
+                </div>
+                <span class="flow-arrow">→</span>
+                <div class="flow-item">
+                    <i class="bi bi-clock-history"></i>
+                    <small>Lama!</small>
+                </div>
+            </div>
+
+            <div style="text-align: center; font-size: 2rem; color: var(--primary); margin: 10px 0;">⬇️</div>
+
+            <div class="flow-box" style="background: #e8f8ee;">
+                <div class="flow-item">
+                    <i class="bi bi-phone"></i>
+                    <small>Input Langsung</small>
+                </div>
+                <span class="flow-arrow">→</span>
+                <div class="flow-item">
+                    <i class="bi bi-lightning-charge"></i>
+                    <small>Otomatis Tersimpan</small>
+                </div>
+                <span class="flow-arrow">→</span>
+                <div class="flow-item">
+                    <i class="bi bi-graph-up"></i>
+                    <small>Dashboard!</small>
+                </div>
+            </div>
+        </div>
+
+        <!-- Apa itu Aplikasi -->
+        <div class="section">
+            <h3 class="section-title"><i class="bi bi-bullseye"></i> Apa itu Aplikasi Ini?</h3>
+
+            <div class="alert-box alert-info" style="margin-bottom: 20px;">
+                <i class="bi bi-shield-check"></i>
+                <div>
+                    <strong>Objektif Utama:</strong><br>
+                    <em>"Memastikan setiap pekerja di lapangan terlindungi dengan APD & peralatan kerja yang layak, lengkap, dan berfungsi — melalui sistem monitoring digital real-time, sehingga seluruh ketidaksesuaian dapat terdeteksi dini dan ditindaklanjuti segera."</em>
+                </div>
+            </div>
+
+            <p>Aplikasi <strong>Penilaian Alat Kerja</strong> adalah sistem digital untuk:</p>
+
+            <ul class="checklist">
+                <li><strong>Deteksi Dini</strong> — Mengetahui secara cepat jika ada alat yang rusak, hilang, atau tidak layak pakai</li>
+                <li><strong>Monitoring Real-Time</strong> — Memantau kondisi APD & peralatan kerja setiap regu/personil secara langsung</li>
+                <li><strong>Tindak Lanjut Cepat</strong> — Data tercatat langsung bisa ditindaklanjuti untuk penggantian atau perbaikan</li>
+                <li><strong>Zero Incident Target</strong> — Mendukung budaya K3 dengan memastikan tidak ada pekerja bekerja dengan peralatan tidak standar</li>
+            </ul>
+
+            <div style="text-align: center; margin: 20px 0; padding: 15px; background: linear-gradient(135deg, var(--primary), var(--secondary)); color: white; border-radius: 10px;">
+                <i class="bi bi-bullseye" style="font-size: 1.5rem;"></i>
+                <p style="margin: 10px 0 0 0; font-weight: 600; font-size: 1.1rem;">"Pantau Alat, Lindungi Pekerja — Real-Time, Setiap Saat"</p>
+            </div>
+
+            <h4 style="color: var(--dark); margin: 25px 0 15px;">Manfaat Utama:</h4>
+
+            <div class="two-col">
+                <div class="info-card">
+                    <i class="bi bi-person-badge"></i>
+                    <h4>Untuk Vendor K3</h4>
+                    <ul style="text-align: left; padding-left: 20px; margin-top: 10px;">
+                        <li>Input cepat dari HP</li>
+                        <li>Tidak perlu rekap manual</li>
+                        <li>Histori tersimpan rapi</li>
+                        <li>Akses kapan saja</li>
+                    </ul>
+                </div>
+                <div class="info-card">
+                    <i class="bi bi-person-workspace"></i>
+                    <h4>Untuk Admin UP3/UID</h4>
+                    <ul style="text-align: left; padding-left: 20px; margin-top: 10px;">
+                        <li>Monitoring real-time</li>
+                        <li>Dashboard terintegrasi</li>
+                        <li>Laporan otomatis</li>
+                        <li>Standar seragam</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <!-- Cara Akses -->
+        <div class="section">
+            <h3 class="section-title"><i class="bi bi-globe"></i> Cara Mengakses Aplikasi</h3>
+
+            <h4 style="color: var(--dark); margin-bottom: 15px;">Alamat Website:</h4>
+            <div class="url-box">
+                https://safetytools-uid.web.app
+            </div>
+
+            <h4 style="color: var(--dark); margin: 25px 0 15px;">Bisa Diakses Melalui:</h4>
+            <div class="card-grid">
+                <div class="info-card">
+                    <i class="bi bi-laptop"></i>
+                    <h4>Komputer / Laptop</h4>
+                </div>
+                <div class="info-card">
+                    <i class="bi bi-phone"></i>
+                    <h4>HP / Tablet</h4>
+                    <p>Tampilan responsive</p>
+                </div>
+                <div class="info-card">
+                    <i class="bi bi-browser-chrome"></i>
+                    <h4>Browser Apapun</h4>
+                    <p>Chrome, Firefox, Safari, Edge</p>
+                </div>
+            </div>
+
+            <div class="alert-box alert-info">
+                <i class="bi bi-lightbulb"></i>
+                <div><strong>Tips:</strong> Simpan sebagai bookmark atau tambahkan ke home screen HP untuk akses cepat
+                </div>
+            </div>
+        </div>
+
+        <!-- Siapa Pengguna -->
+        <div class="section">
+            <h3 class="section-title"><i class="bi bi-people"></i> Siapa Saja yang Menggunakan?</h3>
+
+            <table class="table-custom">
+                <thead>
+                    <tr>
+                        <th>Peran</th>
+                        <th>Tugas Utama</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><span class="badge-custom badge-primary">UID Admin</span></td>
+                        <td>Mengelola seluruh data & user di tingkat UID</td>
+                    </tr>
+                    <tr>
+                        <td><span class="badge-custom badge-primary">UID User</span></td>
+                        <td>Melihat data & laporan tingkat UID</td>
+                    </tr>
+                    <tr>
+                        <td><span class="badge-custom badge-success">UP3 Admin</span></td>
+                        <td>Mengelola data di tingkat UP3 masing-masing</td>
+                    </tr>
+                    <tr>
+                        <td><span class="badge-custom badge-success">UP3 User</span></td>
+                        <td>Melihat data & laporan tingkat UP3</td>
+                    </tr>
+                    <tr>
+                        <td><span class="badge-custom badge-warning">Vendor K3</span></td>
+                        <td>Melakukan input penilaian harian</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Cara Login -->
+        <div class="section">
+            <h3 class="section-title"><i class="bi bi-key"></i> Cara Login</h3>
+
+            <div class="two-col">
+                <div>
+                    <h4 style="color: var(--dark); margin-bottom: 15px;">Langkah-langkah:</h4>
+                    <div class="step-list">
+                        <div class="step-item">
+                            <h4>Buka Website Aplikasi</h4>
+                            <p>Ketik alamat di browser</p>
+                        </div>
+                        <div class="step-item">
+                            <h4>Masukkan Email</h4>
+                            <p>Email yang sudah terdaftar</p>
+                        </div>
+                        <div class="step-item">
+                            <h4>Masukkan Password</h4>
+                            <p>Password akun Anda</p>
+                        </div>
+                        <div class="step-item">
+                            <h4>Klik Login</h4>
+                            <p>Tunggu hingga masuk ke Dashboard</p>
+                        </div>
+                    </div>
+                </div>
+                <div>
+                    <div class="alert-box alert-warning" style="margin-bottom: 15px;">
+                        <i class="bi bi-question-circle"></i>
+                        <div>
+                            <strong>Lupa Password?</strong>
+                            <ul style="margin: 5px 0 0 0; padding-left: 20px;">
+                                <li>Klik "Lupa Password" di halaman login</li>
+                                <li>Masukkan email terdaftar</li>
+                                <li>Cek inbox untuk link reset</li>
+                            </ul>
+                        </div>
+                    </div>
+                    <div class="alert-box alert-info">
+                        <i class="bi bi-person-plus"></i>
+                        <div>
+                            <strong>Belum Punya Akun?</strong>
+                            <ul style="margin: 5px 0 0 0; padding-left: 20px;">
+                                <li>Klik "Daftar Akun Baru"</li>
+                                <li>Isi data diri lengkap</li>
+                                <li>Tunggu persetujuan admin (1x24 jam)</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Fitur Utama -->
+        <div class="section">
+            <h3 class="section-title"><i class="bi bi-grid-3x3-gap"></i> Fitur Utama Aplikasi</h3>
+
+            <div class="card-grid">
+                <div class="info-card">
+                    <i class="bi bi-speedometer2"></i>
+                    <h4>1. Dashboard</h4>
+                    <p>Ringkasan statistik, grafik skor, data penilaian</p>
+                </div>
+                <div class="info-card">
+                    <i class="bi bi-clipboard-check"></i>
+                    <h4>2. Form Penilaian</h4>
+                    <p>Input penilaian alat kerja harian</p>
+                </div>
+                <div class="info-card">
+                    <i class="bi bi-table"></i>
+                    <h4>3. Data Penilaian</h4>
+                    <p>Riwayat & filter penilaian</p>
+                </div>
+                <div class="info-card">
+                    <i class="bi bi-database"></i>
+                    <h4>4. Master Data</h4>
+                    <p>Unit, Vendor, Kendaraan, Personil, Standar</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Cara Penilaian -->
+        <div class="section">
+            <h3 class="section-title"><i class="bi bi-pencil-square"></i> Cara Melakukan Penilaian</h3>
+
+            <div class="step-list">
+                <div class="step-item">
+                    <h4>Pilih Menu "Form Penilaian"</h4>
+                    <p>Klik menu <strong>Penilaian</strong> → <strong>Form Penilaian</strong></p>
+                </div>
+                <div class="step-item">
+                    <h4>Isi Informasi Dasar</h4>
+                    <p>
+                        📅 Tanggal (otomatis hari ini) &nbsp;|&nbsp;
+                        ⏰ Shift (Pagi/Siang/Malam) &nbsp;|&nbsp;
+                        🏢 Vendor &nbsp;|&nbsp;
+                        🎯 Peruntukan &nbsp;|&nbsp;
+                        🚗 Kendaraan &nbsp;|&nbsp;
+                        👷 Petugas
+                    </p>
+                </div>
+                <div class="step-item">
+                    <h4>Isi Checklist Peralatan</h4>
+                    <table class="table-custom">
+                        <thead>
+                            <tr>
+                                <th>Kolom</th>
+                                <th>Keterangan</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td><strong>Standar</strong></td>
+                                <td>Jumlah yang seharusnya ada</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Realisasi</strong></td>
+                                <td>Jumlah yang ada saat ini</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Layak</strong></td>
+                                <td>Jumlah yang kondisinya baik</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Tidak Layak</strong></td>
+                                <td>Jumlah yang kondisinya rusak/aus</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Berfungsi</strong></td>
+                                <td>Jumlah yang bisa digunakan</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Tidak Berfungsi</strong></td>
+                                <td>Jumlah yang tidak bisa digunakan</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+                <div class="step-item">
+                    <h4>Simpan Penilaian</h4>
+                    <p>Klik tombol <strong>Simpan</strong> → Sistem akan menghitung skor otomatis</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Memahami Skor -->
+        <div class="section">
+            <h3 class="section-title"><i class="bi bi-bar-chart-line"></i> Memahami Skor Penilaian</h3>
+
+            <h4 style="color: var(--dark); margin-bottom: 15px;">Rentang Skor:</h4>
+
+            <div class="card-grid">
+                <div class="info-card" style="border: 3px solid var(--success);">
+                    <h4 class="score-good">≥ 1.5</h4>
+                    <span class="badge-custom badge-success">🟢 BAIK</span>
+                    <p style="margin-top: 10px;">Memenuhi standar</p>
+                </div>
+                <div class="info-card" style="border: 3px solid var(--warning);">
+                    <h4 class="score-warning">0 - 1.49</h4>
+                    <span class="badge-custom badge-warning">🟡 PERHATIAN</span>
+                    <p style="margin-top: 10px;">Ada kekurangan</p>
+                </div>
+                <div class="info-card" style="border: 3px solid var(--danger);">
+                    <h4 class="score-bad">
+                        < 0</h4>
+                            <span class="badge-custom badge-danger">🔴 BURUK</span>
+                            <p style="margin-top: 10px;">Banyak kekurangan</p>
+                </div>
+            </div>
+
+            <div class="alert-box alert-info" style="margin-top: 20px;">
+                <i class="bi bi-calculator"></i>
+                <div>
+                    <strong>Cara Perhitungan:</strong><br>
+                    <code
+                        style="background: #f0f4ff; padding: 5px 10px; border-radius: 5px; display: inline-block; margin-top: 5px;">
+                        Skor = (Realisasi/Standar) + (Layak/Realisasi) + (Berfungsi/Realisasi) - 2
+                    </code><br>
+                    <small>Skor maksimal = <strong>1</strong> per item alat</small>
+                </div>
+            </div>
+        </div>
+
+        <!-- Alur Kerja Harian -->
+        <div class="section">
+            <h3 class="section-title"><i class="bi bi-arrow-repeat"></i> Alur Kerja Harian</h3>
+
+            <div style="background: #f8f9fa; border-radius: 10px; padding: 25px; border: 2px solid #e9ecef;">
+                <h4 style="text-align: center; color: var(--dark); margin-bottom: 20px;">
+                    <i class="bi bi-sun"></i> PAGI / AWAL SHIFT
+                </h4>
+                <div class="step-list">
+                    <div class="step-item">
+                        <h4>Login ke aplikasi</h4>
+                    </div>
+                    <div class="step-item">
+                        <h4>Buka Form Penilaian</h4>
+                    </div>
+                    <div class="step-item">
+                        <h4>Pilih Vendor & Tim yang akan dinilai</h4>
+                    </div>
+                    <div class="step-item">
+                        <h4>Lakukan penilaian fisik di lapangan</h4>
+                    </div>
+                    <div class="step-item">
+                        <h4>Input hasil penilaian ke sistem</h4>
+                    </div>
+                    <div class="step-item">
+                        <h4>Simpan ✓</h4>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Skenario Penggunaan -->
+        <div class="section">
+            <h3 class="section-title"><i class="bi bi-play-circle"></i> Contoh Skenario Penggunaan</h3>
+
+            <div class="scenario-box">
+                <h4>Skenario 1: Penilaian Harian Regu Kendaraan</h4>
+                <div class="situation">
+                    <strong>Situasi:</strong> Pak Budi (Vendor K3) akan menilai kelengkapan APD regu mobil PJU dengan
+                    nomor polisi B 1234 XYZ
+                </div>
+
+                <div class="step-list">
+                    <div class="step-item">
+                        <h4>Login ke aplikasi pagi hari</h4>
+                        <p>Email: budi@vendor.com | Password: ****</p>
+                    </div>
+                    <div class="step-item">
+                        <h4>Masuk Form Penilaian</h4>
+                        <p>Menu: Penilaian → Form Penilaian</p>
+                    </div>
+                    <div class="step-item">
+                        <h4>Isi data</h4>
+                        <p>Tanggal, Shift: Pagi, Vendor: PT. Safety Prima, Peruntukan: Regu, Kendaraan: B 1234 XYZ,
+                            Petugas: Andi, Dedi, Roni</p>
+                    </div>
+                    <div class="step-item">
+                        <h4>Cek fisik peralatan & input</h4>
+                        <table class="table-custom" style="font-size: 0.85rem;">
+                            <thead>
+                                <tr>
+                                    <th>Alat</th>
+                                    <th>Standar</th>
+                                    <th>Realisasi</th>
+                                    <th>Layak</th>
+                                    <th>Tidak Layak</th>
+                                    <th>Berfungsi</th>
+                                    <th>Tidak Berfungsi</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td>Helm Safety</td>
+                                    <td>3</td>
+                                    <td>3</td>
+                                    <td>3</td>
+                                    <td>0</td>
+                                    <td>3</td>
+                                    <td>0</td>
+                                </tr>
+                                <tr>
+                                    <td>Rompi K3</td>
+                                    <td>3</td>
+                                    <td>3</td>
+                                    <td>2</td>
+                                    <td>1</td>
+                                    <td>3</td>
+                                    <td>0</td>
+                                </tr>
+                                <tr>
+                                    <td>Sepatu Safety</td>
+                                    <td>3</td>
+                                    <td>3</td>
+                                    <td>3</td>
+                                    <td>0</td>
+                                    <td>3</td>
+                                    <td>0</td>
+                                </tr>
+                                <tr>
+                                    <td>Sarung Tangan</td>
+                                    <td>3</td>
+                                    <td>2</td>
+                                    <td>2</td>
+                                    <td>0</td>
+                                    <td>2</td>
+                                    <td>0</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    <div class="step-item">
+                        <h4>Klik SIMPAN</h4>
+                        <p>Skor dihitung otomatis</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="scenario-box" style="background: #f0fff4; border-color: var(--success);">
+                <h4>Skenario 2: Penilaian Personal Individu</h4>
+                <div class="situation">
+                    <strong>Situasi:</strong> Bu Sari (Vendor K3) menilai petugas individual yang bekerja sendiri
+                </div>
+                <ul style="padding-left: 20px; margin-top: 15px;">
+                    <li>Login ke aplikasi</li>
+                    <li>Form Penilaian: Peruntukan = <strong>Personal</strong> (bukan Regu)</li>
+                    <li>Petugas: Pilih <strong>1 orang</strong> saja</li>
+                    <li>Standar peralatan otomatis menyesuaikan untuk personal</li>
+                    <li>Input hasil penilaian → Simpan</li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- Do's and Don'ts -->
+        <div class="section">
+            <h3 class="section-title"><i class="bi bi-check2-square"></i> Do's and Don'ts</h3>
+
+            <div class="two-col">
+                <div>
+                    <h4 style="color: var(--success); margin-bottom: 15px;">✅ LAKUKAN (Do's)</h4>
+                    <ul class="checklist">
+                        <li>Input data <strong>segera setelah</strong> penilaian fisik</li>
+                        <li>Periksa <strong>semua field</strong> sebelum simpan</li>
+                        <li>Gunakan <strong>password kuat</strong></li>
+                        <li><strong>Logout</strong> setelah selesai</li>
+                        <li>Laporkan kendala <strong>segera</strong></li>
+                        <li>Update browser ke versi <strong>terbaru</strong></li>
+                    </ul>
+                </div>
+                <div>
+                    <h4 style="color: var(--danger); margin-bottom: 15px;">❌ JANGAN LAKUKAN (Don'ts)</h4>
+                    <ul class="checklist checklist-x">
+                        <li>Share akun dengan orang lain</li>
+                        <li>Input data asal-asalan</li>
+                        <li>Menunda input terlalu lama</li>
+                        <li>Mengabaikan notifikasi error</li>
+                        <li>Simpan password di browser publik</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <!-- Troubleshooting -->
+        <div class="section">
+            <h3 class="section-title"><i class="bi bi-wrench"></i> Troubleshooting Umum</h3>
+
+            <div class="alert-box alert-danger" style="margin-bottom: 15px;">
+                <i class="bi bi-x-circle"></i>
+                <div>
+                    <strong>Masalah 1: Tidak Bisa Login</strong><br>
+                    <small>Gejala: Muncul pesan "Email atau password salah"</small>
+                    <ul style="margin: 10px 0 0 0; padding-left: 20px;">
+                        <li>Pastikan CAPS LOCK tidak aktif</li>
+                        <li>Periksa ejaan email</li>
+                        <li>Coba klik "Lupa Password" untuk reset</li>
+                        <li>Hubungi Admin jika masih gagal</li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="alert-box alert-warning" style="margin-bottom: 15px;">
+                <i class="bi bi-exclamation-triangle"></i>
+                <div>
+                    <strong>Masalah 2: Halaman Error</strong><br>
+                    <small>Gejala: Halaman kosong atau error</small>
+                    <ul style="margin: 10px 0 0 0; padding-left: 20px;">
+                        <li>Refresh halaman (F5)</li>
+                        <li>Hapus cache browser (Ctrl+Shift+Delete)</li>
+                        <li>Coba browser lain</li>
+                        <li>Periksa koneksi internet</li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="alert-box alert-info" style="margin-bottom: 15px;">
+                <i class="bi bi-cloud-slash"></i>
+                <div>
+                    <strong>Masalah 3: Data Tidak Tersimpan</strong><br>
+                    <small>Gejala: Klik Simpan tapi tidak ada konfirmasi</small>
+                    <ul style="margin: 10px 0 0 0; padding-left: 20px;">
+                        <li>Periksa koneksi internet</li>
+                        <li>Pastikan semua field wajib sudah diisi</li>
+                        <li>Jangan klik Simpan berulang kali</li>
+                        <li>Tunggu hingga muncul notifikasi</li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="alert-box alert-success">
+                <i class="bi bi-list-ul"></i>
+                <div>
+                    <strong>Masalah 4: Dropdown Kosong</strong><br>
+                    <small>Gejala: Pilihan vendor/kendaraan/petugas tidak muncul</small>
+                    <ul style="margin: 10px 0 0 0; padding-left: 20px;">
+                        <li>Penyebab: Data belum diinput oleh Admin</li>
+                        <li>Solusi: Hubungi Admin UP3 untuk menambahkan data master</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <!-- FAQ -->
+        <div class="section">
+            <h3 class="section-title"><i class="bi bi-question-circle"></i> Pertanyaan Umum (FAQ)</h3>
+
+            <div style="margin-bottom: 20px;">
+                <h4 style="color: var(--primary);">Q: Apakah bisa input penilaian untuk tanggal kemarin?</h4>
+                <p><strong>A:</strong> Ya, bisa memilih tanggal sebelumnya saat input penilaian.</p>
+            </div>
+
+            <div style="margin-bottom: 20px;">
+                <h4 style="color: var(--primary);">Q: Bagaimana jika ada alat yang tidak ada di daftar?</h4>
+                <p><strong>A:</strong> Hubungi Admin untuk menambahkan alat ke standar peralatan.</p>
+            </div>
+
+            <div style="margin-bottom: 20px;">
+                <h4 style="color: var(--primary);">Q: Apakah data bisa diedit setelah disimpan?</h4>
+                <p><strong>A:</strong> Data yang sudah disimpan tidak bisa diedit untuk menjaga integritas.</p>
+            </div>
+
+            <div style="margin-bottom: 20px;">
+                <h4 style="color: var(--primary);">Q: Bagaimana melihat riwayat penilaian?</h4>
+                <p><strong>A:</strong> Buka menu <strong>Penilaian</strong> → <strong>Data Penilaian</strong>, lalu
+                    filter sesuai kebutuhan.</p>
+            </div>
+
+            <div>
+                <h4 style="color: var(--primary);">Q: Siapa yang bisa melihat data penilaian?</h4>
+                <p><strong>A:</strong></p>
+                <ul style="padding-left: 20px;">
+                    <li><strong>UID Admin/User</strong> → Semua data UP3</li>
+                    <li><strong>UP3 Admin/User</strong> → Data UP3 masing-masing</li>
+                    <li><strong>Vendor K3</strong> → Data vendor sendiri</li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- Quick Reference -->
+        <div class="section" style="padding: 0; overflow: hidden;">
+            <div class="quick-ref">
+                <h3>📌 KARTU REFERENSI CEPAT</h3>
+
+                <div class="quick-ref-item">
+                    <i class="bi bi-globe"></i>
+                    <div>
+                        <strong>URL:</strong> https://safetytools-uid.web.app
+                    </div>
+                </div>
+
+                <div class="quick-ref-item">
+                    <i class="bi bi-phone"></i>
+                    <div>Bisa dibuka di HP, Laptop, Tablet</div>
+                </div>
+
+                <div class="quick-ref-item">
+                    <i class="bi bi-key"></i>
+                    <div><strong>Login:</strong> Email + Password</div>
+                </div>
+
+                <div class="quick-ref-item">
+                    <i class="bi bi-list"></i>
+                    <div>
+                        <strong>Menu Utama:</strong><br>
+                        • Dashboard → Lihat ringkasan<br>
+                        • Form Penilaian → Input penilaian baru<br>
+                        • Data Penilaian → Lihat riwayat
+                    </div>
+                </div>
+
+                <div class="quick-ref-item">
+                    <i class="bi bi-bar-chart"></i>
+                    <div>
+                        <strong>Skor:</strong><br>
+                        🟢 ≥1.5 = Baik &nbsp;|&nbsp; 🟡 0-1.49 = Perhatian &nbsp;|&nbsp; 🔴 <0=Buruk </div>
+                    </div>
+
+                    <div class="quick-ref-item" style="border-bottom: none;">
+                        <i class="bi bi-telephone"></i>
+                        <div><strong>Bantuan:</strong> [WhatsApp / Email Support]</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Action Items -->
+            <div class="section">
+                <h3 class="section-title"><i class="bi bi-list-check"></i> Langkah Selanjutnya</h3>
+
+                <div class="two-col">
+                    <div>
+                        <h4 style="color: var(--dark); margin-bottom: 15px;">Untuk Peserta Sosialisasi:</h4>
+                        <table class="table-custom">
+                            <thead>
+                                <tr>
+                                    <th>No</th>
+                                    <th>Aksi</th>
+                                    <th>Deadline</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td>1</td>
+                                    <td>Daftar akun di aplikasi</td>
+                                    <td>Hari ini</td>
+                                </tr>
+                                <tr>
+                                    <td>2</td>
+                                    <td>Tunggu approval dari Admin</td>
+                                    <td>1x24 jam</td>
+                                </tr>
+                                <tr>
+                                    <td>3</td>
+                                    <td>Login dan eksplorasi fitur</td>
+                                    <td>Setelah diapprove</td>
+                                </tr>
+                                <tr>
+                                    <td>4</td>
+                                    <td>Mulai input penilaian</td>
+                                    <td>Shift pertama</td>
+                                </tr>
+                                <tr>
+                                    <td>5</td>
+                                    <td>Laporkan kendala jika ada</td>
+                                    <td>Kapan saja</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    <div>
+                        <h4 style="color: var(--dark); margin-bottom: 15px;">Untuk Admin:</h4>
+                        <table class="table-custom">
+                            <thead>
+                                <tr>
+                                    <th>No</th>
+                                    <th>Aksi</th>
+                                    <th>Deadline</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td>1</td>
+                                    <td>Approve user baru</td>
+                                    <td>Segera</td>
+                                </tr>
+                                <tr>
+                                    <td>2</td>
+                                    <td>Lengkapi data master</td>
+                                    <td>Sebelum go-live</td>
+                                </tr>
+                                <tr>
+                                    <td>3</td>
+                                    <td>Monitor penilaian harian</td>
+                                    <td>Rutin</td>
+                                </tr>
+                                <tr>
+                                    <td>4</td>
+                                    <td>Handle laporan kendala</td>
+                                    <td>Responsif</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Jadwal -->
+            <div class="section">
+                <h3 class="section-title"><i class="bi bi-calendar-event"></i> Jadwal Implementasi</h3>
+
+                <table class="table-custom">
+                    <thead>
+                        <tr>
+                            <th>Fase</th>
+                            <th>Kegiatan</th>
+                            <th>Tanggal</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>1</td>
+                            <td>Sosialisasi</td>
+                            <td>18 Feb 2026</td>
+                        </tr>
+                        <tr>
+                            <td>2</td>
+                            <td>Registrasi Akun</td>
+                            <td>18-19 Feb 2026</td>
+                        </tr>
+                        <tr>
+                            <td>3</td>
+                            <td>Approval User</td>
+                            <td>19 Feb 2026</td>
+                        </tr>
+                        <tr>
+                            <td>4</td>
+                            <td>Soft Launch</td>
+                            <td>20 Feb 2026</td>
+                        </tr>
+                        <tr>
+                            <td>5</td>
+                            <td>Full Operation</td>
+                            <td>24 Feb 2026</td>
+                        </tr>
+                        <tr>
+                            <td>6</td>
+                            <td>Evaluasi Minggu Pertama</td>
+                            <td>28 Feb 2026</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Penutup -->
+            <div class="section" style="text-align: center; background: linear-gradient(135deg, #f0f4ff, #fff);">
+                <h3 class="section-title" style="justify-content: center; border-bottom: none;">
+                    <i class="bi bi-mortarboard"></i> Penutup
+                </h3>
+
+                <p style="font-size: 1.1rem; margin-bottom: 20px;">Aplikasi ini dibuat untuk:</p>
+
+                <div class="card-grid" style="max-width: 800px; margin: 0 auto;">
+                    <div class="info-card">
+                        <i class="bi bi-shield-check"></i>
+                        <p>Meningkatkan keselamatan kerja</p>
+                    </div>
+                    <div class="info-card">
+                        <i class="bi bi-graph-up-arrow"></i>
+                        <p>Memudahkan monitoring APD</p>
+                    </div>
+                    <div class="info-card">
+                        <i class="bi bi-clipboard-data"></i>
+                        <p>Menyediakan data akurat</p>
+                    </div>
+                    <div class="info-card">
+                        <i class="bi bi-lightning-charge"></i>
+                        <p>Mendukung digitalisasi K3</p>
+                    </div>
+                </div>
+
+                <div
+                    style="margin-top: 30px; padding: 20px; background: var(--dark); color: white; border-radius: 10px;">
+                    <h4 style="margin-bottom: 0;">"Keselamatan Kerja adalah Prioritas Utama"</h4>
+                </div>
+            </div>
+
+            <!-- Footer -->
+            <div class="footer">
+                <h3>Terima Kasih!</h3>
+                <p><strong>Tim Pengembang K3 - PLN UID</strong></p>
+                <small>Dokumen ini dapat digunakan sebagai panduan pengguna aplikasi</small>
+                <br><br>
+                <small style="color: #999;">Versi 1.0 | 18 Februari 2026</small>
+            </div>
+        </div>
+
+</body>
+
+</html>
