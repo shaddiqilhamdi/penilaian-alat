@@ -4,6 +4,36 @@
 
 ---
 
+## 📖 Latar Belakang
+
+### Mengapa Aplikasi Ini Dibuat?
+
+Sebelumnya, proses penilaian APD & alat kerja vendor dilakukan secara **manual** dengan berbagai kendala:
+
+| Masalah Lama | Dampak |
+|--------------|--------|
+| Pencatatan di kertas/Excel | Data tersebar, sulit dikompilasi |
+| Tidak ada standarisasi | Format berbeda tiap UP3 |
+| Proses pelaporan lambat | Butuh waktu lama untuk rekap |
+| Sulit monitoring real-time | Tidak bisa pantau kondisi terkini |
+| Rawan human error | Kesalahan input & perhitungan |
+
+### Solusi dengan Aplikasi Digital:
+
+```
+┌────────────────────────────────────────────────────────────────┐
+│                         SEBELUM                                 │
+│  📝 Manual → 📊 Excel → 📧 Email → 📋 Rekap → ⏳ Lama!        │
+└────────────────────────────────────────────────────────────────┘
+                              ⬇️
+┌────────────────────────────────────────────────────────────────┐
+│                         SESUDAH                                 │
+│  📱 Input Langsung → ⚡ Otomatis Tersimpan → 📊 Dashboard!    │
+└────────────────────────────────────────────────────────────────┘
+```
+
+---
+
 ## 🎯 Apa itu Aplikasi Ini?
 
 Aplikasi **Penilaian Alat Kerja** adalah sistem digital untuk:
@@ -11,6 +41,15 @@ Aplikasi **Penilaian Alat Kerja** adalah sistem digital untuk:
 - ✅ Memantau kelayakan dan fungsi peralatan keselamatan kerja
 - ✅ Menghasilkan laporan dan skor penilaian secara otomatis
 - ✅ Memastikan kepatuhan standar K3 di lapangan
+
+### Manfaat Utama:
+
+| Untuk Vendor K3 | Untuk Admin UP3/UID |
+|-----------------|---------------------|
+| Input cepat dari HP | Monitoring real-time |
+| Tidak perlu rekap manual | Dashboard terintegrasi |
+| Histori tersimpan rapi | Laporan otomatis |
+| Akses kapan saja | Standar seragam |
 
 ---
 
@@ -198,6 +237,209 @@ Jika mengalami kendala, silakan hubungi:
 
 ---
 
+## 📱 Contoh Skenario Penggunaan
+
+### Skenario 1: Penilaian Harian Regu Kendaraan
+
+> **Situasi:** Pak Budi (Vendor K3) akan menilai kelengkapan APD regu mobil PJU dengan nomor polisi B 1234 XYZ
+
+**Langkah-langkah:**
+
+```
+1️⃣ Pak Budi login ke aplikasi pagi hari
+   └─ Email: budi@vendor.com | Password: ****
+
+2️⃣ Masuk ke Form Penilaian
+   └─ Menu: Penilaian → Form Penilaian
+
+3️⃣ Isi data:
+   ├─ Tanggal: 18 Februari 2026 (otomatis)
+   ├─ Shift: Pagi
+   ├─ Vendor: PT. Safety Prima
+   ├─ Peruntukan: Regu
+   ├─ Kendaraan: B 1234 XYZ (PJU)
+   └─ Petugas: ✓ Andi, ✓ Dedi, ✓ Roni (pilih semua anggota regu)
+
+4️⃣ Cek fisik peralatan & input:
+   ┌──────────────────┬────────┬──────────┬───────┬───────┬──────────┬──────────┐
+   │ Alat             │ Standar│ Realisasi│ Layak │ Tidak │ Berfungsi│ Tidak    │
+   │                  │        │          │       │ Layak │          │ Berfungsi│
+   ├──────────────────┼────────┼──────────┼───────┼───────┼──────────┼──────────┤
+   │ Helm Safety      │   3    │    3     │   3   │   0   │    3     │    0     │
+   │ Rompi K3         │   3    │    3     │   2   │   1   │    3     │    0     │
+   │ Sepatu Safety    │   3    │    3     │   3   │   0   │    3     │    0     │
+   │ Sarung Tangan    │   3    │    2     │   2   │   0   │    2     │    0     │
+   └──────────────────┴────────┴──────────┴───────┴───────┴──────────┴──────────┘
+
+5️⃣ Klik SIMPAN → Skor dihitung otomatis
+```
+
+### Skenario 2: Penilaian Personal Individu
+
+> **Situasi:** Bu Sari (Vendor K3) menilai petugas individual yang bekerja sendiri
+
+**Langkah-langkah:**
+
+```
+1️⃣ Login ke aplikasi
+
+2️⃣ Form Penilaian:
+   ├─ Peruntukan: Personal (bukan Regu)
+   └─ Petugas: Pilih 1 orang saja
+
+3️⃣ Standar peralatan otomatis menyesuaikan untuk personal
+
+4️⃣ Input hasil penilaian → Simpan
+```
+
+---
+
+## ✅ Do's and Don'ts
+
+### ✅ LAKUKAN (Do's)
+
+| Aksi | Alasan |
+|------|--------|
+| Input data **segera setelah** penilaian fisik | Data akurat dan tidak lupa |
+| Periksa **semua field** sebelum simpan | Mencegah kesalahan input |
+| Gunakan **password kuat** | Keamanan akun |
+| **Logout** setelah selesai | Mencegah akses tidak sah |
+| Laporkan kendala **segera** | Perbaikan cepat |
+| Update browser ke versi **terbaru** | Kompatibilitas aplikasi |
+
+### ❌ JANGAN LAKUKAN (Don'ts)
+
+| Aksi | Dampak |
+|------|--------|
+| ❌ Share akun dengan orang lain | Jejak audit tidak valid |
+| ❌ Input data asal-asalan | Skor tidak akurat |
+| ❌ Menunda input terlalu lama | Lupa detail penilaian |
+| ❌ Mengabaikan notifikasi error | Masalah tidak terselesaikan |
+| ❌ Simpan password di browser publik | Risiko keamanan |
+
+---
+
+## 🔧 Troubleshooting Umum
+
+### Masalah 1: Tidak Bisa Login
+
+```
+Gejala: Muncul pesan "Email atau password salah"
+
+Solusi:
+├─ 1. Pastikan CAPS LOCK tidak aktif
+├─ 2. Periksa ejaan email (huruf besar/kecil penting)
+├─ 3. Coba klik "Lupa Password" untuk reset
+└─ 4. Hubungi Admin jika masih gagal
+```
+
+### Masalah 2: Halaman Tidak Muncul / Error
+
+```
+Gejala: Halaman kosong atau error
+
+Solusi:
+├─ 1. Refresh halaman (tekan F5 atau Ctrl+R)
+├─ 2. Hapus cache browser (Ctrl+Shift+Delete)
+├─ 3. Coba browser lain (Chrome/Firefox/Edge)
+└─ 4. Periksa koneksi internet
+```
+
+### Masalah 3: Data Tidak Tersimpan
+
+```
+Gejala: Klik Simpan tapi tidak ada konfirmasi
+
+Solusi:
+├─ 1. Periksa koneksi internet
+├─ 2. Pastikan semua field wajib sudah diisi
+├─ 3. Jangan klik Simpan berulang kali
+└─ 4. Tunggu hingga muncul notifikasi sukses/gagal
+```
+
+### Masalah 4: Dropdown Kosong (Vendor/Kendaraan/Petugas)
+
+```
+Gejala: Pilihan dropdown tidak muncul
+
+Penyebab:
+└─ Data belum diinput oleh Admin
+
+Solusi:
+└─ Hubungi Admin UP3 untuk menambahkan data master
+```
+
+---
+
+## 📊 Memahami Dashboard
+
+### Komponen Dashboard:
+
+```
+┌─────────────────────────────────────────────────────────────────────┐
+│                          DASHBOARD                                   │
+├─────────────────────────────────────────────────────────────────────┤
+│                                                                      │
+│  ┌──────────────┐  ┌──────────────┐  ┌──────────────┐               │
+│  │ Total        │  │ Skor Rata-   │  │ Peralatan    │               │
+│  │ Penilaian    │  │ rata         │  │ Tidak Layak  │               │
+│  │     125      │  │    0.85      │  │      12      │               │
+│  └──────────────┘  └──────────────┘  └──────────────┘               │
+│                                                                      │
+│  ┌─────────────────────────────────────────────────────────────┐   │
+│  │                    GRAFIK TREND SKOR                         │   │
+│  │  1.0 ─┬─────────────────────────────────────                │   │
+│  │       │    ╱╲      ╱╲                                        │   │
+│  │  0.5 ─┤   ╱  ╲    ╱  ╲    ╱                                  │   │
+│  │       │  ╱    ╲  ╱    ╲  ╱                                   │   │
+│  │  0.0 ─┴──┴─────┴─┴─────┴─┴──────────────────                │   │
+│  │       Jan  Feb  Mar  Apr  Mei                                │   │
+│  └─────────────────────────────────────────────────────────────┘   │
+│                                                                      │
+│  ┌─────────────────────────────────────────────────────────────┐   │
+│  │              PENILAIAN TERBARU                               │   │
+│  │  📅 18 Feb │ PT. Safety Prima │ Regu PJU │ Skor: 0.92      │   │
+│  │  📅 17 Feb │ CV. Aman Jaya    │ Personal │ Skor: 0.78      │   │
+│  └─────────────────────────────────────────────────────────────┘   │
+│                                                                      │
+└─────────────────────────────────────────────────────────────────────┘
+```
+
+### Cara Membaca Dashboard:
+
+| Elemen | Arti |
+|--------|------|
+| **Total Penilaian** | Jumlah penilaian yang sudah diinput |
+| **Skor Rata-rata** | Rata-rata skor semua penilaian |
+| **Peralatan Tidak Layak** | Jumlah item yang perlu perhatian |
+| **Grafik Trend** | Perubahan skor dari waktu ke waktu |
+| **Penilaian Terbaru** | Daftar penilaian terakhir |
+
+---
+
+## 🎥 Demo Praktik (Untuk Presenter)
+
+### Agenda Demo:
+
+| No | Aktivitas | Durasi |
+|----|-----------|--------|
+| 1 | Login ke aplikasi | 2 menit |
+| 2 | Jelajahi Dashboard | 3 menit |
+| 3 | Buat Penilaian Baru | 5 menit |
+| 4 | Lihat Riwayat Penilaian | 2 menit |
+| 5 | Q&A | 8 menit |
+| | **Total** | **20 menit** |
+
+### Checklist Sebelum Demo:
+
+- [ ] Koneksi internet stabil
+- [ ] Akun demo sudah disiapkan
+- [ ] Data master (vendor, kendaraan, personil) sudah ada
+- [ ] Browser dalam kondisi clear cache
+- [ ] Proyektor/layar sudah terhubung
+
+---
+
 ## 🎓 Penutup
 
 Aplikasi ini dibuat untuk:
@@ -210,7 +452,113 @@ Aplikasi ini dibuat untuk:
 
 ---
 
+## 📋 Langkah Selanjutnya (Action Items)
+
+### Untuk Peserta Sosialisasi:
+
+| No | Aksi | Deadline |
+|----|------|----------|
+| 1 | Daftar akun di aplikasi | Hari ini |
+| 2 | Tunggu approval dari Admin | 1x24 jam |
+| 3 | Login dan eksplorasi fitur | Setelah diapprove |
+| 4 | Mulai input penilaian | Shift pertama |
+| 5 | Laporkan kendala jika ada | Kapan saja |
+
+### Untuk Admin:
+
+| No | Aksi | Deadline |
+|----|------|----------|
+| 1 | Approve user baru | Segera |
+| 2 | Lengkapi data master | Sebelum go-live |
+| 3 | Monitor penilaian harian | Rutin |
+| 4 | Handle laporan kendala | Responsif |
+
+---
+
+## 📌 Quick Reference Card
+
+```
+┌─────────────────────────────────────────────────────────────────┐
+│                    KARTU REFERENSI CEPAT                        │
+├─────────────────────────────────────────────────────────────────┤
+│                                                                  │
+│  🌐 URL: https://safetytools-uid.web.app                        │
+│                                                                  │
+│  📱 Bisa dibuka di HP, Laptop, Tablet                           │
+│                                                                  │
+│  🔐 Login: Email + Password                                      │
+│                                                                  │
+│  📝 Menu Utama:                                                  │
+│     • Dashboard     → Lihat ringkasan                           │
+│     • Form Penilaian → Input penilaian baru                     │
+│     • Data Penilaian → Lihat riwayat                            │
+│                                                                  │
+│  📊 Skor:                                                        │
+│     🟢 ≥1.5 = Baik | 🟡 0-1.49 = Perhatian | 🔴 <0 = Buruk     │
+│                                                                  │
+│  📞 Bantuan: [WhatsApp Support] / [Email Support]               │
+│                                                                  │
+└─────────────────────────────────────────────────────────────────┘
+```
+
+---
+
+## 🗓️ Jadwal Implementasi
+
+| Fase | Kegiatan | Tanggal |
+|------|----------|---------|
+| 1 | Sosialisasi | 18 Feb 2026 |
+| 2 | Registrasi Akun | 18-19 Feb 2026 |
+| 3 | Approval User | 19 Feb 2026 |
+| 4 | Soft Launch | 20 Feb 2026 |
+| 5 | Full Operation | 24 Feb 2026 |
+| 6 | Evaluasi Minggu Pertama | 28 Feb 2026 |
+
+---
+
 ### Terima Kasih!
 **Tim Pengembang K3 - PLN UID**
 
 *Dokumen ini dapat digunakan sebagai panduan pengguna aplikasi*
+
+---
+
+## 📎 Lampiran
+
+### A. Daftar Standar Peralatan per Peruntukan
+
+*(Daftar alat yang harus dinilai sesuai peruntukan masing-masing)*
+
+### B. Struktur Organisasi Pengguna
+
+```
+                    ┌─────────────────┐
+                    │    UID Admin    │
+                    │  (Super Admin)  │
+                    └────────┬────────┘
+                             │
+            ┌────────────────┼────────────────┐
+            │                │                │
+    ┌───────▼──────┐ ┌───────▼──────┐ ┌───────▼──────┐
+    │  UP3 Admin   │ │  UP3 Admin   │ │  UP3 Admin   │
+    │  (UP3 A)     │ │  (UP3 B)     │ │  (UP3 C)     │
+    └───────┬──────┘ └───────┬──────┘ └───────┬──────┘
+            │                │                │
+    ┌───────▼──────┐ ┌───────▼──────┐ ┌───────▼──────┐
+    │  Vendor K3   │ │  Vendor K3   │ │  Vendor K3   │
+    │  (Input)     │ │  (Input)     │ │  (Input)     │
+    └──────────────┘ └──────────────┘ └──────────────┘
+```
+
+### C. Kontak Support
+
+| Nama | Role | Kontak |
+|------|------|--------|
+| [Nama Admin UID] | UID Admin | [Kontak] |
+| [Nama Admin UP3] | UP3 Admin | [Kontak] |
+| Tim IT | Technical Support | [Kontak] |
+
+---
+
+*Versi Dokumen: 1.0*
+*Tanggal Update: 18 Februari 2026*
