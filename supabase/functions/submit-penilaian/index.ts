@@ -47,21 +47,18 @@ serve(async (req) => {
     }
 
     try {
-        // Get auth header
+        // Get auth header (optional - will use service role if not provided)
         const authHeader = req.headers.get('Authorization')
-        if (!authHeader) {
-            return new Response(
-                JSON.stringify({ success: false, error: 'Missing authorization header' }),
-                { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-            )
-        }
 
-        // Create Supabase client with user's auth
+        // Create Supabase client - use service role for database operations
         const supabaseClient = createClient(
             Deno.env.get('SUPABASE_URL') ?? '',
-            Deno.env.get('SUPABASE_ANON_KEY') ?? '',
+            Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '',
             {
-                global: { headers: { Authorization: authHeader } }
+                auth: {
+                    autoRefreshToken: false,
+                    persistSession: false
+                }
             }
         )
 

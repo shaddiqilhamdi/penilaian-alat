@@ -257,21 +257,14 @@ async function submitPenilaianEdgeFunction(payload) {
     try {
         const client = getSupabaseClient();
 
-        // Get current session for auth token
-        const { data: { session }, error: sessionError } = await client.auth.getSession();
-
-        if (sessionError || !session) {
-            return { success: false, error: 'User tidak terautentikasi' };
-        }
-
-        // Call edge function
+        // Call edge function using Supabase client (handles auth automatically)
         const { data, error } = await client.functions.invoke('submit-penilaian', {
             body: payload
         });
 
         if (error) {
             console.error('Edge function error:', error);
-            return { success: false, error: error.message };
+            return { success: false, error: error.message || 'Edge Function error' };
         }
 
         return data;
