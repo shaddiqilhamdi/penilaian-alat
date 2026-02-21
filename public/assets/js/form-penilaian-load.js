@@ -500,7 +500,7 @@ async function loadKendaraanData(vendorId, peruntukanId = null) {
         kendaraanData.forEach(kendaraan => {
             const option = document.createElement('option');
             option.value = kendaraan.id;
-            option.textContent = `${kendaraan.nomor_polisi}${kendaraan.category ? ' - ' + kendaraan.category : ''}`;
+            option.textContent = `${kendaraan.nomor_polisi}${kendaraan.description ? ' - ' + kendaraan.description : ''}`;
             option.dataset.nopol = kendaraan.nomor_polisi;
             option.dataset.category = kendaraan.category || '';
             nopolSelect.appendChild(option);
