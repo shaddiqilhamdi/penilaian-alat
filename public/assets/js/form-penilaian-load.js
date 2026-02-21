@@ -232,8 +232,9 @@ async function loadVendorData() {
                 vendorSelect.value = userVendor.id;
                 vendorSelect.disabled = true; // Lock the vendor dropdown
 
-                // Trigger personil load for this vendor
+                // Trigger personil and peruntukan load for this vendor
                 loadPersonilData(userVendor.id);
+                loadPeruntukanData(userVendor.id);
                 return;
             }
         }
