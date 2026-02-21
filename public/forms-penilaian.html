@@ -5,7 +5,7 @@
   <meta charset="utf-8" />
   <meta content="width=device-width, initial-scale=1.0" name="viewport" />
 
-  <title>Formulir - Penilaian Alat Kerja</title>
+  <title>Formulir - PPE Health Index</title>
   <meta content="" name="description" />
   <meta content="" name="keywords" />
 
@@ -404,28 +404,13 @@
     <div class="d-flex align-items-center justify-content-between">
       <a href="index.html" class="logo d-flex align-items-center">
         <i class="bi bi-shield-check fs-4 text-primary me-2"></i>
-        <span class="d-none d-lg-block">Penilaian Alat Kerja</span>
+        <span class="d-none d-lg-block">PPE Health Index</span>
       </a>
       <i class="bi bi-list toggle-sidebar-btn"></i>
     </div>
 
-    <div class="search-bar">
-      <form class="search-form d-flex align-items-center" method="POST" action="#">
-        <input type="text" name="query" placeholder="Search" title="Enter search keyword" />
-        <button type="submit" title="Search">
-          <i class="bi bi-search"></i>
-        </button>
-      </form>
-    </div>
-
     <nav class="header-nav ms-auto">
       <ul class="d-flex align-items-center">
-
-        <li class="nav-item d-block d-lg-none">
-          <a class="nav-link nav-icon search-bar-toggle " href="#">
-            <i class="bi bi-search"></i>
-          </a>
-        </li><!-- End Search Icon-->
 
         <!-- Notification Nav - Hidden -->
         <li class="nav-item dropdown" style="display: none;">
@@ -691,48 +676,27 @@
                   </div>
                 </div>
 
-                <!-- Section 2: Peruntukan Info -->
+                <!-- Section 2: Peruntukan, Kendaraan & Petugas -->
                 <div class="card border mb-4 section-card">
                   <div class="card-header border-bottom py-2">
                     <h6 class="mb-0 text-dark">
-                      <i class="bi bi-bullseye me-2 text-success"></i>Detail Peruntukan
+                      <i class="bi bi-bullseye me-2 text-success"></i>Detail Penilaian
                       <span class="badge bg-success bg-opacity-10 text-success ms-2 fw-normal">Langkah 2</span>
                     </h6>
                   </div>
                   <div class="card-body py-3">
                     <div class="row g-3">
-                      <div class="col-md-6">
-                        <label for="modalJenis" class="form-label fw-semibold"><i
-                            class="bi bi-tags me-1 text-muted"></i>Jenis Peruntukan</label>
-                        <select id="modalJenis" class="form-select" required>
-                          <option value="">-- Pilih Jenis --</option>
-                        </select>
-                        <small class="text-muted">Personal (individu) atau Regu (tim/kendaraan)</small>
-                      </div>
-                      <div class="col-md-6">
+                      <!-- Peruntukan -->
+                      <div class="col-md-4">
                         <label for="modalPeruntukan" class="form-label fw-semibold"><i
                             class="bi bi-diagram-3 me-1 text-muted"></i>Peruntukan</label>
                         <select id="modalPeruntukan" class="form-select" required>
                           <option value="">-- Pilih Peruntukan --</option>
                         </select>
-                        <small class="text-muted">Pilih peruntukan spesifik untuk penilaian</small>
+                        <small class="text-muted">Sesuai standar peralatan vendor</small>
                       </div>
-                    </div>
-                  </div>
-                </div>
-
-                <!-- Section 3: Additional Info (Kendaraan & Petugas) -->
-                <div class="card border mb-4 section-card">
-                  <div class="card-header border-bottom py-2">
-                    <h6 class="mb-0 text-dark">
-                      <i class="bi bi-person-badge me-2 text-info"></i>Identitas Penilaian
-                      <span class="badge bg-info bg-opacity-10 text-info ms-2 fw-normal">Langkah 3</span>
-                    </h6>
-                  </div>
-                  <div class="card-body py-3">
-                    <div class="row g-3">
                       <!-- Kendaraan - Dropdown + Tombol Tambah -->
-                      <div class="col-md-6">
+                      <div class="col-md-4">
                         <label class="form-label fw-semibold">
                           <i class="bi bi-car-front me-1 text-muted"></i>Kendaraan / Regu
                         </label>
@@ -747,9 +711,8 @@
                         </div>
                         <input type="hidden" id="modalTeamId" value="" />
                       </div>
-
                       <!-- Petugas - Dropdown + Tombol Tambah -->
-                      <div class="col-md-6">
+                      <div class="col-md-4">
                         <label class="form-label fw-semibold">
                           <i class="bi bi-people me-1 text-muted"></i>Petugas Penilai
                           <small class="text-muted fw-normal">(pilih satu atau lebih)</small>
@@ -757,7 +720,6 @@
                         <div class="input-group">
                           <select id="modalPetugasSelect" class="form-select">
                             <option value="">-- Pilih Petugas --</option>
-                            <!-- Options akan diisi oleh JavaScript -->
                           </select>
                           <button type="button" class="btn btn-outline-secondary" id="btnAddPetugas"
                             data-bs-toggle="modal" data-bs-target="#modalTambahPetugas" title="Tambah Petugas Baru">
@@ -771,10 +733,12 @@
                         </div>
                       </div>
                     </div>
+                    <!-- Hidden element to maintain backward compatibility -->
+                    <input type="hidden" id="modalJenis" value="" />
                   </div>
                 </div>
 
-                <!-- Section 4: Equipment Evaluation Table -->
+                <!-- Section 3: Equipment Evaluation Table -->
                 <div class="card border shadow-sm section-card">
                   <div class="card-header border-bottom py-2">
                     <div class="d-flex justify-content-between align-items-center mb-2">
@@ -957,11 +921,14 @@
             </div>
             <hr class="my-2" />
             <!-- Input Nomor Polisi dan Kategori -->
-            <div class="col-5">
+            <div class="col-6">
               <label class="form-label fw-semibold">Nomor Polisi <span class="text-danger">*</span></label>
-              <input type="text" class="form-control" id="inputNomorPolisi" placeholder="Contoh: B 1234 XYZ" required />
+              <input type="text" class="form-control" id="inputNomorPolisi" placeholder="B 1234 XYZ"
+                pattern="^[A-Z]{1,2}\s?\d{1,4}\s?[A-Z]{1,3}$" style="text-transform: uppercase;" required />
+              <small class="text-muted">Format: B 1234 XYZ</small>
+              <div class="invalid-feedback">Format tidak valid</div>
             </div>
-            <div class="col-4">
+            <div class="col-6">
               <label class="form-label fw-semibold">Kategori <span class="text-danger">*</span></label>
               <select class="form-select" id="inputKategoriKendaraan" required>
                 <option value="">-- Pilih --</option>
@@ -971,9 +938,10 @@
                 <option value="Lainnya">Lainnya</option>
               </select>
             </div>
-            <div class="col-3">
-              <label class="form-label fw-semibold">Keterangan</label>
-              <input type="text" class="form-control" id="inputKeteranganKendaraan" placeholder="Opsional" />
+            <div class="col-12">
+              <label class="form-label fw-semibold">Deskripsi</label>
+              <textarea class="form-control" id="inputDeskripsiKendaraan" rows="2"
+                placeholder="Deskripsi kendaraan (opsional)"></textarea>
             </div>
           </div>
         </div>

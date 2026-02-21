@@ -17,7 +17,7 @@ if (typeof window.PeruntukanAPI === 'undefined') {
                 const { data, error } = await client
                     .from('peruntukan')
                     .select('*')
-                    .order('jenis', { ascending: true });
+                    .order('deskripsi', { ascending: true });
 
                 if (error) {
                     console.error('❌ Failed to fetch peruntukan:', error);
@@ -56,57 +56,7 @@ if (typeof window.PeruntukanAPI === 'undefined') {
             }
         },
 
-        /**
-         * Get peruntukan by jenis
-         */
-        async getByJenis(jenis) {
-            try {
-                const client = getSupabaseClient();
-                const { data, error } = await client
-                    .from('peruntukan')
-                    .select('*')
-                    .eq('jenis', jenis)
-                    .order('id', { ascending: true });
 
-                if (error) {
-                    console.error('❌ Failed to fetch peruntukan by jenis:', error);
-                    return { success: false, error: error.message, data: null };
-                }
-
-                return { success: true, data, error: null };
-            } catch (error) {
-                console.error('❌ Error fetching peruntukan:', error);
-                return { success: false, error: error.message, data: null };
-            }
-        },
-
-        /**
-         * Get all unique jenis values (for dropdown)
-         */
-        async getAllJenis() {
-            try {
-                const client = getSupabaseClient();
-                const { data, error } = await client
-                    .from('peruntukan')
-                    .select('jenis')
-                    .order('jenis', { ascending: true });
-
-                if (error) {
-                    console.error('❌ Failed to fetch jenis:', error);
-                    return { success: false, error: error.message, data: null };
-                }
-
-                // Get unique jenis values
-                const uniqueJenis = [...new Set(data.map(item => item.jenis))];
-                const jenisData = uniqueJenis.map(jenis => ({ jenis }));
-
-                console.log('✅ Jenis loaded:', jenisData.length);
-                return { success: true, data: jenisData, error: null };
-            } catch (error) {
-                console.error('❌ Error fetching jenis:', error);
-                return { success: false, error: error.message, data: null };
-            }
-        },
 
         /**
          * Create new peruntukan

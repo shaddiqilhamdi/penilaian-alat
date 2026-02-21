@@ -19,10 +19,10 @@ if (typeof window.VendorAssetsAPI === 'undefined') {
                     .select(`
                         *,
                         vendors(vendor_name, unit_code),
-                        peruntukan(jenis, deskripsi),
+                        peruntukan(deskripsi),
                         teams(nomor_polisi, category),
                         personnel(nama_personil),
-                        equipment_master(nama_alat, kategori, satuan)
+                        equipment_master(nama_alat, kategori, satuan, jenis)
                     `)
                     .order('created_at', { ascending: false });
 
@@ -49,10 +49,10 @@ if (typeof window.VendorAssetsAPI === 'undefined') {
                     .from('vendor_assets')
                     .select(`
                         *,
-                        peruntukan(jenis, deskripsi),
+                        peruntukan(deskripsi),
                         teams(nomor_polisi, category),
                         personnel(nama_personil),
-                        equipment_master(nama_alat, kategori, satuan)
+                        equipment_master(nama_alat, kategori, satuan, jenis)
                     `)
                     .eq('vendor_id', vendorId)
                     .order('created_at', { ascending: false });
@@ -83,8 +83,8 @@ if (typeof window.VendorAssetsAPI === 'undefined') {
                     .from('vendor_assets')
                     .select(`
                         *,
-                        peruntukan(jenis, deskripsi),
-                        equipment_master(id, nama_alat, kategori, sub_kategori1, satuan)
+                        peruntukan(deskripsi),
+                        equipment_master(id, nama_alat, kategori, sub_kategori1, satuan, jenis)
                     `)
                     .eq('vendor_id', vendorId)
                     .eq('peruntukan_id', peruntukanId)

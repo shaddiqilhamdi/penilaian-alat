@@ -8,6 +8,7 @@ let allAssets = [];
 let vendors = [];
 let peruntukanList = [];
 let currentUserProfile = null;
+let dataTable = null;
 
 document.addEventListener('DOMContentLoaded', async function () {
     // Wait for Supabase client
@@ -129,7 +130,7 @@ async function loadPeruntukan() {
             const select = document.getElementById('filterPeruntukan');
             select.innerHTML = '<option value="">Semua Peruntukan</option>';
             peruntukanList.forEach(p => {
-                select.innerHTML += `<option value="${p.id}">${p.deskripsi || p.jenis}</option>`;
+                select.innerHTML += `<option value="${p.id}">${p.deskripsi}</option>`;
             });
         }
     } catch (error) {
@@ -176,6 +177,12 @@ function renderAssets(assets) {
     const loadingState = document.getElementById('loadingState');
     const emptyState = document.getElementById('emptyState');
 
+    // Destroy existing DataTable before re-render
+    if (dataTable) {
+        dataTable.destroy();
+        dataTable = null;
+    }
+
     loadingState.style.display = 'none';
 
     if (!assets || assets.length === 0) {
@@ -189,7 +196,7 @@ function renderAssets(assets) {
 
     tbody.innerHTML = assets.map((asset, index) => {
         const vendorName = asset.vendors?.vendor_name || '-';
-        const peruntukanName = asset.peruntukan?.deskripsi || asset.peruntukan?.jenis || '-';
+        const peruntukanName = asset.peruntukan?.deskripsi || '-';
         const equipmentName = asset.equipment_master?.nama_alat || '-';
         const teamInfo = asset.teams?.nomor_polisi || asset.personnel?.nama_personil || '-';
 
@@ -229,6 +236,30 @@ function renderAssets(assets) {
             </tr>
         `;
     }).join('');
+
+    // Initialize DataTable
+    initDataTable();
+}
+
+// Initialize or reinitialize DataTable
+function initDataTable() {
+    const table = document.getElementById('assetsTable');
+    if (table && typeof simpleDatatables !== 'undefined') {
+        if (dataTable) {
+            dataTable.destroy();
+            dataTable = null;
+        }
+        dataTable = new simpleDatatables.DataTable(table, {
+            perPage: 10,
+            perPageSelect: [5, 10, 25, 50],
+            labels: {
+                placeholder: "Cari...",
+                perPage: "data per halaman",
+                noRows: "Tidak ada data",
+                info: "Menampilkan {start} sampai {end} dari {rows} data"
+            }
+        });
+    }
 }
 
 // Apply filters

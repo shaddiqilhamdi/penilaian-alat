@@ -84,11 +84,12 @@ async function loadUP3Stats() {
             .from('vendor_assets')
             .select(`
                 id, nilai, kondisi_fisik, kondisi_fungsi, kesesuaian_kontrak,
-                peruntukan(jenis)
+                equipment_master(jenis)
             `)
             .in('vendor_id', vendorIds)
             .gte('last_assessment_date', firstDayOfMonth.toISOString())
-            .lte('last_assessment_date', lastDayOfMonth.toISOString());
+            .lte('last_assessment_date', lastDayOfMonth.toISOString())
+            .range(0, 9999);
 
         if (assetsError) throw assetsError;
 
@@ -98,8 +99,8 @@ async function loadUP3Stats() {
             : 0;
 
         // Calculate Personal vs Regu scores
-        const personalAssets = vendorAssets?.filter(a => a.peruntukan?.jenis === 'Personal') || [];
-        const reguAssets = vendorAssets?.filter(a => a.peruntukan?.jenis === 'Regu') || [];
+        const personalAssets = vendorAssets?.filter(a => a.equipment_master?.jenis === 'Personal') || [];
+        const reguAssets = vendorAssets?.filter(a => a.equipment_master?.jenis === 'Regu') || [];
         const avgPersonal = personalAssets.length > 0
             ? (personalAssets.reduce((sum, a) => sum + (a.nilai || 0), 0) / personalAssets.length)
             : 0;
@@ -160,7 +161,8 @@ async function loadUP3VendorRecap() {
             .select(`
                 id, vendor_id, peruntukan_id, required_qty, contract_qty,
                 vendors(vendor_name),
-                peruntukan(jenis, deskripsi)
+                peruntukan(deskripsi),
+                equipment_master(jenis)
             `)
             .in('vendor_id', vendorIds);
 
@@ -191,7 +193,8 @@ async function loadUP3VendorRecap() {
             .in('vendor_id', vendorIds)
             .not('last_assessment_date', 'is', null)
             .gte('last_assessment_date', firstDayOfMonth.toISOString())
-            .lte('last_assessment_date', lastDayOfMonth.toISOString());
+            .lte('last_assessment_date', lastDayOfMonth.toISOString())
+            .range(0, 9999);
 
         if (assetsError) throw assetsError;
 
@@ -204,7 +207,7 @@ async function loadUP3VendorRecap() {
                     vendorId: std.vendor_id,
                     vendorName: std.vendors?.vendor_name || '-',
                     peruntukanId: std.peruntukan_id,
-                    jenis: std.peruntukan?.jenis || '-',
+                    jenis: std.equipment_master?.jenis || '-',
                     peruntukan: std.peruntukan?.deskripsi || '-',
                     jumlah: 0,
                     equipmentCount: 0,
@@ -301,8 +304,7 @@ async function loadUP3EquipmentIssues() {
                 nilai,
                 last_assessment_date,
                 vendors(vendor_name),
-                equipment_master(nama_alat),
-                peruntukan(jenis),
+                equipment_master(nama_alat, jenis),
                 teams(nomor_polisi),
                 personnel(nama_personil)
             `)
@@ -338,9 +340,9 @@ async function loadUP3EquipmentIssues() {
 
             // Determine Tim/Personil display based on peruntukan type
             let timPersonil = '-';
-            if (asset.peruntukan?.jenis === 'Regu' && asset.teams?.nomor_polisi) {
+            if (asset.equipment_master?.jenis === 'Regu' && asset.teams?.nomor_polisi) {
                 timPersonil = `<i class="bi bi-truck"></i> ${asset.teams.nomor_polisi}`;
-            } else if (asset.peruntukan?.jenis === 'Personal' && asset.personnel?.nama_personil) {
+            } else if (asset.equipment_master?.jenis === 'Personal' && asset.personnel?.nama_personil) {
                 timPersonil = `<i class="bi bi-person"></i> ${asset.personnel.nama_personil}`;
             }
 

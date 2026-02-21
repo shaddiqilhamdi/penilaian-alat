@@ -8,7 +8,7 @@ const ROLE_PERMISSIONS = {
     uid_admin: ['uid_admin', 'uid_user', 'up3_admin', 'up3_user', 'vendor_k3', 'petugas'],
     uid_user: ['uid_user', 'up3_admin', 'up3_user', 'vendor_k3'],
     up3_admin: ['up3_user', 'vendor_k3', 'petugas'],
-    up3_user: ['vendor_k3'],
+    up3_user: ['vendor_k3', 'petugas'], // up3_user can add vendor_k3 and petugas
     vendor_k3: ['petugas'], // vendor_k3 can only add petugas
     petugas: [] // petugas cannot add users
 };

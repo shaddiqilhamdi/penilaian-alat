@@ -20,8 +20,8 @@ if (typeof window.EquipmentStandardsAPI === 'undefined') {
                     *,
                     vendors(vendor_name),
                     units:unit_code(unit_name),
-                    peruntukan(jenis, deskripsi),
-                    equipment_master(nama_alat, kategori, satuan)
+                    peruntukan(deskripsi),
+                    equipment_master(nama_alat, kategori, satuan, jenis)
                 `)
                     .order('created_at', { ascending: false });
 
@@ -48,8 +48,8 @@ if (typeof window.EquipmentStandardsAPI === 'undefined') {
                     .from('equipment_standards')
                     .select(`
                     *,
-                    peruntukan(jenis, deskripsi),
-                    equipment_master(nama_alat, kategori, satuan)
+                    peruntukan(deskripsi),
+                    equipment_master(nama_alat, kategori, satuan, jenis)
                 `)
                     .eq('vendor_id', vendorId)
                     .order('created_at', { ascending: false });
@@ -106,8 +106,8 @@ if (typeof window.EquipmentStandardsAPI === 'undefined') {
                     .select(`
                     *,
                     vendors(vendor_name),
-                    peruntukan(jenis, deskripsi),
-                    equipment_master(nama_alat, kategori, satuan)
+                    peruntukan(deskripsi),
+                    equipment_master(nama_alat, kategori, satuan, jenis)
                 `)
                     .eq('unit_code', unitCode)
                     .order('created_at', { ascending: false });
@@ -249,6 +249,44 @@ if (typeof window.EquipmentStandardsAPI === 'undefined') {
 
         /**
          * Get distinct peruntukan that vendor has equipment standards for
+         * No jenis filter - returns all peruntukan for this vendor
+         * Returns list of peruntukan IDs with their details
+         */
+        async getDistinctPeruntukanByVendor(vendorId) {
+            try {
+                const client = getSupabaseClient();
+                const { data, error } = await client
+                    .from('equipment_standards')
+                    .select(`
+                        peruntukan_id,
+                        peruntukan(id, deskripsi)
+                    `)
+                    .eq('vendor_id', vendorId);
+
+                if (error) {
+                    console.error('❌ Failed to fetch distinct peruntukan:', error);
+                    return { success: false, error: error.message, data: [] };
+                }
+
+                // Extract unique peruntukan (no jenis filter)
+                const uniquePeruntukan = new Map();
+                data.forEach(item => {
+                    if (item.peruntukan) {
+                        uniquePeruntukan.set(item.peruntukan_id, item.peruntukan);
+                    }
+                });
+
+                const result = Array.from(uniquePeruntukan.values());
+                console.log(`✅ Distinct peruntukan for vendor ${vendorId}:`, result.length);
+                return { success: true, data: result };
+            } catch (error) {
+                console.error('❌ Error fetching distinct peruntukan:', error);
+                return { success: false, error: error.message, data: [] };
+            }
+        },
+
+        /**
+         * Get distinct peruntukan that vendor has equipment standards for
          * Filter by jenis to match dropdown flow
          * Returns list of peruntukan IDs with their details
          */
@@ -259,7 +297,8 @@ if (typeof window.EquipmentStandardsAPI === 'undefined') {
                     .from('equipment_standards')
                     .select(`
                         peruntukan_id,
-                        peruntukan(id, jenis, deskripsi)
+                        peruntukan(id, deskripsi),
+                        equipment_master(jenis)
                     `)
                     .eq('vendor_id', vendorId);
 
@@ -268,10 +307,10 @@ if (typeof window.EquipmentStandardsAPI === 'undefined') {
                     return { success: false, error: error.message, data: [] };
                 }
 
-                // Extract unique peruntukan and filter by jenis
+                // Extract unique peruntukan and filter by jenis from equipment_master
                 const uniquePeruntukan = new Map();
                 data.forEach(item => {
-                    if (item.peruntukan && item.peruntukan.jenis === jenis) {
+                    if (item.peruntukan && item.equipment_master?.jenis === jenis) {
                         uniquePeruntukan.set(item.peruntukan_id, item.peruntukan);
                     }
                 });
@@ -296,7 +335,7 @@ if (typeof window.EquipmentStandardsAPI === 'undefined') {
                     .from('equipment_standards')
                     .select(`
                         peruntukan_id,
-                        peruntukan(jenis)
+                        equipment_master(jenis)
                     `)
                     .eq('vendor_id', vendorId);
 
@@ -305,11 +344,11 @@ if (typeof window.EquipmentStandardsAPI === 'undefined') {
                     return { success: false, error: error.message, data: [] };
                 }
 
-                // Extract unique jenis values
+                // Extract unique jenis values from equipment_master
                 const uniqueJenis = new Set();
                 data.forEach(item => {
-                    if (item.peruntukan && item.peruntukan.jenis) {
-                        uniqueJenis.add(item.peruntukan.jenis);
+                    if (item.equipment_master && item.equipment_master.jenis) {
+                        uniqueJenis.add(item.equipment_master.jenis);
                     }
                 });
 

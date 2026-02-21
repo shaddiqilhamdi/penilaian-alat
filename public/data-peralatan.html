@@ -5,7 +5,7 @@
   <meta charset="utf-8">
   <meta content="width=device-width, initial-scale=1.0" name="viewport">
 
-  <title>Data Peralatan - Penilaian Alat Kerja</title>
+  <title>Data Peralatan - PPE Health Index</title>
   <meta content="" name="description">
   <meta content="" name="keywords">
 
@@ -110,26 +110,13 @@
     <div class="d-flex align-items-center justify-content-between">
       <a href="index.html" class="logo d-flex align-items-center">
         <i class="bi bi-shield-check fs-4 text-primary me-2"></i>
-        <span class="d-none d-lg-block">Penilaian Alat Kerja</span>
+        <span class="d-none d-lg-block">PPE Health Index</span>
       </a>
       <i class="bi bi-list toggle-sidebar-btn"></i>
     </div><!-- End Logo -->
 
-    <div class="search-bar">
-      <form class="search-form d-flex align-items-center" method="POST" action="#">
-        <input type="text" name="query" placeholder="Search" title="Enter search keyword">
-        <button type="submit" title="Search"><i class="bi bi-search"></i></button>
-      </form>
-    </div><!-- End Search Bar -->
-
     <nav class="header-nav ms-auto">
       <ul class="d-flex align-items-center">
-
-        <li class="nav-item d-block d-lg-none">
-          <a class="nav-link nav-icon search-bar-toggle " href="#">
-            <i class="bi bi-search"></i>
-          </a>
-        </li><!-- End Search Icon-->
 
         <!-- Notification Nav - Hidden -->
         <li class="nav-item dropdown" style="display: none;">
@@ -351,33 +338,35 @@
 
           <div class="card">
             <div class="card-body">
-              <h5 class="card-title">
-                Data Peralatan
-                <button type="button" class="btn btn-primary float-end" id="addPeralatanBtn" data-bs-toggle="modal"
-                  data-bs-target="#peralatanModal">
-                  <i class="bi bi-plus-circle"></i> Tambah Peralatan
-                </button>
-              </h5>
-
-              <!-- Table with stripped rows -->
-              <div class="table-responsive">
-                <table class="table table-striped table-sm" id="peralatan-table">
-                  <thead>
-                    <tr>
-                      <th style="width: 40px;"><b>#</b></th>
-                      <th><b>Nama Alat</b></th>
-                      <th><b>Kategori</b></th>
-                      <th><b>Sub-Kategori</b></th>
-                      <th><b>Satuan</b></th>
-                      <th style="width: 90px;"><b>Aksi</b></th>
-                    </tr>
-                  </thead>
-                  <tbody id="peralatan-table-body">
-                    <!-- Data akan dimuat di sini oleh JavaScript -->
-                  </tbody>
-                </table>
+              <div class="d-flex justify-content-between align-items-center">
+                <h5 class="card-title">Data Peralatan</h5>
+                <div class="d-flex gap-1">
+                  <button class="btn btn-outline-primary btn-sm" id="refreshBtn" title="Refresh">
+                    <i class="bi bi-arrow-clockwise"></i>
+                  </button>
+                  <button type="button" class="btn btn-primary btn-sm" id="addPeralatanBtn" title="Tambah"
+                    data-bs-toggle="modal" data-bs-target="#peralatanModal">
+                    <i class="bi bi-plus-circle"></i>
+                  </button>
+                </div>
               </div>
-              <!-- End Table with stripped rows -->
+
+              <table class="table table-striped table-sm table-hover" id="peralatan-table">
+                <thead>
+                  <tr>
+                    <th width="40">#</th>
+                    <th>Nama Alat</th>
+                    <th>Kategori</th>
+                    <th>Sub-Kategori</th>
+                    <th>Jenis</th>
+                    <th>Satuan</th>
+                    <th width="90">Aksi</th>
+                  </tr>
+                </thead>
+                <tbody id="peralatan-table-body">
+                  <!-- Data akan dimuat di sini oleh JavaScript -->
+                </tbody>
+              </table>
 
             </div>
           </div>
@@ -388,34 +377,37 @@
 
   </main><!-- End #main -->
 
-  <!-- Modal -->
+  <!-- Modal Edit Peralatan -->
   <div class="modal fade" id="peralatanModal" tabindex="-1" aria-labelledby="peralatanModalLabel" aria-hidden="true">
-    <div class="modal-dialog modal-lg">
+    <div class="modal-dialog">
       <div class="modal-content">
         <div class="modal-header">
-          <h5 class="modal-title" id="peralatanModalLabel">Form Data Peralatan</h5>
+          <h5 class="modal-title" id="peralatanModalLabel">Edit Data Peralatan</h5>
           <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
         </div>
         <div class="modal-body">
           <form id="peralatanForm">
             <input type="hidden" id="peralatanId">
+            <div class="mb-3">
+              <label for="namaAlat" class="form-label">Nama Alat <span class="text-danger">*</span></label>
+              <input type="text" class="form-control" id="namaAlat" required>
+            </div>
             <div class="row">
               <div class="col-md-6">
                 <div class="mb-3">
-                  <label for="vendorSelect" class="form-label">Vendor/Perusahaan <span
-                      class="text-danger">*</span></label>
-                  <select class="form-select" id="vendorSelect" required>
-                    <option value="">Pilih Vendor</option>
-                    <!-- Options will be populated by JavaScript -->
-                  </select>
+                  <label for="kategori" class="form-label">Kategori</label>
+                  <input type="text" class="form-control" id="kategori">
                 </div>
               </div>
               <div class="col-md-6">
                 <div class="mb-3">
-                  <label for="peruntukanSelect" class="form-label">Peruntukan <span class="text-danger">*</span></label>
-                  <select class="form-select" id="peruntukanSelect" required>
-                    <option value="">Pilih Peruntukan</option>
-                    <!-- Options will be populated by JavaScript -->
+                  <label for="subKategori" class="form-label">Sub-Kategori</label>
+                  <select class="form-select" id="subKategori">
+                    <option value="">Pilih Sub-Kategori</option>
+                    <option value="APD">APD</option>
+                    <option value="Peralatan K3">Peralatan K3</option>
+                    <option value="Peralatan Kerja Utama">Peralatan Kerja Utama</option>
+                    <option value="Peralatan Komunikasi">Peralatan Komunikasi</option>
                   </select>
                 </div>
               </div>
@@ -423,40 +415,33 @@
             <div class="row">
               <div class="col-md-6">
                 <div class="mb-3">
-                  <label for="peralatan" class="form-label">Nama Peralatan <span class="text-danger">*</span></label>
-                  <input type="text" class="form-control" id="peralatan" required>
+                  <label for="jenisSelect" class="form-label">Jenis <span class="text-danger">*</span></label>
+                  <select class="form-select" id="jenisSelect" required>
+                    <option value="">Pilih Jenis</option>
+                    <option value="Personal">Personal</option>
+                    <option value="Regu">Regu</option>
+                  </select>
                 </div>
               </div>
               <div class="col-md-6">
                 <div class="mb-3">
-                  <label for="kategori" class="form-label">Kategori <span class="text-danger">*</span></label>
-                  <input type="text" class="form-control" id="kategori" required>
-                </div>
-              </div>
-            </div>
-            <div class="row">
-              <div class="col-md-4">
-                <div class="mb-3">
-                  <label for="jumlahStandar" class="form-label">Jumlah Standar <span
-                      class="text-danger">*</span></label>
-                  <input type="number" class="form-control" id="jumlahStandar" min="1" required>
-                </div>
-              </div>
-              <div class="col-md-4">
-                <div class="mb-3">
-                  <label for="tglDistribusi" class="form-label">Tanggal Distribusi <span
-                      class="text-danger">*</span></label>
-                  <input type="date" class="form-control" id="tglDistribusi" required>
-                </div>
-              </div>
-              <div class="col-md-4">
-                <div class="mb-3">
-                  <label for="statusPeralatan" class="form-label">Status <span class="text-danger">*</span></label>
-                  <select class="form-select" id="statusPeralatan" required>
-                    <option value="">Pilih Status</option>
-                    <option value="active">Active</option>
-                    <option value="inactive">Inactive</option>
-                    <option value="maintenance">Maintenance</option>
+                  <label for="satuan" class="form-label">Satuan</label>
+                  <select class="form-select" id="satuan">
+                    <option value="">Pilih Satuan</option>
+                    <option value="bh">bh</option>
+                    <option value="unit">unit</option>
+                    <option value="set">set</option>
+                    <option value="pasang">pasang</option>
+                    <option value="box">box</option>
+                    <option value="pcs">pcs</option>
+                    <option value="buah">buah</option>
+                    <option value="lembar">lembar</option>
+                    <option value="roll">roll</option>
+                    <option value="meter">meter</option>
+                    <option value="kg">kg</option>
+                    <option value="liter">liter</option>
+                    <option value="pack">pack</option>
+                    <option value="botol">botol</option>
                   </select>
                 </div>
               </div>
@@ -464,8 +449,8 @@
           </form>
         </div>
         <div class="modal-footer">
-          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Tutup</button>
-          <button type="submit" form="peralatanForm" class="btn btn-primary">Simpan</button>
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Batal</button>
+          <button type="button" class="btn btn-primary" id="savePeralatanBtn">Simpan</button>
         </div>
       </div>
     </div>
@@ -480,6 +465,7 @@
 
   <!-- Vendor JS Files -->
   <script src="assets/vendor/bootstrap/js/bootstrap.bundle.min.js"></script>
+  <script src="assets/vendor/simple-datatables/simple-datatables.js"></script>
 
   <!-- Supabase & SweetAlert2 -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>

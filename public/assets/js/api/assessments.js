@@ -18,7 +18,7 @@ if (typeof window.AssessmentsAPI === 'undefined') {
                     .select(`
                         *,
                         vendors!inner(id, vendor_name, unit_code),
-                        peruntukan(id, jenis, deskripsi),
+                        peruntukan(id, deskripsi),
                         teams(id, nomor_polisi, category),
                         profiles!assessments_assessor_id_fkey(id, nama)
                     `);
@@ -67,7 +67,7 @@ if (typeof window.AssessmentsAPI === 'undefined') {
                     .select(`
                         *,
                         vendors(id, vendor_name, unit_code, unit_name),
-                        peruntukan(id, jenis, deskripsi),
+                        peruntukan(id, deskripsi),
                         teams(id, nomor_polisi, category),
                         profiles!assessments_assessor_id_fkey(id, nama),
                         assessment_items(

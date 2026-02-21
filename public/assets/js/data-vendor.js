@@ -18,6 +18,7 @@ document.addEventListener('DOMContentLoaded', () => {
 let currentUser = null;
 let currentProfile = null;
 let vendorModal = null;
+let dataTable = null;
 
 /**
  * Check authentication and load data
@@ -227,6 +228,30 @@ function displayVendors(vendors) {
             `;
         }).join('');
     }
+
+    // Initialize DataTable
+    initDataTable();
+}
+
+// Initialize or reinitialize DataTable
+function initDataTable() {
+    const table = document.getElementById('vendor-table');
+    if (table && typeof simpleDatatables !== 'undefined') {
+        if (dataTable) {
+            dataTable.destroy();
+            dataTable = null;
+        }
+        dataTable = new simpleDatatables.DataTable(table, {
+            perPage: 10,
+            perPageSelect: [5, 10, 25, 50],
+            labels: {
+                placeholder: "Cari...",
+                perPage: "data per halaman",
+                noRows: "Tidak ada data",
+                info: "Menampilkan {start} sampai {end} dari {rows} data"
+            }
+        });
+    }
 }
 
 /**
@@ -236,6 +261,15 @@ function setupEventListeners() {
     const vendorForm = document.getElementById('vendorForm');
     const addVendorBtn = document.getElementById('addVendorBtn');
     const modalElement = document.getElementById('vendorModal');
+
+    // Refresh button
+    const refreshBtn = document.getElementById('refreshBtn');
+    if (refreshBtn) {
+        refreshBtn.addEventListener('click', () => {
+            if (dataTable) { dataTable.destroy(); dataTable = null; }
+            loadVendors();
+        });
+    }
 
     // Form submit handler
     if (vendorForm) {

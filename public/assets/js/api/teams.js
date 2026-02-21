@@ -19,7 +19,7 @@ if (typeof window.TeamsAPI === 'undefined') {
                     .select(`
                         *,
                         vendors(vendor_name, unit_code),
-                        peruntukan(jenis, deskripsi)
+                        peruntukan(deskripsi)
                     `)
                     .order('created_at', { ascending: false });
 
@@ -47,7 +47,7 @@ if (typeof window.TeamsAPI === 'undefined') {
                     .select(`
                     *,
                     vendors(vendor_name),
-                    peruntukan(jenis, deskripsi)
+                    peruntukan(deskripsi)
                 `)
                     .eq('id', teamId)
                     .single();
@@ -74,7 +74,7 @@ if (typeof window.TeamsAPI === 'undefined') {
                     .from('teams')
                     .select(`
                     *,
-                    peruntukan(jenis, deskripsi)
+                    peruntukan(deskripsi)
                 `)
                     .eq('vendor_id', vendorId)
                     .order('created_at', { ascending: false });
@@ -128,7 +128,7 @@ if (typeof window.TeamsAPI === 'undefined') {
                     .from('teams')
                     .select(`
                     *,
-                    peruntukan(jenis, deskripsi)
+                    peruntukan(deskripsi)
                 `)
                     .eq('vendor_id', vendorId)
                     .eq('peruntukan_id', peruntukanId)
@@ -157,7 +157,7 @@ if (typeof window.TeamsAPI === 'undefined') {
                     .select(`
                     *,
                     vendors(vendor_name, unit_code, unit_name),
-                    peruntukan(jenis, deskripsi)
+                    peruntukan(deskripsi)
                 `)
                     .eq('access_token', accessToken)
                     .single();
@@ -274,7 +274,7 @@ if (typeof window.TeamsAPI === 'undefined') {
                     .select(`
                         *,
                         vendors!inner(vendor_name, unit_code),
-                        peruntukan(jenis, deskripsi)
+                        peruntukan(deskripsi)
                     `)
                     .eq('vendors.unit_code', unitCode)
                     .order('created_at', { ascending: false });
@@ -300,7 +300,7 @@ if (typeof window.TeamsAPI === 'undefined') {
                     .select(`
                         *,
                         vendors(vendor_name, unit_code),
-                        peruntukan(jenis, deskripsi)
+                        peruntukan(deskripsi)
                     `)
                     .eq('vendor_id', vendorId)
                     .order('created_at', { ascending: false });

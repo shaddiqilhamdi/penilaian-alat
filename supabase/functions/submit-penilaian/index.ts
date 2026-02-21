@@ -19,6 +19,7 @@ interface AssessmentItem {
     tidak_layak: number
     berfungsi: number
     tidak_berfungsi: number
+    jenis?: string  // 'Personal' or 'Regu' - from equipment_master
 }
 
 interface SubmitRequest {
@@ -186,10 +187,32 @@ serve(async (req) => {
         }
 
         // ========== STEP 3: Upsert Vendor Assets ==========
+        // LOGIC per item berdasarkan equipment_master.jenis:
+        // - Regu: unique key = vendor + peruntukan + team + equipment (personnel_id = NULL)
+        // - Personal: unique key = vendor + peruntukan + personnel + equipment
+        // Dalam 1 assessment bisa ada KEDUA jenis sekaligus
         const upsertResults = []
         const now = new Date().toISOString()
 
+        // Fetch jenis for all equipment in this assessment
+        const equipmentIds = processedItems.map(i => i.equipment_id)
+        const { data: equipmentList } = await supabaseClient
+            .from('equipment_master')
+            .select('id, jenis')
+            .in('id', equipmentIds)
+
+        // Build lookup map: equipment_id -> jenis
+        const jenisMap: Record<string, string | null> = {}
+        if (equipmentList) {
+            for (const eq of equipmentList) {
+                jenisMap[eq.id] = eq.jenis
+            }
+        }
+
         for (const item of processedItems) {
+            const jenis = jenisMap[item.equipment_id] || null
+            const isRegu = jenis === 'Regu'
+
             // Build unique key for lookup
             const lookupQuery = supabaseClient
                 .from('vendor_assets')
@@ -198,17 +221,22 @@ serve(async (req) => {
                 .eq('peruntukan_id', body.peruntukan_id)
                 .eq('equipment_id', item.equipment_id)
 
-            // Add team_id or personnel_id to lookup
-            if (body.team_id) {
-                lookupQuery.eq('team_id', body.team_id)
-            } else {
-                lookupQuery.is('team_id', null)
-            }
-
-            if (body.personnel_id) {
-                lookupQuery.eq('personnel_id', body.personnel_id)
-            } else {
+            if (isRegu) {
+                // REGU: lookup by team_id, personnel_id must be NULL
+                if (body.team_id) {
+                    lookupQuery.eq('team_id', body.team_id)
+                } else {
+                    lookupQuery.is('team_id', null)
+                }
                 lookupQuery.is('personnel_id', null)
+            } else {
+                // PERSONAL: lookup by personnel_id, team_id is NULL
+                lookupQuery.is('team_id', null)
+                if (body.personnel_id) {
+                    lookupQuery.eq('personnel_id', body.personnel_id)
+                } else {
+                    lookupQuery.is('personnel_id', null)
+                }
             }
 
             const { data: existingAsset } = await lookupQuery.maybeSingle()
@@ -216,8 +244,8 @@ serve(async (req) => {
             const assetData = {
                 vendor_id: body.vendor_id,
                 peruntukan_id: body.peruntukan_id,
-                team_id: body.team_id,
-                personnel_id: body.personnel_id,
+                team_id: isRegu ? (body.team_id || null) : null,
+                personnel_id: isRegu ? null : (body.personnel_id || null),
                 equipment_id: item.equipment_id,
                 realisasi_qty: item.actual_qty,
                 distribution_date: body.tanggal_penilaian,

@@ -161,7 +161,6 @@ function renderAssessmentsTable(data) {
         const vendorName = assessment.vendors?.vendor_name || 'N/A';
         const unitCode = assessment.vendors?.unit_code || '-';
         const peruntukanDesc = assessment.peruntukan?.deskripsi || 'N/A';
-        const peruntukanJenis = assessment.peruntukan?.jenis || '-';
         const assessorName = assessment.profiles?.nama || 'N/A';
         const tanggal = formatDate(assessment.tanggal_penilaian);
         const shift = assessment.shift || '-';
@@ -183,7 +182,6 @@ function renderAssessmentsTable(data) {
                 </td>
                 <td>
                     ${peruntukanDesc}
-                    <br><small class="text-muted">${peruntukanJenis}</small>
                 </td>
                 <td class="text-center">${totalItems}</td>
                 <td class="text-center">
@@ -269,7 +267,6 @@ function renderAssessmentDetail(assessment) {
     const unitCode = assessment.vendors?.unit_code || '-';
     const unitName = assessment.vendors?.unit_name || '-';
     const peruntukanDesc = assessment.peruntukan?.deskripsi || 'N/A';
-    const peruntukanJenis = assessment.peruntukan?.jenis || '-';
     const teamNopol = assessment.teams?.nomor_polisi || '-';
     const teamCategory = assessment.teams?.category || '-';
     const assessorName = assessment.profiles?.nama || 'N/A';
@@ -374,7 +371,7 @@ function renderAssessmentDetail(assessment) {
                             </tr>
                             <tr>
                                 <td><strong>Peruntukan</strong></td>
-                                <td>${peruntukanDesc} (${peruntukanJenis})</td>
+                                <td>${peruntukanDesc}</td>
                             </tr>
                             <tr>
                                 <td><strong>Kendaraan</strong></td>

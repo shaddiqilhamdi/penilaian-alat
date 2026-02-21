@@ -9,6 +9,7 @@ let currentUser = null;
 let currentProfile = null;
 let equipmentList = [];
 let canCRUD = false;
+let dataTable = null;
 
 // Role labels for display
 const ROLE_LABELS = {
@@ -100,19 +101,19 @@ async function loadEquipment() {
         }
 
         // Show loading
-        tableBody.innerHTML = '<tr><td colspan="6" class="text-center"><div class="spinner-border spinner-border-sm" role="status"></div> Memuat data...</td></tr>';
+        tableBody.innerHTML = '<tr><td colspan="7" class="text-center"><div class="spinner-border spinner-border-sm" role="status"></div> Memuat data...</td></tr>';
 
         const result = await EquipmentAPI.getAll();
 
         if (!result.success) {
-            tableBody.innerHTML = '<tr><td colspan="6" class="text-center text-danger">Gagal memuat data: ' + result.error + '</td></tr>';
+            tableBody.innerHTML = '<tr><td colspan="7" class="text-center text-danger">Gagal memuat data: ' + result.error + '</td></tr>';
             return;
         }
 
         equipmentList = result.data || [];
 
         if (equipmentList.length === 0) {
-            tableBody.innerHTML = '<tr><td colspan="6" class="text-center">Tidak ada data peralatan</td></tr>';
+            tableBody.innerHTML = '<tr><td colspan="7" class="text-center">Tidak ada data peralatan</td></tr>';
             return;
         }
 
@@ -121,7 +122,7 @@ async function loadEquipment() {
     } catch (error) {
         const tableBody = document.getElementById('peralatan-table-body');
         if (tableBody) {
-            tableBody.innerHTML = '<tr><td colspan="6" class="text-center text-danger">Error: ' + error.message + '</td></tr>';
+            tableBody.innerHTML = '<tr><td colspan="7" class="text-center text-danger">Error: ' + error.message + '</td></tr>';
         }
     }
 }
@@ -157,7 +158,8 @@ function renderEquipmentTable() {
             <td>${index + 1}</td>
             <td>${item.nama_alat || '-'}</td>
             <td>${item.kategori || '-'}</td>
-            <td>${item['sub-kategori1'] || '-'}</td>
+            <td>${item.sub_kategori1 || '-'}</td>
+            <td>${item.jenis || '-'}</td>
             <td>${item.satuan || '-'}</td>
             <td>${actionButtons}</td>
         `;
@@ -165,32 +167,82 @@ function renderEquipmentTable() {
         tableBody.appendChild(row);
     });
 
-    // Attach event listeners to buttons
-    attachButtonListeners();
+    // Initialize DataTable
+    initDataTable();
 }
 
-// Attach event listeners to edit/delete buttons
-function attachButtonListeners() {
-    // Edit buttons
-    document.querySelectorAll('.edit-btn').forEach(btn => {
-        btn.addEventListener('click', handleEdit);
-    });
+// Initialize or reinitialize DataTable
+function initDataTable() {
+    const table = document.getElementById('peralatan-table');
+    if (table && typeof simpleDatatables !== 'undefined') {
+        if (dataTable) {
+            dataTable.destroy();
+            dataTable = null;
+        }
+        dataTable = new simpleDatatables.DataTable(table, {
+            perPage: 10,
+            perPageSelect: [5, 10, 25, 50],
+            labels: {
+                placeholder: "Cari...",
+                perPage: "data per halaman",
+                noRows: "Tidak ada data",
+                info: "Menampilkan {start} sampai {end} dari {rows} data"
+            }
+        });
+    }
+}
 
-    // Delete buttons
-    document.querySelectorAll('.delete-btn').forEach(btn => {
-        btn.addEventListener('click', handleDelete);
+// Attach event delegation for edit/delete buttons (survives simple-datatables re-rendering)
+function attachTableEventDelegation() {
+    const table = document.getElementById('peralatan-table');
+    if (!table) return;
+    table.addEventListener('click', (event) => {
+        const editBtn = event.target.closest('.edit-btn');
+        if (editBtn) {
+            handleEdit(event);
+            return;
+        }
+        const deleteBtn = event.target.closest('.delete-btn');
+        if (deleteBtn) {
+            handleDelete(event);
+            return;
+        }
     });
 }
 
 // Setup event listeners
 function setupEventListeners() {
+    // Event delegation for table buttons (set up once, survives pagination)
+    attachTableEventDelegation();
+
+    // Refresh button
+    const refreshBtn = document.getElementById('refreshBtn');
+    if (refreshBtn) {
+        refreshBtn.addEventListener('click', () => {
+            if (dataTable) { dataTable.destroy(); dataTable = null; }
+            loadEquipment();
+        });
+    }
+
     // Add button click
     const addBtn = document.getElementById('addPeralatanBtn');
     if (addBtn) {
         addBtn.addEventListener('click', () => {
-            // TODO: Implement add equipment modal
-            Swal.fire('Info', 'Fitur tambah peralatan akan segera tersedia', 'info');
+            // Clear form for new entry
+            document.getElementById('peralatanId').value = '';
+            document.getElementById('namaAlat').value = '';
+            document.getElementById('kategori').value = '';
+            document.getElementById('subKategori').value = '';
+            document.getElementById('jenisSelect').value = '';
+            document.getElementById('satuan').value = '';
+            document.getElementById('peralatanModalLabel').textContent = 'Tambah Data Peralatan';
         });
+    }
+
+    // Save button click
+    const saveBtn = document.getElementById('savePeralatanBtn');
+    if (saveBtn) {
+        saveBtn.addEventListener('click', handleSave);
     }
 
     // Logout button
@@ -225,8 +277,68 @@ function handleEdit(event) {
     const btn = event.target.closest('button');
     const id = btn.dataset.id;
 
-    // TODO: Implement edit equipment modal
-    Swal.fire('Info', 'Fitur edit peralatan akan segera tersedia', 'info');
+    // Find equipment data
+    const equipment = equipmentList.find(e => e.id === id);
+    if (!equipment) {
+        Swal.fire('Error', 'Data peralatan tidak ditemukan', 'error');
+        return;
+    }
+
+    // Fill form with data
+    document.getElementById('peralatanId').value = equipment.id;
+    document.getElementById('namaAlat').value = equipment.nama_alat || '';
+    document.getElementById('kategori').value = equipment.kategori || '';
+    document.getElementById('subKategori').value = equipment.sub_kategori1 || '';
+    document.getElementById('jenisSelect').value = equipment.jenis || '';
+    document.getElementById('satuan').value = equipment.satuan || '';
+    document.getElementById('peralatanModalLabel').textContent = 'Edit Data Peralatan';
+
+    // Show modal
+    const modal = new bootstrap.Modal(document.getElementById('peralatanModal'));
+    modal.show();
+}
+
+// Handle save (create/update)
+async function handleSave() {
+    const id = document.getElementById('peralatanId').value;
+    const namaAlat = document.getElementById('namaAlat').value.trim();
+    const jenis = document.getElementById('jenisSelect').value;
+
+    // Validate required fields
+    if (!namaAlat) {
+        Swal.fire('Error', 'Nama alat harus diisi', 'error');
+        return;
+    }
+    if (!jenis) {
+        Swal.fire('Error', 'Jenis harus dipilih', 'error');
+        return;
+    }
+
+    const data = {
+        nama_alat: namaAlat,
+        kategori: document.getElementById('kategori').value.trim() || null,
+        sub_kategori1: document.getElementById('subKategori').value.trim() || null,
+        jenis: jenis,
+        satuan: document.getElementById('satuan').value.trim() || null
+    };
+
+    let result;
+    if (id) {
+        // Update existing
+        result = await EquipmentAPI.update(id, data);
+    } else {
+        // Create new
+        result = await EquipmentAPI.create(data);
+    }
+
+    if (result.success) {
+        // Close modal
+        bootstrap.Modal.getInstance(document.getElementById('peralatanModal')).hide();
+        Swal.fire('Sukses', id ? 'Data berhasil diupdate' : 'Data berhasil ditambahkan', 'success');
+        await loadEquipment();
+    } else {
+        Swal.fire('Error', 'Gagal menyimpan data: ' + result.error, 'error');
+    }
 }
 
 // Handle delete button click

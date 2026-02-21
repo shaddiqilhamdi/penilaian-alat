@@ -327,7 +327,6 @@ const FormPenilaianManager = {
         const shift = document.getElementById('modalShift').value;
         const unit = document.getElementById('modalUnit').value;
         const vendor = document.getElementById('modalVendor').value;
-        const jenis = document.getElementById('modalJenis').value;
         const peruntukan = document.getElementById('modalPeruntukan').value;
 
         // Check petugas - from badge system (window.selectedPetugasIds and window.newPetugasList)
@@ -335,7 +334,7 @@ const FormPenilaianManager = {
         const hasNewPetugas = window.newPetugasList && window.newPetugasList.length > 0;
         const hasPetugas = hasSelectedPetugas || hasNewPetugas;
 
-        return tanggal && shift && unit && vendor && jenis && peruntukan && hasPetugas;
+        return tanggal && shift && unit && vendor && peruntukan && hasPetugas;
     },
 
     // Get form data for submission
@@ -354,7 +353,6 @@ const FormPenilaianManager = {
             shift: document.getElementById('modalShift').value,
             unit_id: document.getElementById('modalUnit').value,
             vendor_id: document.getElementById('modalVendor').value,
-            jenis: document.getElementById('modalJenis').value,
             peruntukan_id: document.getElementById('modalPeruntukan').value,
 
             // Kendaraan info
@@ -553,7 +551,7 @@ document.addEventListener('DOMContentLoaded', function () {
     FormPenilaianManager.initializeDropdownEvents();
 
     // Session info change listeners
-    const sessionFields = ['modalTanggal', 'modalShift', 'modalUnit', 'modalVendor', 'modalJenis', 'modalPeruntukan', 'modalPetugas'];
+    const sessionFields = ['modalTanggal', 'modalShift', 'modalUnit', 'modalVendor', 'modalPeruntukan', 'modalPetugas'];
     sessionFields.forEach(fieldId => {
         const field = document.getElementById(fieldId);
         if (field) {

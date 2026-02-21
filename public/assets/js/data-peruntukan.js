@@ -9,6 +9,7 @@ let currentUser = null;
 let currentProfile = null;
 let peruntukanList = [];
 let canCRUD = false;
+let dataTable = null;
 
 // Role labels for display
 const ROLE_LABELS = {
@@ -100,19 +101,28 @@ async function loadPeruntukan() {
         }
 
         // Show loading
-        tableBody.innerHTML = '<tr><td colspan="4" class="text-center"><div class="spinner-border spinner-border-sm" role="status"></div> Memuat data...</td></tr>';
+        tableBody.innerHTML = '<tr><td colspan="3" class="text-center"><div class="spinner-border spinner-border-sm" role="status"></div> Memuat data...</td></tr>';
 
         const result = await PeruntukanAPI.getAll();
 
         if (!result.success) {
-            tableBody.innerHTML = '<tr><td colspan="4" class="text-center text-danger">Gagal memuat data: ' + result.error + '</td></tr>';
+            tableBody.innerHTML = '<tr><td colspan="3" class="text-center text-danger">Gagal memuat data: ' + result.error + '</td></tr>';
             return;
         }
 
         peruntukanList = result.data || [];
 
+        // Sort by deskripsi
+        peruntukanList.sort((a, b) => {
+            const deskripsiA = (a.deskripsi || '').toLowerCase();
+            const deskripsiB = (b.deskripsi || '').toLowerCase();
+            if (deskripsiA < deskripsiB) return -1;
+            if (deskripsiA > deskripsiB) return 1;
+            return 0;
+        });
+
         if (peruntukanList.length === 0) {
-            tableBody.innerHTML = '<tr><td colspan="4" class="text-center">Tidak ada data peruntukan</td></tr>';
+            tableBody.innerHTML = '<tr><td colspan="3" class="text-center">Tidak ada data peruntukan</td></tr>';
             return;
         }
 
@@ -121,7 +131,7 @@ async function loadPeruntukan() {
     } catch (error) {
         const tableBody = document.getElementById('peruntukan-table-body');
         if (tableBody) {
-            tableBody.innerHTML = '<tr><td colspan="4" class="text-center text-danger">Error: ' + error.message + '</td></tr>';
+            tableBody.innerHTML = '<tr><td colspan="3" class="text-center text-danger">Error: ' + error.message + '</td></tr>';
         }
     }
 }
@@ -142,7 +152,6 @@ function renderPeruntukanTable() {
             actionButtons = `
                 <button class="btn btn-warning btn-sm edit-btn" 
                     data-id="${item.id}"
-                    data-jenis="${item.jenis || ''}"
                     data-deskripsi="${item.deskripsi || ''}"
                     title="Edit">
                     <i class="bi bi-pencil"></i>
@@ -157,7 +166,6 @@ function renderPeruntukanTable() {
 
         row.innerHTML = `
             <td>${index + 1}</td>
-            <td>${item.jenis || '-'}</td>
             <td>${item.deskripsi || '-'}</td>
             <td>${actionButtons}</td>
         `;
@@ -165,25 +173,63 @@ function renderPeruntukanTable() {
         tableBody.appendChild(row);
     });
 
-    // Attach event listeners to buttons
-    attachButtonListeners();
+    // Initialize DataTable
+    initDataTable();
 }
 
-// Attach event listeners to edit/delete buttons
-function attachButtonListeners() {
-    // Edit buttons
-    document.querySelectorAll('.edit-btn').forEach(btn => {
-        btn.addEventListener('click', handleEdit);
-    });
+// Initialize or reinitialize DataTable
+function initDataTable() {
+    const table = document.getElementById('peruntukan-table');
+    if (table && typeof simpleDatatables !== 'undefined') {
+        if (dataTable) {
+            dataTable.destroy();
+            dataTable = null;
+        }
+        dataTable = new simpleDatatables.DataTable(table, {
+            perPage: 10,
+            perPageSelect: [5, 10, 25, 50],
+            labels: {
+                placeholder: "Cari...",
+                perPage: "data per halaman",
+                noRows: "Tidak ada data",
+                info: "Menampilkan {start} sampai {end} dari {rows} data"
+            }
+        });
+    }
+}
 
-    // Delete buttons
-    document.querySelectorAll('.delete-btn').forEach(btn => {
-        btn.addEventListener('click', handleDelete);
+// Attach event delegation for edit/delete buttons (survives simple-datatables re-rendering)
+function attachTableEventDelegation() {
+    const table = document.getElementById('peruntukan-table');
+    if (!table) return;
+    table.addEventListener('click', (event) => {
+        const editBtn = event.target.closest('.edit-btn');
+        if (editBtn) {
+            handleEdit(event);
+            return;
+        }
+        const deleteBtn = event.target.closest('.delete-btn');
+        if (deleteBtn) {
+            handleDelete(event);
+            return;
+        }
     });
 }
 
 // Setup event listeners
 function setupEventListeners() {
+    // Event delegation for table buttons (set up once, survives pagination)
+    attachTableEventDelegation();
+
+    // Refresh button
+    const refreshBtn = document.getElementById('refreshBtn');
+    if (refreshBtn) {
+        refreshBtn.addEventListener('click', () => {
+            if (dataTable) { dataTable.destroy(); dataTable = null; }
+            loadPeruntukan();
+        });
+    }
+
     // Add button click
     const addBtn = document.getElementById('addPeruntukanBtn');
     if (addBtn) {
@@ -249,17 +295,14 @@ function setupEventListeners() {
 function handleEdit(event) {
     const btn = event.target.closest('button');
     const id = btn.dataset.id;
-    const jenis = btn.dataset.jenis;
     const deskripsi = btn.dataset.deskripsi;
 
     const modalLabel = document.getElementById('peruntukanModalLabel');
     const form = document.getElementById('peruntukanForm');
-    const jenisInput = document.getElementById('jenis');
     const deskripsiInput = document.getElementById('deskripsi');
 
     if (modalLabel) modalLabel.textContent = 'Edit Data Peruntukan';
     if (form) form.dataset.peruntukanId = id;
-    if (jenisInput) jenisInput.value = jenis;
     if (deskripsiInput) deskripsiInput.value = deskripsi;
 
     const modal = new bootstrap.Modal(document.getElementById('peruntukanModal'));
@@ -299,17 +342,15 @@ async function handleFormSubmit(event) {
 
     const form = document.getElementById('peruntukanForm');
     const peruntukanId = form.dataset.peruntukanId;
-    const jenisInput = document.getElementById('jenis');
     const deskripsiInput = document.getElementById('deskripsi');
 
     const peruntukanData = {
-        jenis: jenisInput.value.trim(),
         deskripsi: deskripsiInput.value.trim()
     };
 
     // Validation
-    if (!peruntukanData.jenis || !peruntukanData.deskripsi) {
-        Swal.fire('Validasi Gagal!', 'Semua field harus diisi.', 'warning');
+    if (!peruntukanData.deskripsi) {
+        Swal.fire('Validasi Gagal!', 'Deskripsi harus diisi.', 'warning');
         return;
     }
 

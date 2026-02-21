@@ -14,6 +14,7 @@ let equipmentList = [];
 let selectedVendorId = null;
 let currentViewData = null; // Store current view data for edit/delete
 let equipmentRowCounter = 0;
+let dataTable = null;
 
 // Initialize page
 document.addEventListener('DOMContentLoaded', async function () {
@@ -174,7 +175,7 @@ function populatePeruntukanDropdown(elementId, peruntukan) {
     peruntukan.forEach(p => {
         const option = document.createElement('option');
         option.value = p.id;
-        option.textContent = `${p.jenis} - ${p.deskripsi}`;
+        option.textContent = `${p.deskripsi}`;
         select.appendChild(option);
     });
 }
@@ -226,9 +227,21 @@ function groupByPeruntukan(standards) {
 
 // Display table view
 function displayTable(grouped) {
+    // Destroy existing DataTable before re-render (must happen before querying DOM)
+    if (dataTable) {
+        dataTable.destroy();
+        dataTable = null;
+    }
+
     const tableContainer = document.getElementById('tableContainer');
-    const tbody = document.getElementById('standardsTableBody');
+    const table = document.getElementById('standardsTable');
+    const tbody = table ? table.querySelector('tbody') : null;
     const emptyState = document.getElementById('emptyState');
+
+    if (!tbody) {
+        console.error('Table body not found');
+        return;
+    }
 
     tbody.innerHTML = '';
 
@@ -252,16 +265,13 @@ function displayTable(grouped) {
     const vendorName = selectedVendor?.vendor_name || '-';
     const unitCode = selectedVendor?.unit_code || '-';
 
-    // Sort keys by jenis then deskripsi
+    // Sort keys by deskripsi
     const sortedKeys = keys.sort((a, b) => {
         const pA = grouped[a].peruntukan;
         const pB = grouped[b].peruntukan;
-        const jenisA = pA?.jenis || '';
-        const jenisB = pB?.jenis || '';
         const deskA = pA?.deskripsi || '';
         const deskB = pB?.deskripsi || '';
 
-        if (jenisA !== jenisB) return jenisA.localeCompare(jenisB);
         return deskA.localeCompare(deskB);
     });
 
@@ -276,7 +286,7 @@ function displayTable(grouped) {
             <td>${index + 1}</td>
             <td><span class="badge bg-secondary">${unitCode}</span></td>
             <td>${vendorName}</td>
-            <td>${peruntukan?.jenis || '-'} - ${peruntukan?.deskripsi || '-'}</td>
+            <td>${peruntukan?.deskripsi || '-'}</td>
             <td class="text-center">${totalItems}</td>
             <td class="text-center">
                 <button class="btn btn-primary btn-sm" onclick="viewDetail('${peruntukanId}')" title="Lihat Detail">
@@ -286,6 +296,30 @@ function displayTable(grouped) {
         `;
         tbody.appendChild(row);
     });
+
+    // Initialize DataTable
+    initDataTable();
+}
+
+// Initialize or reinitialize DataTable
+function initDataTable() {
+    const table = document.getElementById('standardsTable');
+    if (table && typeof simpleDatatables !== 'undefined') {
+        if (dataTable) {
+            dataTable.destroy();
+            dataTable = null;
+        }
+        dataTable = new simpleDatatables.DataTable(table, {
+            perPage: 10,
+            perPageSelect: [5, 10, 25, 50],
+            labels: {
+                placeholder: "Cari...",
+                perPage: "data per halaman",
+                noRows: "Tidak ada data",
+                info: "Menampilkan {start} sampai {end} dari {rows} data"
+            }
+        });
+    }
 }
 
 // View detail modal
@@ -313,7 +347,7 @@ function viewDetail(peruntukanId) {
     // Update modal content - Info section
     document.getElementById('detailUnitName').textContent = selectedVendor?.unit_code || '-';
     document.getElementById('detailVendorName').textContent = selectedVendor?.vendor_name || '-';
-    document.getElementById('detailJenis').textContent = peruntukan?.jenis || '-';
+    document.getElementById('detailJenis').textContent = peruntukan?.deskripsi || '-';
     document.getElementById('detailPeruntukanName').textContent = peruntukan?.deskripsi || '-';
     document.getElementById('detailApdCount').textContent = apdCount + ' APD';
     document.getElementById('detailPeralatanCount').textContent = peralatanCount + ' Peralatan';
@@ -407,14 +441,10 @@ function editFromDetail() {
 
     // Get current peruntukan info
     const peruntukan = currentViewData.items[0]?.peruntukan;
-    const currentJenis = peruntukan?.jenis || '';
     const currentPeruntukanId = currentViewData.peruntukanId;
 
-    // Populate Jenis dropdown from peruntukan table (unique values)
-    populateJenisDropdown(currentJenis);
-
-    // Populate Peruntukan dropdown filtered by Jenis
-    filterPeruntukanByJenis();
+    // Populate Peruntukan dropdown directly (no jenis filter)
+    populateEditPeruntukanDropdown(currentPeruntukanId);
 
     // Set current Peruntukan
     document.getElementById('editPeruntukanSelect').value = currentPeruntukanId;
@@ -447,32 +477,30 @@ function editFromDetail() {
     setModalMode('edit');
 }
 
-// Populate Jenis dropdown from peruntukan table (unique values)
+// Populate Jenis dropdown (kept for backward compatibility - now hidden)
 function populateJenisDropdown(selectedJenis) {
     const jenisSelect = document.getElementById('editJenisSelect');
-
-    // Get unique jenis values from peruntukan table
-    const uniqueJenis = [...new Set(peruntukanList.map(p => p.jenis))].filter(j => j);
-
-    jenisSelect.innerHTML = uniqueJenis.map(jenis =>
-        `<option value="${jenis}" ${jenis === selectedJenis ? 'selected' : ''}>${jenis}</option>`
-    ).join('');
+    if (jenisSelect) jenisSelect.value = selectedJenis || '';
 }
 
-// Filter Peruntukan dropdown by Jenis (from peruntukan table)
+// Populate edit peruntukan dropdown directly (no jenis filter)
+function populateEditPeruntukanDropdown(selectedPeruntukanId) {
+    const peruntukanSelect = document.getElementById('editPeruntukanSelect');
+
+    peruntukanSelect.innerHTML = '<option value="">Pilih Peruntukan</option>' +
+        peruntukanList.map(p => `<option value="${p.id}" ${p.id === selectedPeruntukanId ? 'selected' : ''}>${p.deskripsi}</option>`).join('');
+}
+
+// Filter Peruntukan dropdown by Jenis (kept for backward compatibility)
 function filterPeruntukanByJenis() {
-    const jenis = document.getElementById('editJenisSelect').value;
     const peruntukanSelect = document.getElementById('editPeruntukanSelect');
     const currentValue = peruntukanSelect.value;
 
-    // Filter peruntukan by jenis from peruntukan table
-    const filtered = peruntukanList.filter(p => p.jenis === jenis);
-
     peruntukanSelect.innerHTML = '<option value="">Pilih Peruntukan</option>' +
-        filtered.map(p => `<option value="${p.id}">${p.deskripsi}</option>`).join('');
+        peruntukanList.map(p => `<option value="${p.id}">${p.deskripsi}</option>`).join('');
 
     // Try to restore previous value if still valid
-    if (filtered.some(p => p.id === currentValue)) {
+    if (peruntukanList.some(p => p.id === currentValue)) {
         peruntukanSelect.value = currentValue;
     }
 }
@@ -702,7 +730,7 @@ async function deletePeruntukan(peruntukanId) {
 
     const items = standardsList.filter(s => s.peruntukan_id === peruntukanId);
     const peruntukan = items[0]?.peruntukan;
-    const peruntukanName = peruntukan ? `${peruntukan.jenis} - ${peruntukan.deskripsi}` : peruntukanId;
+    const peruntukanName = peruntukan ? `${peruntukan.deskripsi}` : peruntukanId;
 
     const result = await Swal.fire({
         title: 'Hapus Peruntukan?',
@@ -929,35 +957,27 @@ function resetModalForm() {
         document.getElementById('vendorSelect').value = selectedVendorId;
     }
 
-    // Populate Jenis dropdown for Add modal
-    populateAddJenisDropdown();
+    // Populate Peruntukan dropdown for Add modal
+    populateAddPeruntukanDropdown();
 }
 
-// Populate Jenis dropdown for Add modal
-function populateAddJenisDropdown() {
-    const jenisSelect = document.getElementById('addJenisSelect');
-    if (!jenisSelect) return;
-
-    // Get unique jenis values from peruntukan table
-    const uniqueJenis = [...new Set(peruntukanList.map(p => p.jenis))].filter(j => j);
-
-    jenisSelect.innerHTML = '<option value="">Pilih Jenis</option>' +
-        uniqueJenis.map(jenis => `<option value="${jenis}">${jenis}</option>`).join('');
-
-    // Clear peruntukan dropdown
-    document.getElementById('peruntukanSelect').innerHTML = '<option value="">Pilih Peruntukan</option>';
-}
-
-// Filter Peruntukan dropdown by Jenis for Add modal
-function filterAddPeruntukanByJenis() {
-    const jenis = document.getElementById('addJenisSelect').value;
+// Populate Peruntukan dropdown for Add modal (no jenis filter)
+function populateAddPeruntukanDropdown() {
     const peruntukanSelect = document.getElementById('peruntukanSelect');
-
-    // Filter peruntukan by jenis from peruntukan table
-    const filtered = peruntukanList.filter(p => p.jenis === jenis);
+    if (!peruntukanSelect) return;
 
     peruntukanSelect.innerHTML = '<option value="">Pilih Peruntukan</option>' +
-        filtered.map(p => `<option value="${p.id}">${p.deskripsi}</option>`).join('');
+        peruntukanList.map(p => `<option value="${p.id}">${p.deskripsi}</option>`).join('');
+}
+
+// Kept for backward compatibility (now hidden)
+function populateAddJenisDropdown() {
+    populateAddPeruntukanDropdown();
+}
+
+// Kept for backward compatibility
+function filterAddPeruntukanByJenis() {
+    populateAddPeruntukanDropdown();
 }
 
 // Show/hide loading state
@@ -998,6 +1018,7 @@ function setupEventListeners() {
     document.getElementById('resetFilterBtn')?.addEventListener('click', function () {
         document.getElementById('filterVendor').value = '';
         selectedVendorId = null;
+        if (dataTable) { dataTable.destroy(); dataTable = null; }
         document.getElementById('emptyState').style.display = 'block';
         document.getElementById('tableContainer').style.display = 'none';
         document.getElementById('emptyState').innerHTML = `

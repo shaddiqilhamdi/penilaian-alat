@@ -9,6 +9,7 @@ let currentUser = null;
 let currentProfile = null;
 let unitsList = [];
 let canCRUD = false;
+let dataTable = null;
 
 // Role labels for display
 const ROLE_LABELS = {
@@ -172,6 +173,30 @@ function displayUnits(units) {
 
         tableBody.appendChild(row);
     });
+
+    // Initialize DataTable
+    initDataTable();
+}
+
+// Initialize or reinitialize DataTable
+function initDataTable() {
+    const table = document.getElementById('unit-table');
+    if (table && typeof simpleDatatables !== 'undefined') {
+        if (dataTable) {
+            dataTable.destroy();
+            dataTable = null;
+        }
+        dataTable = new simpleDatatables.DataTable(table, {
+            perPage: 10,
+            perPageSelect: [5, 10, 25, 50],
+            labels: {
+                placeholder: "Cari...",
+                perPage: "data per halaman",
+                noRows: "Tidak ada data",
+                info: "Menampilkan {start} sampai {end} dari {rows} data"
+            }
+        });
+    }
 }
 
 // Setup event listeners
@@ -195,6 +220,15 @@ function setupEventListeners() {
             resetForm();
             document.getElementById('unitModalLabel').textContent = 'Tambah Unit Baru';
             document.getElementById('kodeUnit').disabled = false;
+        });
+    }
+
+    // Refresh button
+    const refreshBtn = document.getElementById('refreshBtn');
+    if (refreshBtn) {
+        refreshBtn.addEventListener('click', () => {
+            if (dataTable) { dataTable.destroy(); dataTable = null; }
+            loadUnits();
         });
     }
 

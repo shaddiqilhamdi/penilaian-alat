@@ -5,7 +5,7 @@
     <meta charset="utf-8">
     <meta content="width=device-width, initial-scale=1.0" name="viewport">
 
-    <title>Inventaris Vendor - Penilaian Alat Kerja</title>
+    <title>Inventaris Vendor - PPE Health Index</title>
     <meta content="" name="description">
     <meta content="" name="keywords">
 
@@ -146,26 +146,13 @@
         <div class="d-flex align-items-center justify-content-between">
             <a href="index.html" class="logo d-flex align-items-center">
                 <i class="bi bi-shield-check fs-4 text-primary me-2"></i>
-                <span class="d-none d-lg-block">Penilaian Alat Kerja</span>
+                <span class="d-none d-lg-block">PPE Health Index</span>
             </a>
             <i class="bi bi-list toggle-sidebar-btn"></i>
         </div><!-- End Logo -->
 
-        <div class="search-bar">
-            <form class="search-form d-flex align-items-center" method="POST" action="#">
-                <input type="text" name="query" placeholder="Search" title="Enter search keyword">
-                <button type="submit" title="Search"><i class="bi bi-search"></i></button>
-            </form>
-        </div><!-- End Search Bar -->
-
         <nav class="header-nav ms-auto">
             <ul class="d-flex align-items-center">
-
-                <li class="nav-item d-block d-lg-none">
-                    <a class="nav-link nav-icon search-bar-toggle " href="#">
-                        <i class="bi bi-search"></i>
-                    </a>
-                </li><!-- End Search Icon-->
 
                 <li class="nav-item dropdown pe-3">
 
@@ -352,8 +339,9 @@
                         <div class="card-body">
                             <div class="d-flex justify-content-between align-items-center">
                                 <h5 class="card-title">Inventaris Vendor</h5>
-                                <button class="btn btn-sm btn-outline-primary" onclick="loadAllAssets()">
-                                    <i class="bi bi-arrow-clockwise"></i> Refresh
+                                <button class="btn btn-sm btn-outline-primary" onclick="loadAllAssets()"
+                                    title="Refresh">
+                                    <i class="bi bi-arrow-clockwise"></i>
                                 </button>
                             </div>
 
@@ -415,27 +403,25 @@
 
                             <!-- Data Table -->
                             <div id="tableContainer" style="display: none;">
-                                <div class="table-responsive">
-                                    <table class="table table-sm table-hover table-bordered" id="assetsTable">
-                                        <thead class="table-light">
-                                            <tr>
-                                                <th width="40">#</th>
-                                                <th>Vendor</th>
-                                                <th>Peruntukan</th>
-                                                <th>Team/Personil</th>
-                                                <th>Peralatan</th>
-                                                <th class="text-center">Qty</th>
-                                                <th class="text-center">Fisik</th>
-                                                <th class="text-center">Fungsi</th>
-                                                <th class="text-center">Kontrak</th>
-                                                <th>Penilaian Terakhir</th>
-                                            </tr>
-                                        </thead>
-                                        <tbody id="assetsTableBody">
-                                            <!-- Data will be populated by JavaScript -->
-                                        </tbody>
-                                    </table>
-                                </div>
+                                <table class="table table-sm table-hover" id="assetsTable">
+                                    <thead>
+                                        <tr>
+                                            <th width="40">#</th>
+                                            <th>Vendor</th>
+                                            <th>Peruntukan</th>
+                                            <th>Team/Personil</th>
+                                            <th>Peralatan</th>
+                                            <th class="text-center">Qty</th>
+                                            <th class="text-center">Fisik</th>
+                                            <th class="text-center">Fungsi</th>
+                                            <th class="text-center">Kontrak</th>
+                                            <th>Penilaian Terakhir</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="assetsTableBody">
+                                        <!-- Data will be populated by JavaScript -->
+                                    </tbody>
+                                </table>
                             </div>
 
                         </div>
@@ -456,6 +442,7 @@
 
     <!-- Vendor JS Files -->
     <script src="assets/vendor/bootstrap/js/bootstrap.bundle.min.js"></script>
+    <script src="assets/vendor/simple-datatables/simple-datatables.js"></script>
 
     <!-- Supabase & SweetAlert2 -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>

@@ -15,6 +15,30 @@ const ROLE_LABELS = {
     vendor_k3: 'Vendor K3'
 };
 
+// Validate nomor polisi format
+// Format: B 1234 XYZ or BB 1234 XYZ (1-2 letters, 1-4 digits, 1-3 letters)
+function validateNomorPolisiFormat(nopol) {
+    if (!nopol) return false;
+    // Remove extra spaces and convert to uppercase
+    const cleaned = nopol.toUpperCase().replace(/\s+/g, ' ').trim();
+    // Pattern: 1-2 letters, space optional, 1-4 digits, space optional, 1-3 letters
+    const pattern = /^[A-Z]{1,2}\s?\d{1,4}\s?[A-Z]{1,3}$/;
+    return pattern.test(cleaned);
+}
+
+// Format nomor polisi to standard format (with spaces)
+function formatNomorPolisiStandard(nopol) {
+    if (!nopol) return '';
+    // Remove all spaces and convert to uppercase
+    const cleaned = nopol.toUpperCase().replace(/\s+/g, '');
+    // Extract parts: prefix (1-2 letters), number (1-4 digits), suffix (1-3 letters)
+    const match = cleaned.match(/^([A-Z]{1,2})(\d{1,4})([A-Z]{1,3})$/);
+    if (match) {
+        return `${match[1]} ${match[2]} ${match[3]}`;
+    }
+    return cleaned;
+}
+
 document.addEventListener('DOMContentLoaded', async function () {
 
 
@@ -106,7 +130,6 @@ async function initializeFormData() {
     // Load dropdown data
     await loadUnitData();
     await loadVendorData();
-    await loadJenisData();
 }
 
 // Load Unit data
@@ -252,46 +275,9 @@ function filterVendorsByUnit(unitCode) {
 
 }
 
-// Load Jenis data
-async function loadJenisData() {
-    try {
-        if (typeof PeruntukanAPI === 'undefined') {
-            throw new Error('PeruntukanAPI is not available');
-        }
-
-        const result = await PeruntukanAPI.getAllJenis();
-        const jenisSelect = document.getElementById('modalJenis');
-
-        if (!jenisSelect) {
-            console.error('Jenis select element not found');
-            return;
-        }
-
-        if (!result.success) {
-            console.error('Failed to load jenis:', result.error);
-            return;
-        }
-
-        const jenisData = result.data || [];
-
-        // Clear existing options except first
-        jenisSelect.innerHTML = '<option value="">No item selected</option>';
-
-        jenisData.forEach(jenis => {
-            const option = document.createElement('option');
-            option.value = jenis.jenis;
-            option.textContent = jenis.jenis;
-            jenisSelect.appendChild(option);
-        });
-
-    } catch (error) {
-        console.error('Error loading jenis data:', error);
-        showNotification('Gagal memuat data jenis', 'error');
-    }
-}
-
-// Load Peruntukan based on selected Jenis AND Vendor (filtered by equipment_standards)
-async function loadPeruntukanData(jenis, vendorId = null) {
+// Load Peruntukan based on selected Vendor (filtered by equipment_standards)
+// Jenis filter removed - show all peruntukan that have equipment_standards for this vendor
+async function loadPeruntukanData(vendorId) {
     try {
         const peruntukanSelect = document.getElementById('modalPeruntukan');
 
@@ -302,18 +288,18 @@ async function loadPeruntukanData(jenis, vendorId = null) {
 
         let peruntukanData = [];
 
-        // If vendorId is provided, filter peruntukan by equipment_standards
+        // Get all peruntukan from equipment_standards for this vendor (no jenis filter)
         if (vendorId && typeof EquipmentStandardsAPI !== 'undefined') {
-            const result = await EquipmentStandardsAPI.getDistinctPeruntukanByVendorAndJenis(vendorId, jenis);
+            const result = await EquipmentStandardsAPI.getDistinctPeruntukanByVendor(vendorId);
             if (result.success) {
                 peruntukanData = result.data || [];
             }
         } else {
-            // Fallback to all peruntukan by jenis (legacy behavior)
+            // Fallback to all peruntukan (legacy behavior)
             if (typeof PeruntukanAPI === 'undefined') {
                 throw new Error('PeruntukanAPI is not available');
             }
-            const result = await PeruntukanAPI.getByJenis(jenis);
+            const result = await PeruntukanAPI.getAll();
             if (result.success) {
                 peruntukanData = result.data || [];
             }
@@ -323,10 +309,10 @@ async function loadPeruntukanData(jenis, vendorId = null) {
         peruntukanSelect.innerHTML = '<option value="">-- Pilih Peruntukan --</option>';
 
         if (peruntukanData.length === 0) {
-            // Show message if no peruntukan available for this vendor+jenis
+            // Show message if no peruntukan available for this vendor
             const option = document.createElement('option');
             option.value = '';
-            option.textContent = '(Tidak ada data standar untuk kombinasi ini)';
+            option.textContent = '(Tidak ada data standar untuk vendor ini)';
             option.disabled = true;
             peruntukanSelect.appendChild(option);
             return;
@@ -336,7 +322,6 @@ async function loadPeruntukanData(jenis, vendorId = null) {
             const option = document.createElement('option');
             option.value = peruntukan.id;
             option.textContent = peruntukan.deskripsi;
-            option.dataset.jenis = peruntukan.jenis;
             peruntukanSelect.appendChild(option);
         });
 
@@ -707,7 +692,25 @@ function renderEquipmentTableFromFilter(equipmentData) {
         return;
     }
 
-    equipmentData.forEach((standard, index) => {
+    // Sort by kategori first, then by nama_alat
+    const sortedData = [...equipmentData].sort((a, b) => {
+        const equipA = a.equipment_master || {};
+        const equipB = b.equipment_master || {};
+
+        const kategoriA = (equipA.kategori || '').toLowerCase();
+        const kategoriB = (equipB.kategori || '').toLowerCase();
+        if (kategoriA < kategoriB) return -1;
+        if (kategoriA > kategoriB) return 1;
+
+        const namaA = (equipA.nama_alat || '').toLowerCase();
+        const namaB = (equipB.nama_alat || '').toLowerCase();
+        if (namaA < namaB) return -1;
+        if (namaA > namaB) return 1;
+
+        return 0;
+    });
+
+    sortedData.forEach((standard, index) => {
         // Get equipment info from nested equipment_master relation
         const equipment = standard.equipment_master || {};
         const row = `
@@ -865,10 +868,31 @@ function renderEquipmentTable(equipmentData, isFromVendorAssets = false) {
         return;
     }
 
-    tableBody.innerHTML = '';
-    if (countBadge) countBadge.textContent = `${equipmentData.length} Item`;
+    // Sort equipment by kategori first, then by nama_alat
+    const sortedData = [...equipmentData].sort((a, b) => {
+        // Get equipment info for each item
+        const infoA = a.equipment_master || a;
+        const infoB = b.equipment_master || b;
 
-    equipmentData.forEach((item, index) => {
+        // First sort by kategori
+        const kategoriA = (infoA.kategori || a.kategori || '').toLowerCase();
+        const kategoriB = (infoB.kategori || b.kategori || '').toLowerCase();
+        if (kategoriA < kategoriB) return -1;
+        if (kategoriA > kategoriB) return 1;
+
+        // Then sort by nama_alat
+        const namaA = (infoA.nama_alat || a.nama_alat || '').toLowerCase();
+        const namaB = (infoB.nama_alat || b.nama_alat || '').toLowerCase();
+        if (namaA < namaB) return -1;
+        if (namaA > namaB) return 1;
+
+        return 0;
+    });
+
+    tableBody.innerHTML = '';
+    if (countBadge) countBadge.textContent = `${sortedData.length} Item`;
+
+    sortedData.forEach((item, index) => {
         // Get equipment info - structure differs based on source
         let equipmentInfo, equipmentId, requiredQty, currentQty;
         const dataSource = item.source || (isFromVendorAssets ? 'vendor_assets' : 'equipment_standards');
@@ -967,8 +991,8 @@ function renderEquipmentTable(equipmentData, isFromVendorAssets = false) {
         tableBody.appendChild(row);
     });
 
-    // Also render accordion for mobile view
-    renderEquipmentAccordion(equipmentData, isFromVendorAssets);
+    // Also render accordion for mobile view (use sorted data)
+    renderEquipmentAccordion(sortedData, isFromVendorAssets);
 
     // Update progress after rendering
     if (typeof FormPenilaianManager !== 'undefined' && FormPenilaianManager.updateProgress) {
@@ -1209,15 +1233,12 @@ function setupEventListeners() {
         }
     });
 
-    // Vendor dropdown change event - load personil based on vendor
+    // Vendor dropdown change event - load personil and peruntukan based on vendor
     document.getElementById('modalVendor').addEventListener('change', function () {
         const selectedVendor = this.value;
 
-        // Reset jenis and peruntukan when vendor changes (because peruntukan depends on vendor's equipment_standards)
-        const jenisSelect = document.getElementById('modalJenis');
+        // Reset peruntukan when vendor changes
         const peruntukanSelect = document.getElementById('modalPeruntukan');
-
-        if (jenisSelect) jenisSelect.value = '';
         if (peruntukanSelect) {
             peruntukanSelect.innerHTML = '<option value="">-- Pilih Peruntukan --</option>';
         }
@@ -1229,38 +1250,11 @@ function setupEventListeners() {
         if (selectedVendor) {
             // Load personil data based on selected vendor
             loadPersonilData(selectedVendor);
+            // Load peruntukan directly from equipment_standards (no jenis filter)
+            loadPeruntukanData(selectedVendor);
         } else {
             // Clear dependent fields when vendor is deselected
             clearVendorDependentFields();
-        }
-    });
-
-    // Jenis change event - filter peruntukan by jenis AND vendor (from equipment_standards)
-    document.getElementById('modalJenis').addEventListener('change', function () {
-        const selectedJenis = this.value;
-        const selectedVendor = document.getElementById('modalVendor').value;
-        const peruntukanSelect = document.getElementById('modalPeruntukan');
-
-        // Reset peruntukan dropdown
-        peruntukanSelect.innerHTML = '<option value="">-- Pilih Peruntukan --</option>';
-
-        // Clear kendaraan and equipment table
-        clearKendaraanField();
-        clearEquipmentTable();
-
-        if (selectedJenis) {
-            // Check if vendor is selected first
-            if (!selectedVendor) {
-                showNotification('Silakan pilih Pelaksana (Vendor) terlebih dahulu', 'warning');
-                this.value = ''; // Reset jenis selection
-                return;
-            }
-
-            // Load peruntukan filtered by vendor's equipment_standards
-            loadPeruntukanData(selectedJenis, selectedVendor);
-
-            // Reload personil to update multiple selection based on jenis
-            loadPersonilData(selectedVendor);
         }
     });
 
@@ -1311,8 +1305,29 @@ function setupModalEventListeners() {
             // Clear input fields
             document.getElementById('inputNomorPolisi').value = '';
             document.getElementById('inputKategoriKendaraan').value = '';
-            document.getElementById('inputKeteranganKendaraan').value = '';
+            document.getElementById('inputDeskripsiKendaraan').value = '';
+            document.getElementById('inputNomorPolisi').classList.remove('is-invalid');
         });
+
+        // Setup nomor polisi input - auto uppercase and validation
+        const nopolInput = document.getElementById('inputNomorPolisi');
+        if (nopolInput) {
+            nopolInput.addEventListener('input', function (e) {
+                e.target.value = e.target.value.toUpperCase();
+                // Real-time validation
+                if (e.target.value && !validateNomorPolisiFormat(e.target.value)) {
+                    e.target.classList.add('is-invalid');
+                } else {
+                    e.target.classList.remove('is-invalid');
+                }
+            });
+
+            nopolInput.addEventListener('blur', function (e) {
+                if (e.target.value && validateNomorPolisiFormat(e.target.value)) {
+                    e.target.value = formatNomorPolisiStandard(e.target.value);
+                }
+            });
+        }
     }
 
     // Modal Tambah Petugas - Pre-fill locked fields when modal opens
@@ -1342,12 +1357,19 @@ function setupModalEventListeners() {
         btnSimpanKendaraan.addEventListener('click', async function () {
             const nomorPolisi = document.getElementById('inputNomorPolisi').value.trim();
             const kategori = document.getElementById('inputKategoriKendaraan').value;
-            const keterangan = document.getElementById('inputKeteranganKendaraan').value.trim();
+            const deskripsi = document.getElementById('inputDeskripsiKendaraan')?.value?.trim() || null;
             const vendorId = document.getElementById('modalVendor').value;
             const peruntukanId = document.getElementById('modalPeruntukan').value;
 
             if (!nomorPolisi) {
                 showNotification('Nomor Polisi harus diisi', 'warning');
+                return;
+            }
+
+            // Validate nomor polisi format
+            if (!validateNomorPolisiFormat(nomorPolisi)) {
+                document.getElementById('inputNomorPolisi').classList.add('is-invalid');
+                showNotification('Format Nomor Polisi tidak valid. Gunakan format: B 1234 XYZ atau BB 1234 XYZ', 'warning');
                 return;
             }
 
@@ -1370,8 +1392,9 @@ function setupModalEventListeners() {
                 const newTeam = {
                     vendor_id: vendorId,
                     peruntukan_id: peruntukanId,
-                    nomor_polisi: nomorPolisi.toUpperCase(),
-                    category: kategori // From dropdown selection
+                    nomor_polisi: formatNomorPolisiStandard(nomorPolisi),
+                    category: kategori,
+                    description: deskripsi
                 };
 
                 const result = await TeamsAPI.create(newTeam);

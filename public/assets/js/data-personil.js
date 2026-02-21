@@ -12,6 +12,7 @@ let personnelList = [];
 let vendorsList = [];
 let peruntukanList = [];
 let teamsList = [];
+let dataTable = null;
 
 // Role labels for display
 const ROLE_LABELS = {
@@ -142,7 +143,7 @@ async function loadPeruntukan() {
                 peruntukanList.forEach(item => {
                     const option = document.createElement('option');
                     option.value = item.id;
-                    option.textContent = `${item.jenis} - ${item.deskripsi || ''}`;
+                    option.textContent = `${item.deskripsi || ''}`;
                     select.appendChild(option);
                 });
             }
@@ -243,9 +244,8 @@ function renderPersonnelTable() {
 
         const vendorName = item.vendors?.vendor_name || '-';
         const unitCode = item.vendors?.unit_code || '-';
-        const peruntukanJenis = item.peruntukan?.jenis || '-';
-        const peruntukanDesc = item.peruntukan?.deskripsi || '';
-        const peruntukan = peruntukanDesc ? `${peruntukanJenis} - ${peruntukanDesc}` : peruntukanJenis;
+        const peruntukanDesc = item.peruntukan?.deskripsi || '-';
+        const peruntukan = peruntukanDesc;
         const teamInfo = item.teams ? `${item.teams.nomor_polisi || '-'} (${item.teams.category || '-'})` : '-';
 
         row.innerHTML = `
@@ -274,25 +274,63 @@ function renderPersonnelTable() {
         tableBody.appendChild(row);
     });
 
-    // Attach event listeners to buttons
-    attachButtonListeners();
+    // Initialize DataTable
+    initDataTable();
 }
 
-// Attach event listeners to edit/delete buttons
-function attachButtonListeners() {
-    // Edit buttons
-    document.querySelectorAll('.edit-btn').forEach(btn => {
-        btn.addEventListener('click', handleEdit);
-    });
+// Initialize or reinitialize DataTable
+function initDataTable() {
+    const table = document.getElementById('personil-table');
+    if (table && typeof simpleDatatables !== 'undefined') {
+        if (dataTable) {
+            dataTable.destroy();
+            dataTable = null;
+        }
+        dataTable = new simpleDatatables.DataTable(table, {
+            perPage: 10,
+            perPageSelect: [5, 10, 25, 50],
+            labels: {
+                placeholder: "Cari...",
+                perPage: "data per halaman",
+                noRows: "Tidak ada data",
+                info: "Menampilkan {start} sampai {end} dari {rows} data"
+            }
+        });
+    }
+}
 
-    // Delete buttons
-    document.querySelectorAll('.delete-btn').forEach(btn => {
-        btn.addEventListener('click', handleDelete);
+// Attach event delegation for edit/delete buttons (survives simple-datatables re-rendering)
+function attachTableEventDelegation() {
+    const table = document.getElementById('personil-table');
+    if (!table) return;
+    table.addEventListener('click', (event) => {
+        const editBtn = event.target.closest('.edit-btn');
+        if (editBtn) {
+            handleEdit(event);
+            return;
+        }
+        const deleteBtn = event.target.closest('.delete-btn');
+        if (deleteBtn) {
+            handleDelete(event);
+            return;
+        }
     });
 }
 
 // Setup event listeners
 function setupEventListeners() {
+    // Event delegation for table buttons (set up once, survives pagination)
+    attachTableEventDelegation();
+
+    // Refresh button
+    const refreshBtn = document.getElementById('refreshBtn');
+    if (refreshBtn) {
+        refreshBtn.addEventListener('click', () => {
+            if (dataTable) { dataTable.destroy(); dataTable = null; }
+            loadPersonnel();
+        });
+    }
+
     // Add button click - reset form
     const addBtn = document.getElementById('addPersonilBtn');
     if (addBtn) {
@@ -409,9 +447,9 @@ async function handleFormSubmit(event) {
         return;
     }
 
-    // Set default NIK if empty
+    // Set NIK to null if empty (to avoid unique constraint violation)
     if (!personnelData.nik) {
-        personnelData.nik = '-';
+        personnelData.nik = null;
     }
 
     // Remove empty team_id

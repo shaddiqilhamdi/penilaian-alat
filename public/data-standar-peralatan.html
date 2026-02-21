@@ -5,7 +5,7 @@
     <meta charset="utf-8">
     <meta content="width=device-width, initial-scale=1.0" name="viewport">
 
-    <title>Standar Peralatan - Penilaian Alat Kerja</title>
+    <title>Standar Peralatan - PPE Health Index</title>
     <meta content="" name="description">
     <meta content="" name="keywords">
 
@@ -159,26 +159,13 @@
         <div class="d-flex align-items-center justify-content-between">
             <a href="index.html" class="logo d-flex align-items-center">
                 <i class="bi bi-shield-check fs-4 text-primary me-2"></i>
-                <span class="d-none d-lg-block">Penilaian Alat Kerja</span>
+                <span class="d-none d-lg-block">PPE Health Index</span>
             </a>
             <i class="bi bi-list toggle-sidebar-btn"></i>
         </div><!-- End Logo -->
 
-        <div class="search-bar">
-            <form class="search-form d-flex align-items-center" method="POST" action="#">
-                <input type="text" name="query" placeholder="Search" title="Enter search keyword">
-                <button type="submit" title="Search"><i class="bi bi-search"></i></button>
-            </form>
-        </div><!-- End Search Bar -->
-
         <nav class="header-nav ms-auto">
             <ul class="d-flex align-items-center">
-
-                <li class="nav-item d-block d-lg-none">
-                    <a class="nav-link nav-icon search-bar-toggle " href="#">
-                        <i class="bi bi-search"></i>
-                    </a>
-                </li><!-- End Search Icon-->
 
                 <!-- Notification Nav - Hidden -->
                 <li class="nav-item dropdown" style="display: none;">
@@ -444,7 +431,7 @@
 
                             <!-- Data Table -->
                             <div id="tableContainer" style="display: none;">
-                                <table class="table datatable table-sm table-hover" id="standardsTable">
+                                <table class="table table-sm table-hover" id="standardsTable">
                                     <thead>
                                         <tr>
                                             <th width="40">No</th>
@@ -496,17 +483,15 @@
                         </div>
 
                     </div>
-                    <!-- View Mode: Jenis & Peruntukan as text -->
+                    <!-- View Mode: Peruntukan as text -->
                     <div class="row mb-3" id="infoViewMode">
-                        <div class="col-md-4">
-                            <label class="form-label text-muted small">Jenis</label>
-                            <p class="fw-bold mb-0" id="detailJenis">-</p>
-                        </div>
-                        <div class="col-md-4">
+                        <div class="col-md-6">
                             <label class="form-label text-muted small">Peruntukan</label>
                             <p class="fw-bold mb-0" id="detailPeruntukanName">-</p>
+                            <!-- Hidden element for backward compatibility -->
+                            <span id="detailJenis" style="display:none;"></span>
                         </div>
-                        <div class="col-md-4">
+                        <div class="col-md-6">
                             <label class="form-label text-muted small">Total Item</label>
                             <p class="fw-bold mb-0">
                                 <span class="badge bg-success" id="detailApdCount">0 APD</span>
@@ -514,22 +499,17 @@
                             </p>
                         </div>
                     </div>
-                    <!-- Edit Mode: Jenis & Peruntukan as dropdowns -->
+                    <!-- Edit Mode: Peruntukan as dropdown -->
                     <div class="row mb-3" id="infoEditMode" style="display: none;">
-                        <div class="col-md-4">
-                            <label class="form-label text-muted small">Jenis</label>
-                            <select class="form-select form-select-sm" id="editJenisSelect"
-                                onchange="filterPeruntukanByJenis()">
-                                <!-- Options populated from peruntukan table -->
-                            </select>
-                        </div>
-                        <div class="col-md-4">
+                        <div class="col-md-6">
                             <label class="form-label text-muted small">Peruntukan</label>
                             <select class="form-select form-select-sm" id="editPeruntukanSelect">
-                                <!-- Options populated based on selected Jenis -->
+                                <!-- Options populated from peruntukan table -->
                             </select>
+                            <!-- Hidden for backward compatibility -->
+                            <input type="hidden" id="editJenisSelect" value="">
                         </div>
-                        <div class="col-md-4">
+                        <div class="col-md-6">
                             <label class="form-label text-muted small">Total Item</label>
                             <p class="fw-bold mb-0">
                                 <span class="badge bg-success" id="editApdCount">0 APD</span>
@@ -638,20 +618,14 @@
                                     <option value="">Pilih Vendor</option>
                                 </select>
                             </div>
-                            <div class="col-md-3">
-                                <label class="form-label text-muted small">Jenis <span
-                                        class="text-danger">*</span></label>
-                                <select class="form-select form-select-sm" id="addJenisSelect"
-                                    onchange="filterAddPeruntukanByJenis()">
-                                    <!-- Options populated from peruntukan table -->
-                                </select>
-                            </div>
-                            <div class="col-md-3">
+                            <div class="col-md-6">
                                 <label class="form-label text-muted small">Peruntukan <span
                                         class="text-danger">*</span></label>
                                 <select class="form-select form-select-sm" id="peruntukanSelect" required>
                                     <option value="">Pilih Peruntukan</option>
                                 </select>
+                                <!-- Hidden for backward compatibility -->
+                                <input type="hidden" id="addJenisSelect" value="">
                             </div>
                         </div>
 
@@ -703,6 +677,7 @@
 
     <!-- Vendor JS Files -->
     <script src="assets/vendor/bootstrap/js/bootstrap.bundle.min.js"></script>
+    <script src="assets/vendor/simple-datatables/simple-datatables.js"></script>
 
     <!-- Supabase & SweetAlert2 -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>

@@ -10,6 +10,7 @@ let currentProfile = null;
 let teamsList = [];
 let vendorsList = [];
 let peruntukanList = [];
+let dataTable = null;
 
 // Role labels for display
 const ROLE_LABELS = {
@@ -136,7 +137,7 @@ async function loadPeruntukan() {
                 peruntukanList.forEach(item => {
                     const option = document.createElement('option');
                     option.value = item.id;
-                    option.textContent = `${item.jenis} - ${item.deskripsi || ''}`;
+                    option.textContent = item.deskripsi || '';
                     select.appendChild(option);
                 });
             }
@@ -210,9 +211,9 @@ function renderTeamsTable() {
 
         const vendorName = item.vendors?.vendor_name || '-';
         const unitCode = item.vendors?.unit_code || '-';
-        const peruntukanJenis = item.peruntukan?.jenis || '-';
-        const peruntukanDesc = item.peruntukan?.deskripsi || '';
-        const peruntukan = peruntukanDesc ? `${peruntukanJenis} - ${peruntukanDesc}` : peruntukanJenis;
+        const peruntukan = item.peruntukan?.deskripsi || '-';
+
+        const description = item.description || '';
 
         row.innerHTML = `
             <td>${index + 1}</td>
@@ -220,7 +221,7 @@ function renderTeamsTable() {
             <td>${unitCode}</td>
             <td>${peruntukan}</td>
             <td>${item.category || '-'}</td>
-            <td>${item.nomor_polisi || '-'}</td>
+            <td>${item.nomor_polisi || '-'}${description ? '<br><small class="text-muted">' + description + '</small>' : ''}</td>
             <td>
                 <button class="btn btn-warning btn-sm edit-btn" 
                     data-id="${item.id}"
@@ -228,6 +229,7 @@ function renderTeamsTable() {
                     data-peruntukan-id="${item.peruntukan_id || ''}"
                     data-category="${item.category || ''}"
                     data-nomor-polisi="${item.nomor_polisi || ''}"
+                    data-description="${description}"
                     title="Edit">
                     <i class="bi bi-pencil"></i>
                 </button>
@@ -240,25 +242,63 @@ function renderTeamsTable() {
         tableBody.appendChild(row);
     });
 
-    // Attach event listeners to buttons
-    attachButtonListeners();
+    // Initialize DataTable
+    initDataTable();
 }
 
-// Attach event listeners to edit/delete buttons
-function attachButtonListeners() {
-    // Edit buttons
-    document.querySelectorAll('.edit-btn').forEach(btn => {
-        btn.addEventListener('click', handleEdit);
-    });
+// Initialize or reinitialize DataTable
+function initDataTable() {
+    const table = document.getElementById('kendaraan-table');
+    if (table && typeof simpleDatatables !== 'undefined') {
+        if (dataTable) {
+            dataTable.destroy();
+            dataTable = null;
+        }
+        dataTable = new simpleDatatables.DataTable(table, {
+            perPage: 10,
+            perPageSelect: [5, 10, 25, 50],
+            labels: {
+                placeholder: "Cari...",
+                perPage: "data per halaman",
+                noRows: "Tidak ada data",
+                info: "Menampilkan {start} sampai {end} dari {rows} data"
+            }
+        });
+    }
+}
 
-    // Delete buttons
-    document.querySelectorAll('.delete-btn').forEach(btn => {
-        btn.addEventListener('click', handleDelete);
+// Attach event delegation for edit/delete buttons (survives simple-datatables re-rendering)
+function attachTableEventDelegation() {
+    const table = document.getElementById('kendaraan-table');
+    if (!table) return;
+    table.addEventListener('click', (event) => {
+        const editBtn = event.target.closest('.edit-btn');
+        if (editBtn) {
+            handleEdit(event);
+            return;
+        }
+        const deleteBtn = event.target.closest('.delete-btn');
+        if (deleteBtn) {
+            handleDelete(event);
+            return;
+        }
     });
 }
 
 // Setup event listeners
 function setupEventListeners() {
+    // Event delegation for table buttons (set up once, survives pagination)
+    attachTableEventDelegation();
+
+    // Refresh button
+    const refreshBtn = document.getElementById('refreshBtn');
+    if (refreshBtn) {
+        refreshBtn.addEventListener('click', () => {
+            if (dataTable) { dataTable.destroy(); dataTable = null; }
+            loadTeams();
+        });
+    }
+
     // Add button click - reset form
     const addBtn = document.getElementById('addKendaraanBtn');
     if (addBtn) {
@@ -279,6 +319,28 @@ function setupEventListeners() {
     const modal = document.getElementById('kendaraanModal');
     if (modal) {
         modal.addEventListener('hidden.bs.modal', resetForm);
+    }
+
+    // Nomor polisi input - uppercase and real-time validation
+    const nopolInput = document.getElementById('nopol');
+    if (nopolInput) {
+        // Auto uppercase as user types
+        nopolInput.addEventListener('input', (e) => {
+            e.target.value = e.target.value.toUpperCase();
+            // Real-time validation
+            if (e.target.value && !validateNomorPolisi(e.target.value)) {
+                e.target.classList.add('is-invalid');
+            } else {
+                e.target.classList.remove('is-invalid');
+            }
+        });
+
+        // Format on blur
+        nopolInput.addEventListener('blur', (e) => {
+            if (e.target.value && validateNomorPolisi(e.target.value)) {
+                e.target.value = formatNomorPolisi(e.target.value);
+            }
+        });
     }
 
     // Logout button
@@ -325,6 +387,7 @@ function handleEdit(event) {
     const peruntukanId = btn.dataset.peruntukanId;
     const category = btn.dataset.category;
     const nomorPolisi = btn.dataset.nomorPolisi;
+    const description = btn.dataset.description;
 
     // Set form values
     const idInput = document.getElementById('kendaraanId');
@@ -332,6 +395,7 @@ function handleEdit(event) {
     const peruntukanSelect = document.getElementById('peruntukanKendaraanSelect');
     const categorySelect = document.getElementById('jenisKendaraan');
     const nopolInput = document.getElementById('nopol');
+    const descriptionInput = document.getElementById('descriptionKendaraan');
     const modalLabel = document.getElementById('kendaraanModalLabel');
 
     if (idInput) idInput.value = id;
@@ -339,11 +403,36 @@ function handleEdit(event) {
     if (peruntukanSelect) peruntukanSelect.value = peruntukanId;
     if (categorySelect) categorySelect.value = category;
     if (nopolInput) nopolInput.value = nomorPolisi;
+    if (descriptionInput) descriptionInput.value = description || '';
     if (modalLabel) modalLabel.textContent = 'Edit Data Kendaraan';
 
     // Show modal
     const modal = new bootstrap.Modal(document.getElementById('kendaraanModal'));
     modal.show();
+}
+
+// Validate nomor polisi format
+// Format: B 1234 XYZ or BB 1234 XYZ (1-2 letters, 1-4 digits, 1-3 letters)
+function validateNomorPolisi(nopol) {
+    if (!nopol) return false;
+    // Remove extra spaces and convert to uppercase
+    const cleaned = nopol.toUpperCase().replace(/\s+/g, ' ').trim();
+    // Pattern: 1-2 letters, space optional, 1-4 digits, space optional, 1-3 letters
+    const pattern = /^[A-Z]{1,2}\s?\d{1,4}\s?[A-Z]{1,3}$/;
+    return pattern.test(cleaned);
+}
+
+// Format nomor polisi to standard format
+function formatNomorPolisi(nopol) {
+    if (!nopol) return '';
+    // Remove all spaces and convert to uppercase
+    const cleaned = nopol.toUpperCase().replace(/\s+/g, '');
+    // Extract parts: prefix (1-2 letters), number (1-4 digits), suffix (1-3 letters)
+    const match = cleaned.match(/^([A-Z]{1,2})(\d{1,4})([A-Z]{1,3})$/);
+    if (match) {
+        return `${match[1]} ${match[2]} ${match[3]}`;
+    }
+    return cleaned;
 }
 
 // Handle form submit
@@ -355,18 +444,30 @@ async function handleFormSubmit(event) {
     const peruntukanSelect = document.getElementById('peruntukanKendaraanSelect');
     const categorySelect = document.getElementById('jenisKendaraan');
     const nopolInput = document.getElementById('nopol');
+    const descriptionInput = document.getElementById('descriptionKendaraan');
 
     const teamId = idInput?.value;
+    const rawNopol = nopolInput?.value?.trim();
+
+    // Validate nomor polisi format
+    if (!validateNomorPolisi(rawNopol)) {
+        nopolInput?.classList.add('is-invalid');
+        Swal.fire('Validasi Gagal!', 'Format nomor polisi tidak valid. Gunakan format: B 1234 XYZ atau BB 1234 XYZ', 'warning');
+        return;
+    }
+    nopolInput?.classList.remove('is-invalid');
+
     const teamData = {
         vendor_id: vendorSelect?.value,
         peruntukan_id: peruntukanSelect?.value,
         category: categorySelect?.value,
-        nomor_polisi: nopolInput?.value?.trim()
+        nomor_polisi: formatNomorPolisi(rawNopol),
+        description: descriptionInput?.value?.trim() || null
     };
 
     // Validation
     if (!teamData.vendor_id || !teamData.peruntukan_id || !teamData.category || !teamData.nomor_polisi) {
-        Swal.fire('Validasi Gagal!', 'Semua field harus diisi.', 'warning');
+        Swal.fire('Validasi Gagal!', 'Semua field wajib harus diisi.', 'warning');
         return;
     }
 

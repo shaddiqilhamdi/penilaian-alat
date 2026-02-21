@@ -20,7 +20,7 @@ if (typeof window.PersonnelAPI === 'undefined') {
                         *,
                         vendors(vendor_name, unit_code),
                         teams(nomor_polisi, category),
-                        peruntukan(jenis, deskripsi)
+                        peruntukan(deskripsi)
                     `)
                     .order('created_at', { ascending: false });
 
@@ -49,7 +49,7 @@ if (typeof window.PersonnelAPI === 'undefined') {
                         *,
                         vendors(vendor_name, unit_code),
                         teams(nomor_polisi, category),
-                        peruntukan(jenis, deskripsi)
+                        peruntukan(deskripsi)
                     `)
                     .eq('id', personnelId)
                     .single();
@@ -77,7 +77,7 @@ if (typeof window.PersonnelAPI === 'undefined') {
                     .select(`
                         *,
                         teams(nomor_polisi, category),
-                        peruntukan(jenis, deskripsi)
+                        peruntukan(deskripsi)
                     `)
                     .eq('vendor_id', vendorId)
                     .order('nama_personil', { ascending: true });
