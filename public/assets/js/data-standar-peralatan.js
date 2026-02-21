@@ -83,6 +83,7 @@ function formatRole(role) {
 function applyRoleBasedControl() {
     const role = currentProfile?.role;
     const addBtn = document.getElementById('addStandardBtn');
+    const copyBtn = document.getElementById('copyStandardBtn');
     const editBtn = document.getElementById('btnEditFromDetail');
     const deleteBtn = document.getElementById('btnDeleteFromDetail');
 
@@ -91,6 +92,11 @@ function applyRoleBasedControl() {
     // up3_admin: CRUD for vendors in their unit
     // up3_user: view only
     // vendor_k3: view only
+
+    // Copy standard: hanya uid_admin
+    if (role !== 'uid_admin') {
+        if (copyBtn) copyBtn.style.display = 'none';
+    }
 
     if (role === 'up3_user' || role === 'vendor_k3') {
         if (addBtn) addBtn.style.display = 'none';
@@ -1049,6 +1055,9 @@ function setupEventListeners() {
         }
     });
 
+    // Copy Standard Modal events
+    setupCopyStandardEvents();
+
     // Logout button
     document.getElementById('logoutBtn')?.addEventListener('click', async (e) => {
         e.preventDefault();
@@ -1067,4 +1076,276 @@ function setupEventListeners() {
             window.location.href = 'pages-login.html';
         }
     });
+}
+
+// ============================================================================
+// COPY STANDARD FEATURE - Salin standar dari vendor lain
+// ============================================================================
+
+let copySourceData = []; // Grouped source data for copy
+
+function setupCopyStandardEvents() {
+    // Reset copy modal when hidden
+    document.getElementById('copyStandardModal')?.addEventListener('hidden.bs.modal', resetCopyModal);
+
+    // Populate source vendor dropdown when modal shown
+    document.getElementById('copyStandardModal')?.addEventListener('show.bs.modal', function () {
+        populateCopySourceVendor();
+    });
+
+    // Preview button
+    document.getElementById('btnPreviewSource')?.addEventListener('click', previewSourceVendor);
+
+    // Select all source checkbox
+    document.getElementById('copySelectAll')?.addEventListener('change', function () {
+        const checkboxes = document.querySelectorAll('#copyPreviewList input[type="checkbox"]');
+        checkboxes.forEach(cb => cb.checked = this.checked);
+    });
+
+    // Select all target checkbox
+    document.getElementById('copyTargetSelectAll')?.addEventListener('change', function () {
+        const checkboxes = document.querySelectorAll('#copyTargetList input[type="checkbox"]');
+        checkboxes.forEach(cb => cb.checked = this.checked);
+    });
+
+    // Execute copy button
+    document.getElementById('btnExecuteCopy')?.addEventListener('click', executeCopyStandard);
+}
+
+function populateCopySourceVendor() {
+    const select = document.getElementById('copySourceVendor');
+    if (!select) return;
+
+    select.innerHTML = '<option value="">-- Pilih Vendor Sumber --</option>';
+    vendorsList.forEach(vendor => {
+        const option = document.createElement('option');
+        option.value = vendor.id;
+        option.textContent = `[${vendor.unit_code || '-'}] ${vendor.vendor_name}`;
+        select.appendChild(option);
+    });
+}
+
+async function previewSourceVendor() {
+    const sourceVendorId = document.getElementById('copySourceVendor').value;
+    if (!sourceVendorId) {
+        showAlert('Pilih vendor sumber terlebih dahulu', 'warning');
+        return;
+    }
+
+    const btn = document.getElementById('btnPreviewSource');
+    btn.disabled = true;
+    btn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span>Memuat...';
+
+    try {
+        // Load standards for source vendor
+        const data = await EquipmentStandardsAPI.getByVendor(sourceVendorId);
+        if (!data || data.length === 0) {
+            showAlert('Vendor ini belum memiliki data standar peralatan', 'warning');
+            return;
+        }
+
+        // Group by peruntukan
+        const grouped = {};
+        data.forEach(item => {
+            const pid = item.peruntukan_id;
+            if (!grouped[pid]) {
+                grouped[pid] = {
+                    peruntukan: item.peruntukan,
+                    peruntukan_id: pid,
+                    items: []
+                };
+            }
+            grouped[pid].items.push(item);
+        });
+
+        copySourceData = Object.values(grouped);
+        const sourceVendor = vendorsList.find(v => v.id === sourceVendorId);
+
+        // Update info
+        document.getElementById('copySourceInfo').textContent = sourceVendor?.vendor_name || '-';
+        document.getElementById('copySourceTotal').textContent = copySourceData.length;
+
+        // Build preview table
+        const previewList = document.getElementById('copyPreviewList');
+        previewList.innerHTML = copySourceData.map((group, idx) => {
+            const apdCount = group.items.filter(i => i.equipment_master?.kategori === 'APD').length;
+            const peralatanCount = group.items.filter(i => i.equipment_master?.kategori === 'Peralatan').length;
+            return `
+                <tr>
+                    <td class="text-center">
+                        <input type="checkbox" class="copy-peruntukan-cb" data-index="${idx}" checked>
+                    </td>
+                    <td>${group.peruntukan?.deskripsi || '-'}</td>
+                    <td class="text-center">${group.items.length}</td>
+                    <td class="text-center"><span class="badge bg-success">${apdCount}</span></td>
+                    <td class="text-center"><span class="badge bg-info">${peralatanCount}</span></td>
+                </tr>
+            `;
+        }).join('');
+
+        // Show preview and step 2
+        document.getElementById('copyPreviewContainer').style.display = 'block';
+        document.getElementById('copySeparator').style.display = 'block';
+        document.getElementById('copyStep2').style.display = 'block';
+        document.getElementById('btnExecuteCopy').style.display = 'inline-block';
+
+        // Populate target vendor list (exclude source vendor)
+        populateCopyTargetVendors(sourceVendorId);
+
+    } catch (error) {
+        console.error('Error previewing source vendor:', error);
+        showAlert('Gagal memuat data vendor sumber', 'error');
+    } finally {
+        btn.disabled = false;
+        btn.innerHTML = '<i class="bi bi-eye me-1"></i>Preview Standar';
+    }
+}
+
+function populateCopyTargetVendors(sourceVendorId) {
+    const targetList = document.getElementById('copyTargetList');
+    if (!targetList) return;
+
+    // Include all vendors (termasuk vendor sumber, untuk salin peruntukan berbeda)
+    targetList.innerHTML = vendorsList.map(vendor => {
+        const isSame = vendor.id === sourceVendorId;
+        return `
+        <tr>
+            <td width="40">
+                <input type="checkbox" class="copy-target-cb" value="${vendor.id}" data-unit-code="${vendor.unit_code || ''}">
+            </td>
+            <td>
+                <span class="badge bg-secondary me-1">${vendor.unit_code || '-'}</span>
+                ${vendor.vendor_name}
+                ${isSame ? '<span class="badge bg-warning text-dark ms-1">Sumber</span>' : ''}
+            </td>
+        </tr>
+    `;
+    }).join('');
+}
+
+async function executeCopyStandard() {
+    // Get selected source peruntukan
+    const selectedPeruntukan = [];
+    document.querySelectorAll('#copyPreviewList input.copy-peruntukan-cb:checked').forEach(cb => {
+        const idx = parseInt(cb.dataset.index);
+        selectedPeruntukan.push(copySourceData[idx]);
+    });
+
+    if (selectedPeruntukan.length === 0) {
+        showAlert('Pilih minimal 1 peruntukan untuk disalin', 'warning');
+        return;
+    }
+
+    // Get selected target vendors
+    const targetVendorIds = [];
+    const targetVendorUnits = {};
+    document.querySelectorAll('#copyTargetList input.copy-target-cb:checked').forEach(cb => {
+        targetVendorIds.push(cb.value);
+        targetVendorUnits[cb.value] = cb.dataset.unitCode || '';
+    });
+
+    if (targetVendorIds.length === 0) {
+        showAlert('Pilih minimal 1 vendor tujuan', 'warning');
+        return;
+    }
+
+    // Confirm
+    const totalOps = selectedPeruntukan.length * targetVendorIds.length;
+    const confirm = await Swal.fire({
+        title: 'Konfirmasi Salin Standar',
+        html: `Salin <strong>${selectedPeruntukan.length}</strong> peruntukan ke <strong>${targetVendorIds.length}</strong> vendor?<br>
+               <small class="text-muted">(Total ${totalOps} operasi, peruntukan yang sudah ada akan dilewati)</small>`,
+        icon: 'question',
+        showCancelButton: true,
+        confirmButtonColor: '#198754',
+        cancelButtonColor: '#6c757d',
+        confirmButtonText: 'Ya, Salin',
+        cancelButtonText: 'Batal'
+    });
+
+    if (!confirm.isConfirmed) return;
+
+    const btn = document.getElementById('btnExecuteCopy');
+    btn.disabled = true;
+    btn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span>Menyalin...';
+
+    let successCount = 0;
+    let skippedCount = 0;
+    let errorCount = 0;
+
+    try {
+        for (const targetVendorId of targetVendorIds) {
+            // Get existing standards for this target vendor to check duplicates
+            const existingData = await EquipmentStandardsAPI.getByVendor(targetVendorId);
+            const existingPeruntukanIds = new Set((existingData || []).map(d => d.peruntukan_id));
+            const targetUnitCode = targetVendorUnits[targetVendorId] ||
+                vendorsList.find(v => v.id === targetVendorId)?.unit_code || '';
+
+            for (const group of selectedPeruntukan) {
+                // Skip if this peruntukan already exists for target vendor
+                if (existingPeruntukanIds.has(group.peruntukan_id)) {
+                    skippedCount++;
+                    continue;
+                }
+
+                // Build batch insert data
+                const batchData = group.items.map(item => ({
+                    vendor_id: targetVendorId,
+                    unit_code: targetUnitCode,
+                    peruntukan_id: group.peruntukan_id,
+                    equipment_id: item.equipment_id,
+                    required_qty: item.required_qty || 1,
+                    contract_qty: item.contract_qty || null
+                }));
+
+                const result = await EquipmentStandardsAPI.createBatch(batchData);
+                if (result.success) {
+                    successCount++;
+                } else {
+                    errorCount++;
+                    console.error(`Failed to copy peruntukan ${group.peruntukan_id} to vendor ${targetVendorId}:`, result.error);
+                }
+            }
+        }
+
+        // Show results
+        let message = `<strong>${successCount}</strong> peruntukan berhasil disalin`;
+        if (skippedCount > 0) message += `<br><strong>${skippedCount}</strong> dilewati (sudah ada)`;
+        if (errorCount > 0) message += `<br><strong>${errorCount}</strong> gagal`;
+
+        await Swal.fire({
+            title: 'Selesai',
+            html: message,
+            icon: errorCount > 0 ? 'warning' : 'success'
+        });
+
+        // Close modal
+        const modal = bootstrap.Modal.getInstance(document.getElementById('copyStandardModal'));
+        if (modal) modal.hide();
+
+        // Reload current view
+        if (selectedVendorId) {
+            await loadStandardsByVendor(selectedVendorId);
+        }
+
+    } catch (error) {
+        console.error('Error executing copy:', error);
+        showAlert('Terjadi kesalahan: ' + error.message, 'error');
+    } finally {
+        btn.disabled = false;
+        btn.innerHTML = '<i class="bi bi-clipboard-check me-1"></i>Salin Standar';
+    }
+}
+
+function resetCopyModal() {
+    copySourceData = [];
+    document.getElementById('copySourceVendor').value = '';
+    document.getElementById('copyPreviewContainer').style.display = 'none';
+    document.getElementById('copyPreviewList').innerHTML = '';
+    document.getElementById('copySeparator').style.display = 'none';
+    document.getElementById('copyStep2').style.display = 'none';
+    document.getElementById('copyTargetList').innerHTML = '';
+    document.getElementById('btnExecuteCopy').style.display = 'none';
+    document.getElementById('copyTargetSelectAll').checked = false;
+    document.getElementById('copySelectAll').checked = true;
 }

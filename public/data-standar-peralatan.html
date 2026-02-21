@@ -410,6 +410,12 @@
                                                 title="Tambah Peruntukan" style="padding: 0.375rem 0.75rem;">
                                                 <i class="bi bi-plus-circle"></i>
                                             </button>
+                                            <button type="button" class="btn btn-success" id="copyStandardBtn"
+                                                data-bs-toggle="modal" data-bs-target="#copyStandardModal"
+                                                title="Salin Standar dari Vendor Lain"
+                                                style="padding: 0.375rem 0.75rem;">
+                                                <i class="bi bi-clipboard-plus"></i>
+                                            </button>
                                         </div>
                                     </div>
                                 </div>
@@ -662,6 +668,101 @@
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Batal</button>
                     <button type="button" class="btn btn-success" id="btnSaveStandard">
                         <i class="bi bi-check-lg"></i> Simpan
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Copy Standard Modal -->
+    <div class="modal fade" id="copyStandardModal" tabindex="-1" aria-labelledby="copyStandardModalLabel"
+        aria-hidden="true">
+        <div class="modal-dialog modal-xl modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header bg-success text-white">
+                    <h5 class="modal-title" id="copyStandardModalLabel">
+                        <i class="bi bi-clipboard-plus me-2"></i>Salin Standar Peruntukan
+                    </h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"
+                        aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <!-- Step 1: Pilih Vendor Sumber -->
+                    <div id="copyStep1">
+                        <h6 class="mb-3"><span class="badge bg-success me-2">1</span>Pilih Vendor Sumber (yang sudah ada
+                            standarnya)</h6>
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <select class="form-select" id="copySourceVendor">
+                                    <option value="">-- Pilih Vendor Sumber --</option>
+                                </select>
+                            </div>
+                            <div class="col-md-6">
+                                <button type="button" class="btn btn-primary" id="btnPreviewSource">
+                                    <i class="bi bi-eye me-1"></i>Preview Standar
+                                </button>
+                            </div>
+                        </div>
+                        <!-- Preview Table -->
+                        <div id="copyPreviewContainer" style="display: none;">
+                            <div class="alert alert-info py-2">
+                                <i class="bi bi-info-circle me-1"></i>
+                                <strong id="copySourceInfo">-</strong> - Total: <span id="copySourceTotal">0</span>
+                                peruntukan
+                            </div>
+                            <div class="table-responsive" style="max-height: 250px; overflow-y: auto;">
+                                <table class="table table-sm table-bordered table-hover">
+                                    <thead class="table-light sticky-top">
+                                        <tr>
+                                            <th width="40">
+                                                <input type="checkbox" id="copySelectAll" checked>
+                                            </th>
+                                            <th>Peruntukan</th>
+                                            <th class="text-center" width="80">Item</th>
+                                            <th class="text-center" width="120">APD</th>
+                                            <th class="text-center" width="120">Peralatan</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="copyPreviewList">
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+
+                    <hr id="copySeparator" style="display: none;">
+
+                    <!-- Step 2: Pilih Vendor Tujuan -->
+                    <div id="copyStep2" style="display: none;">
+                        <h6 class="mb-3"><span class="badge bg-success me-2">2</span>Pilih Vendor Tujuan (bisa pilih
+                            banyak)</h6>
+                        <div class="mb-2">
+                            <div class="form-check">
+                                <input type="checkbox" class="form-check-input" id="copyTargetSelectAll">
+                                <label class="form-check-label fw-bold" for="copyTargetSelectAll">Pilih Semua
+                                    Vendor</label>
+                            </div>
+                        </div>
+                        <div class="table-responsive" style="max-height: 200px; overflow-y: auto;">
+                            <table class="table table-sm table-hover">
+                                <tbody id="copyTargetList">
+                                </tbody>
+                            </table>
+                        </div>
+                        <div class="alert alert-warning py-2 mt-2">
+                            <i class="bi bi-exclamation-triangle me-1"></i>
+                            <small>
+                                <strong>Mode penggabungan:</strong> Peruntukan yang sudah ada di vendor tujuan akan
+                                <strong>dilewati</strong>.
+                                Hanya peruntukan yang belum ada yang akan disalin.
+                            </small>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Batal</button>
+                    <button type="button" class="btn btn-success" id="btnExecuteCopy" style="display: none;">
+                        <i class="bi bi-clipboard-check me-1"></i>Salin Standar
                     </button>
                 </div>
             </div>

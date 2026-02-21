@@ -88,9 +88,10 @@ async function loadUIDUnitRecapTable() {
 
         if (error) throw error;
 
-        // Render rows - data sudah siap pakai dari database
+        // Render rows - data sudah siap pakai dari database, urutkan berdasarkan avg_score descending
         const rows = unitRecap
             ?.filter(r => r.total_equipment > 0)
+            .sort((a, b) => (b.avg_score || 0) - (a.avg_score || 0))
             .map(r => {
                 const avgScore = r.avg_score || 0;
                 const avgPersonal = r.avg_personal || 0;
@@ -99,7 +100,7 @@ async function loadUIDUnitRecapTable() {
                 const scoreClass = avgScore >= 1.5 ? 'success' : avgScore > 0 ? 'warning' : 'secondary';
 
                 return `<tr style="cursor: pointer;" onclick="showUnitReportModal('${r.unit_code}', '${r.unit_name}')">
-                    <td><strong>${r.unit_code}</strong><br><small class="text-muted">${r.unit_name}</small></td>
+                    <td><strong>${r.unit_name}</strong></td>
                     <td class="text-center">${r.total_equipment}</td>
                     <td class="text-center">${r.total_teams || '-'}</td>
                     <td class="text-center">${r.total_personnel || '-'}</td>
