@@ -24,7 +24,6 @@ if (typeof window.EquipmentAPI === 'undefined') {
                     return { success: false, error: error.message, data: null };
                 }
 
-                console.log('✅ Equipment loaded:', data.length);
                 return { success: true, data, error: null };
             } catch (error) {
                 console.error('❌ Error fetching equipment:', error);
@@ -50,7 +49,6 @@ if (typeof window.EquipmentAPI === 'undefined') {
                     return { success: false, error: error.message, data: null };
                 }
 
-                console.log(`✅ Equipment by kategori "${kategori}" loaded:`, data.length);
                 return { success: true, data, error: null };
             } catch (error) {
                 console.error('❌ Error fetching equipment:', error);
@@ -122,7 +120,6 @@ if (typeof window.EquipmentAPI === 'undefined') {
                     return { success: false, error: error.message };
                 }
 
-                console.log('✅ Equipment created:', data);
                 return { success: true, data };
             } catch (error) {
                 console.error('❌ Error creating equipment:', error);
@@ -148,7 +145,6 @@ if (typeof window.EquipmentAPI === 'undefined') {
                     return { success: false, error: error.message };
                 }
 
-                console.log('✅ Equipment updated');
                 return { success: true, data };
             } catch (error) {
                 console.error('❌ Error updating equipment:', error);
@@ -172,7 +168,6 @@ if (typeof window.EquipmentAPI === 'undefined') {
                     return { success: false, error: error.message };
                 }
 
-                console.log('✅ Equipment deleted');
                 return { success: true };
             } catch (error) {
                 console.error('❌ Error deleting equipment:', error);

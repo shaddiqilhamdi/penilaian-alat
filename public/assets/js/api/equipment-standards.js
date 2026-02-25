@@ -30,7 +30,6 @@ if (typeof window.EquipmentStandardsAPI === 'undefined') {
                     return null;
                 }
 
-                console.log('✅ Equipment standards loaded:', data.length);
                 return data;
             } catch (error) {
                 console.error('❌ Error fetching equipment standards:', error);
@@ -141,7 +140,6 @@ if (typeof window.EquipmentStandardsAPI === 'undefined') {
                     return { success: false, error: error.message };
                 }
 
-                console.log('✅ Equipment standard created:', data.id);
                 return { success: true, data };
             } catch (error) {
                 console.error('❌ Error creating equipment standard:', error);
@@ -165,7 +163,6 @@ if (typeof window.EquipmentStandardsAPI === 'undefined') {
                     return { success: false, error: error.message };
                 }
 
-                console.log('✅ Equipment standards batch created:', data.length);
                 return { success: true, data };
             } catch (error) {
                 console.error('❌ Error creating equipment standards batch:', error);
@@ -191,7 +188,6 @@ if (typeof window.EquipmentStandardsAPI === 'undefined') {
                     return { success: false, error: error.message };
                 }
 
-                console.log('✅ Equipment standard updated:', standardId);
                 return { success: true, data };
             } catch (error) {
                 console.error('❌ Error updating equipment standard:', error);
@@ -215,7 +211,6 @@ if (typeof window.EquipmentStandardsAPI === 'undefined') {
                     return { success: false, error: error.message };
                 }
 
-                console.log('✅ Equipment standard deleted:', standardId);
                 return { success: true };
             } catch (error) {
                 console.error('❌ Error deleting equipment standard:', error);
@@ -239,7 +234,6 @@ if (typeof window.EquipmentStandardsAPI === 'undefined') {
                     return { success: false, error: error.message };
                 }
 
-                console.log('✅ Equipment standards deleted for vendor:', vendorId);
                 return { success: true };
             } catch (error) {
                 console.error('❌ Error deleting equipment standards:', error);
@@ -277,7 +271,6 @@ if (typeof window.EquipmentStandardsAPI === 'undefined') {
                 });
 
                 const result = Array.from(uniquePeruntukan.values());
-                console.log(`✅ Distinct peruntukan for vendor ${vendorId}:`, result.length);
                 return { success: true, data: result };
             } catch (error) {
                 console.error('❌ Error fetching distinct peruntukan:', error);
@@ -316,7 +309,6 @@ if (typeof window.EquipmentStandardsAPI === 'undefined') {
                 });
 
                 const result = Array.from(uniquePeruntukan.values());
-                console.log(`✅ Distinct peruntukan for vendor ${vendorId} with jenis ${jenis}:`, result.length);
                 return { success: true, data: result };
             } catch (error) {
                 console.error('❌ Error fetching distinct peruntukan:', error);
@@ -353,7 +345,6 @@ if (typeof window.EquipmentStandardsAPI === 'undefined') {
                 });
 
                 const result = Array.from(uniqueJenis).map(jenis => ({ jenis }));
-                console.log(`✅ Distinct jenis for vendor ${vendorId}:`, result.length);
                 return { success: true, data: result };
             } catch (error) {
                 console.error('❌ Error fetching distinct jenis:', error);

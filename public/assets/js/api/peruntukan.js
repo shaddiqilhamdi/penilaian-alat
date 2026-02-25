@@ -24,7 +24,6 @@ if (typeof window.PeruntukanAPI === 'undefined') {
                     return { success: false, error: error.message, data: null };
                 }
 
-                console.log('✅ Peruntukan loaded:', data.length);
                 return { success: true, data, error: null };
             } catch (error) {
                 console.error('❌ Error fetching peruntukan:', error);
@@ -75,7 +74,6 @@ if (typeof window.PeruntukanAPI === 'undefined') {
                     return { success: false, error: error.message };
                 }
 
-                console.log('✅ Peruntukan created:', data.id);
                 return { success: true, data };
             } catch (error) {
                 console.error('❌ Error creating peruntukan:', error);
@@ -101,7 +99,6 @@ if (typeof window.PeruntukanAPI === 'undefined') {
                     return { success: false, error: error.message };
                 }
 
-                console.log('✅ Peruntukan updated:', peruntukanId);
                 return { success: true, data };
             } catch (error) {
                 console.error('❌ Error updating peruntukan:', error);
@@ -125,7 +122,6 @@ if (typeof window.PeruntukanAPI === 'undefined') {
                     return { success: false, error: error.message };
                 }
 
-                console.log('✅ Peruntukan deleted:', peruntukanId);
                 return { success: true };
             } catch (error) {
                 console.error('❌ Error deleting peruntukan:', error);

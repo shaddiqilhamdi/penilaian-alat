@@ -13,6 +13,7 @@ async function loadUIDDashboard() {
         await loadUIDDailyEntryChart();
         await loadUIDUnitRecapTable();
         await initEquipmentIssuesDateFilter();
+        await initMonitorEntryTable();
     } catch (error) {
         // Dashboard error
     }
@@ -941,4 +942,133 @@ async function showUnitReportModal(unitCode, unitName) {
  */
 function printUnitReport() {
     window.print();
+}
+
+// =============================================
+// Monitoring Realisasi Entri Harian
+// =============================================
+async function initMonitorEntryTable() {
+    const dateInput = document.getElementById('monitorEntryDate');
+    const prevBtn = document.getElementById('monitorEntryPrev');
+    const nextBtn = document.getElementById('monitorEntryNext');
+    if (!dateInput) return;
+
+    // Default: today
+    const now = new Date();
+    dateInput.value = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
+
+    // Load initial
+    await loadMonitorEntryTable(dateInput.value);
+
+    // Date picker change
+    dateInput.addEventListener('change', function () {
+        loadMonitorEntryTable(this.value);
+    });
+
+    // Prev / Next buttons
+    if (prevBtn) {
+        prevBtn.addEventListener('click', () => {
+            const d = new Date(dateInput.value);
+            d.setDate(d.getDate() - 1);
+            dateInput.value = d.toISOString().slice(0, 10);
+            loadMonitorEntryTable(dateInput.value);
+        });
+    }
+    if (nextBtn) {
+        nextBtn.addEventListener('click', () => {
+            const d = new Date(dateInput.value);
+            d.setDate(d.getDate() + 1);
+            dateInput.value = d.toISOString().slice(0, 10);
+            loadMonitorEntryTable(dateInput.value);
+        });
+    }
+}
+
+async function loadMonitorEntryTable(dateStr) {
+    const tbody = document.getElementById('monitorEntryBody');
+    const tfoot = document.getElementById('monitorEntryFoot');
+    if (!tbody) return;
+
+    tbody.innerHTML = '<tr><td colspan="4" class="text-center text-muted"><div class="spinner-border spinner-border-sm"></div></td></tr>';
+    if (tfoot) tfoot.innerHTML = '';
+
+    try {
+        const client = getSupabaseClient();
+
+        // Parallel: daily entries + targets + all UP3 units
+        const [entryResult, targetResult, unitResult] = await Promise.all([
+            client.rpc('fn_daily_entry_per_unit', { p_date: dateStr }),
+            client.from('target_penilaian').select('unit_code, target_harian'),
+            client.from('units').select('unit_code, unit_name').eq('unit_tipe', 'UP3').order('unit_code')
+        ]);
+
+        if (entryResult.error) throw entryResult.error;
+
+        // Build target map: sum per unit
+        const targetMap = {};
+        if (targetResult.data) {
+            targetResult.data.forEach(t => {
+                targetMap[t.unit_code] = (targetMap[t.unit_code] || 0) + (t.target_harian || 0);
+            });
+        }
+
+        // Build entry map
+        const entryMap = {};
+        if (entryResult.data) {
+            entryResult.data.forEach(d => { entryMap[d.unit_code] = d.total_count; });
+        }
+
+        // All UP3 units as base
+        const units = unitResult.data || [];
+        if (units.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="4" class="text-center text-muted">Tidak ada data unit</td></tr>';
+            return;
+        }
+
+        let totalTarget = 0, totalEntri = 0;
+
+        tbody.innerHTML = units.map(u => {
+            const target = targetMap[u.unit_code] || 0;
+            const entri = entryMap[u.unit_code] || 0;
+            const pct = target > 0 ? Math.round((entri / target) * 100) : (entri > 0 ? 100 : 0);
+            totalTarget += target;
+            totalEntri += entri;
+
+            let pctClass = 'text-danger';
+            if (pct >= 100) pctClass = 'text-success';
+            else if (pct >= 50) pctClass = 'text-warning';
+
+            let pctBadge = '';
+            if (pct >= 100) pctBadge = `<span class="badge bg-success">${pct}%</span>`;
+            else if (pct >= 50) pctBadge = `<span class="badge bg-warning text-dark">${pct}%</span>`;
+            else pctBadge = `<span class="badge bg-danger">${pct}%</span>`;
+
+            return `<tr>
+                <td>${u.unit_code}</td>
+                <td class="text-center">${target}</td>
+                <td class="text-center">${entri}</td>
+                <td class="text-center">${pctBadge}</td>
+            </tr>`;
+        }).join('');
+
+        // Footer totals
+        if (tfoot) {
+            const totalPct = totalTarget > 0 ? Math.round((totalEntri / totalTarget) * 100) : (totalEntri > 0 ? 100 : 0);
+            let totalBadge = '';
+            if (totalPct >= 100) totalBadge = `<span class="badge bg-success">${totalPct}%</span>`;
+            else if (totalPct >= 50) totalBadge = `<span class="badge bg-warning text-dark">${totalPct}%</span>`;
+            else totalBadge = `<span class="badge bg-danger">${totalPct}%</span>`;
+
+            tfoot.innerHTML = `<tr>
+                <td>Total</td>
+                <td class="text-center">${totalTarget}</td>
+                <td class="text-center">${totalEntri}</td>
+                <td class="text-center">${totalBadge}</td>
+            </tr>`;
+        }
+
+    } catch (error) {
+        console.error('Error loading monitor entry:', error);
+        tbody.innerHTML = '<tr><td colspan="4" class="text-center text-danger">Gagal memuat data</td></tr>';
+    }
 }

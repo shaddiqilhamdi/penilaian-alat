@@ -65,7 +65,6 @@ async function loadUP3Stats() {
 
         // Store vendorIds early for other functions
         window.up3VendorIds = vendorIds;
-        console.log('UP3 vendorIds set:', vendorIds);
 
         // Query assessments for vendors and current month (for assessment count)
         const { data: assessments, error: assessmentsError } = await client
@@ -252,7 +251,6 @@ async function loadUP3VendorRecap() {
 
     try {
         const vendorIds = window.up3VendorIds || [];
-        console.log('VendorRecap - vendorIds:', vendorIds);
         if (vendorIds.length === 0) {
             tbody.innerHTML = '<tr><td colspan="8" class="text-center text-muted">Tidak ada vendor</td></tr>';
             return;

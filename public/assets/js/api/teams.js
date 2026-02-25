@@ -28,7 +28,6 @@ if (typeof window.TeamsAPI === 'undefined') {
                     return { success: false, error: error.message, data: null };
                 }
 
-                console.log('✅ Teams loaded:', data.length);
                 return { success: true, data, error: null };
             } catch (error) {
                 console.error('❌ Error fetching teams:', error);
@@ -197,7 +196,6 @@ if (typeof window.TeamsAPI === 'undefined') {
                     return { success: false, error: error.message };
                 }
 
-                console.log('✅ Team created:', data.id);
                 return { success: true, data };
             } catch (error) {
                 console.error('❌ Error creating team:', error);
@@ -223,7 +221,6 @@ if (typeof window.TeamsAPI === 'undefined') {
                     return { success: false, error: error.message };
                 }
 
-                console.log('✅ Team updated:', teamId);
                 return { success: true, data };
             } catch (error) {
                 console.error('❌ Error updating team:', error);
@@ -247,7 +244,6 @@ if (typeof window.TeamsAPI === 'undefined') {
                     return { success: false, error: error.message };
                 }
 
-                console.log('✅ Team deleted:', teamId);
                 return { success: true };
             } catch (error) {
                 console.error('❌ Error deleting team:', error);

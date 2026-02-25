@@ -26,7 +26,6 @@ if (typeof SUPABASE_URL === 'undefined') {
 
             const { createClient } = window.supabase;
             supabaseClient = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-            console.log('✅ Supabase client initialized');
 
             return supabaseClient;
         } catch (error) {

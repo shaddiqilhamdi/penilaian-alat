@@ -48,7 +48,6 @@ if (typeof window.AssessmentsAPI === 'undefined') {
                     return { success: false, error: error.message, data: null };
                 }
 
-                console.log('✅ Assessments loaded:', data.length);
                 return { success: true, data, error: null };
             } catch (error) {
                 console.error('❌ Error fetching assessments:', error);
@@ -111,7 +110,6 @@ if (typeof window.AssessmentsAPI === 'undefined') {
                     return { success: false, error: error.message };
                 }
 
-                console.log('✅ Assessment created:', data);
                 return { success: true, data };
             } catch (error) {
                 console.error('❌ Error creating assessment:', error);
@@ -155,7 +153,6 @@ if (typeof window.AssessmentsAPI === 'undefined') {
                     return { success: false, error: itemsError.message };
                 }
 
-                console.log('✅ Assessment with items created');
                 return { success: true, data: assessment, items: createdItems };
             } catch (error) {
                 console.error('❌ Error creating assessment:', error);
@@ -181,7 +178,6 @@ if (typeof window.AssessmentsAPI === 'undefined') {
                     return { success: false, error: error.message };
                 }
 
-                console.log('✅ Assessment updated');
                 return { success: true, data };
             } catch (error) {
                 console.error('❌ Error updating assessment:', error);
@@ -243,7 +239,6 @@ if (typeof window.AssessmentsAPI === 'undefined') {
                     return { success: false, error: error.message };
                 }
 
-                console.log('✅ Assessment deleted');
                 return { success: true };
             } catch (error) {
                 console.error('❌ Error deleting assessment:', error);

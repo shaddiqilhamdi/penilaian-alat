@@ -28,7 +28,6 @@ if (typeof window.ProfilesAPI === 'undefined') {
                     return null;
                 }
 
-                console.log('✅ Profiles loaded:', data.length);
                 return data;
             } catch (error) {
                 console.error('❌ Error fetching profiles:', error);
@@ -55,7 +54,6 @@ if (typeof window.ProfilesAPI === 'undefined') {
                 if (error) {
                     // PGRST116 means no rows found - not necessarily an error
                     if (error.code === 'PGRST116') {
-                        console.log('ℹ️ Profile not found for ID:', profileId);
                         return { success: false, data: null, notFound: true };
                     }
                     console.error('❌ Failed to fetch profile:', error);
@@ -229,7 +227,6 @@ if (typeof window.ProfilesAPI === 'undefined') {
                     return { success: false, error: error.message };
                 }
 
-                console.log('✅ Profile created:', data.id);
                 return { success: true, data };
             } catch (error) {
                 console.error('❌ Error creating profile:', error);
@@ -260,7 +257,6 @@ if (typeof window.ProfilesAPI === 'undefined') {
                     return { success: false, error: 'Profile not found or no permission to update' };
                 }
 
-                console.log('✅ Profile updated:', profileId);
                 return { success: true, data: data[0] };
             } catch (error) {
                 console.error('❌ Error updating profile:', error);
@@ -288,7 +284,6 @@ if (typeof window.ProfilesAPI === 'undefined') {
                     return { success: false, error: error.message };
                 }
 
-                console.log('✅ Profile upserted:', data.id);
                 return { success: true, data };
             } catch (error) {
                 console.error('❌ Error upserting profile:', error);
@@ -328,7 +323,6 @@ if (typeof window.ProfilesAPI === 'undefined') {
                     return { success: false, error: error.message };
                 }
 
-                console.log('✅ Profile deleted:', profileId);
                 return { success: true };
             } catch (error) {
                 console.error('❌ Error deleting profile:', error);

@@ -1613,9 +1613,6 @@ function clearEquipmentTable() {
 
 // Show notification
 function showNotification(message, type = 'info') {
-    // Console log for debugging
-
-
     try {
         // Create notification element
         const notification = document.createElement('div');

@@ -68,7 +68,6 @@ async function initNavbarProfile() {
 
         const user = await getCurrentUser();
         if (!user) {
-            console.log('❌ No user for navbar profile');
             return null;
         }
 

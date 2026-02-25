@@ -21,7 +21,6 @@ async function login(email, password) {
             return { success: false, error: error.message };
         }
 
-        console.log('✅ Login successful:', data.user.email);
         return { success: true, user: data.user, session: data.session };
     } catch (error) {
         console.error('❌ Login error:', error);
@@ -48,7 +47,6 @@ async function logout() {
             return { success: false, error: error.message };
         }
 
-        console.log('✅ Logout successful');
         return { success: true };
     } catch (error) {
         console.error('❌ Logout error:', error);
@@ -66,10 +64,8 @@ async function getCurrentUserWithProfile() {
         // Get auth user
         const { data: { user }, error: userError } = await client.auth.getUser();
 
-        console.log('Auth check - user:', user ? user.email : 'null', 'error:', userError?.message || 'none');
 
         if (userError || !user) {
-            console.log('No authenticated user found');
             return null;
         }
 
@@ -97,7 +93,6 @@ async function getCurrentUserWithProfile() {
             };
         }
 
-        console.log('✅ User with profile loaded:', user.email);
 
         // Save role to storage and apply menu permissions
         if (profile) {
@@ -158,7 +153,6 @@ async function updateUserProfile(userId, updates) {
             return { success: false, error: error.message };
         }
 
-        console.log('✅ Profile updated');
         return { success: true, profile: data };
     } catch (error) {
         console.error('❌ Error updating profile:', error);
@@ -245,7 +239,6 @@ function checkPetugasRoleGuard(allowedPage = 'forms-penilaian.html') {
 
     // If user is petugas and not on allowed page, redirect
     if (role === 'petugas' && currentPage !== allowedPage) {
-        console.log('🚫 Petugas role detected - redirecting to form penilaian');
         window.location.href = allowedPage;
         return true; // Redirecting
     }

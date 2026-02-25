@@ -23,7 +23,6 @@ if (typeof window.VendorsAPI === 'undefined') {
                     return { success: false, error: error.message, data: null };
                 }
 
-                console.log('✅ Vendors loaded:', data.length);
                 return { success: true, data, error: null };
             } catch (error) {
                 console.error('❌ Error fetching vendors:', error);
@@ -72,7 +71,6 @@ if (typeof window.VendorsAPI === 'undefined') {
                     return { success: false, error: error.message };
                 }
 
-                console.log('✅ Vendor created:', data);
                 return { success: true, data };
             } catch (error) {
                 console.error('❌ Error creating vendor:', error);
@@ -98,7 +96,6 @@ if (typeof window.VendorsAPI === 'undefined') {
                     return { success: false, error: error.message };
                 }
 
-                console.log('✅ Vendor updated');
                 return { success: true, data };
             } catch (error) {
                 console.error('❌ Error updating vendor:', error);
@@ -122,7 +119,6 @@ if (typeof window.VendorsAPI === 'undefined') {
                     return { success: false, error: error.message };
                 }
 
-                console.log('✅ Vendor deleted');
                 return { success: true };
             } catch (error) {
                 console.error('❌ Error deleting vendor:', error);

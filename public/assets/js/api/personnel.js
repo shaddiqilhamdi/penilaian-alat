@@ -29,7 +29,6 @@ if (typeof window.PersonnelAPI === 'undefined') {
                     return { success: false, error: error.message, data: null };
                 }
 
-                console.log('✅ Personnel loaded:', data.length);
                 return { success: true, data, error: null };
             } catch (error) {
                 console.error('❌ Error fetching personnel:', error);
@@ -163,7 +162,6 @@ if (typeof window.PersonnelAPI === 'undefined') {
                     return { success: false, error: error.message, data: null };
                 }
 
-                console.log('✅ Personnel created:', data.id);
                 return { success: true, data, error: null };
             } catch (error) {
                 console.error('❌ Error creating personnel:', error);
@@ -187,7 +185,6 @@ if (typeof window.PersonnelAPI === 'undefined') {
                     return { success: false, error: error.message, data: null };
                 }
 
-                console.log('✅ Personnel batch created:', data.length);
                 return { success: true, data, error: null };
             } catch (error) {
                 console.error('❌ Error creating personnel batch:', error);
@@ -213,7 +210,6 @@ if (typeof window.PersonnelAPI === 'undefined') {
                     return { success: false, error: error.message, data: null };
                 }
 
-                console.log('✅ Personnel updated:', personnelId);
                 return { success: true, data, error: null };
             } catch (error) {
                 console.error('❌ Error updating personnel:', error);
@@ -244,7 +240,6 @@ if (typeof window.PersonnelAPI === 'undefined') {
                     return { success: false, error: error.message };
                 }
 
-                console.log('✅ Personnel deleted:', personnelId);
                 return { success: true, error: null };
             } catch (error) {
                 console.error('❌ Error deleting personnel:', error);

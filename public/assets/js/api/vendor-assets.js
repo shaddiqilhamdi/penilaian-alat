@@ -31,7 +31,6 @@ if (typeof window.VendorAssetsAPI === 'undefined') {
                     return { success: false, error: error.message, data: null };
                 }
 
-                console.log('✅ Vendor assets loaded:', data.length);
                 return { success: true, data, error: null };
             } catch (error) {
                 console.error('❌ Error fetching vendor assets:', error);
@@ -167,7 +166,6 @@ if (typeof window.VendorAssetsAPI === 'undefined') {
                     return { success: false, error: error.message };
                 }
 
-                console.log('✅ Vendor assets batch created:', data.length);
                 return { success: true, data };
             } catch (error) {
                 console.error('❌ Error creating vendor assets batch:', error);
@@ -277,7 +275,6 @@ if (typeof window.VendorAssetsAPI === 'undefined') {
                     return { success: false, error: error.message };
                 }
 
-                console.log('✅ Vendor asset created:', data.id);
                 return { success: true, data };
             } catch (error) {
                 console.error('❌ Error creating vendor asset:', error);
@@ -303,7 +300,6 @@ if (typeof window.VendorAssetsAPI === 'undefined') {
                     return { success: false, error: error.message };
                 }
 
-                console.log('✅ Vendor asset updated:', assetId);
                 return { success: true, data };
             } catch (error) {
                 console.error('❌ Error updating vendor asset:', error);
@@ -346,7 +342,6 @@ if (typeof window.VendorAssetsAPI === 'undefined') {
                     return { success: false, error: error.message };
                 }
 
-                console.log('✅ Vendor asset deleted:', assetId);
                 return { success: true };
             } catch (error) {
                 console.error('❌ Error deleting vendor asset:', error);
