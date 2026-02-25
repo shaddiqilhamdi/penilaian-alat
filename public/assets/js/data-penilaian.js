@@ -451,12 +451,32 @@ function setupEventListeners() {
         refreshBtn.addEventListener('click', loadAssessmentsData);
     }
 
-    // Filter buttons (if any)
+    // Download Excel button
+    const downloadExcelBtn = document.getElementById('downloadExcelBtn');
+    if (downloadExcelBtn) {
+        downloadExcelBtn.addEventListener('click', downloadExcel);
+    }
+
+    // Filter form
     const filterForm = document.getElementById('filterForm');
     if (filterForm) {
         filterForm.addEventListener('submit', function (e) {
             e.preventDefault();
             applyFilters();
+        });
+    }
+
+    // Clear filter button
+    const clearFilterBtn = document.getElementById('clearFilterBtn');
+    if (clearFilterBtn) {
+        clearFilterBtn.addEventListener('click', function () {
+            const startEl = document.getElementById('filterStartDate');
+            const endEl = document.getElementById('filterEndDate');
+            if (startEl) startEl.value = '';
+            if (endEl) endEl.value = '';
+            // Reload all data without date filters
+            if (dataTable) { dataTable.destroy(); dataTable = null; }
+            loadAssessmentsData();
         });
     }
 
@@ -584,3 +604,201 @@ function showNotification(message, type = 'info') {
 
 // Export function for global access
 window.showAssessmentDetail = showAssessmentDetail;
+
+// =============================================
+// Download Excel (Sheet 1: Rekap, Sheet 2: Detail)
+// =============================================
+async function downloadExcel() {
+    if (!assessmentsData || assessmentsData.length === 0) {
+        showNotification('Tidak ada data untuk di-download', 'error');
+        return;
+    }
+
+    if (typeof XLSX === 'undefined') {
+        showNotification('Library Excel belum dimuat, coba refresh halaman', 'error');
+        return;
+    }
+
+    const btn = document.getElementById('downloadExcelBtn');
+    const origHTML = btn.innerHTML;
+    btn.innerHTML = '<span class="spinner-border spinner-border-sm"></span>';
+    btn.disabled = true;
+
+    try {
+        const client = getSupabaseClient();
+        const assessmentIds = assessmentsData.map(a => a.id);
+
+        // Fetch all assessment details with items & personnel in bulk
+        const { data: fullData, error } = await client
+            .from('assessments')
+            .select(`
+                *,
+                vendors(vendor_name, unit_code),
+                peruntukan(deskripsi),
+                teams(nomor_polisi),
+                profiles!assessments_assessor_id_fkey(nama),
+                assessment_items(
+                    *,
+                    equipment_master(nama_alat, kategori, jenis)
+                ),
+                assessment_personnel(
+                    id,
+                    personnel(nama_personil)
+                )
+            `)
+            .in('id', assessmentIds)
+            .order('tanggal_penilaian', { ascending: false });
+
+        if (error) throw error;
+
+        // ---- Sheet 1: Rekap Penilaian ----
+        const sheet1Data = fullData.map((a, idx) => {
+            const items = a.assessment_items || [];
+            const personnel = (a.assessment_personnel || [])
+                .map(ap => ap.personnel?.nama_personil).filter(Boolean).join(', ') || '-';
+
+            const totalItem = items.length;
+            const kontrak = items.reduce((s, i) => s + (i.required_qty || 0), 0);
+            const realisasi = items.reduce((s, i) => s + (i.actual_qty || 0), 0);
+            const layak = items.reduce((s, i) => s + (i.layak || 0), 0);
+            const tidakLayak = items.reduce((s, i) => s + (i.tidak_layak || 0), 0);
+            const berfungsi = items.reduce((s, i) => s + (i.berfungsi || 0), 0);
+            const tidakBerfungsi = items.reduce((s, i) => s + (i.tidak_berfungsi || 0), 0);
+
+            // Score sums from items (kesesuaian: 2|0, fisik: 0|-1, fungsi: 0|-1)
+            const kesesuaian = items.reduce((s, i) => s + (i.kesesuaian_kontrak || 0), 0);
+            const kondisiFisik = items.reduce((s, i) => s + (i.kondisi_fisik || 0), 0);
+            const kondisiFungsi = items.reduce((s, i) => s + (i.kondisi_fungsi || 0), 0);
+
+            return {
+                'No': idx + 1,
+                'Tanggal': formatDateExcel(a.tanggal_penilaian),
+                'Shift': a.shift || '-',
+                'Vendor': a.vendors?.vendor_name || '-',
+                'Unit': a.vendors?.unit_code || '-',
+                'Peruntukan': a.peruntukan?.deskripsi || '-',
+                'Kendaraan': a.teams?.nomor_polisi || '-',
+                'Petugas': personnel,
+                'Total Item': totalItem,
+                'Kontrak': kontrak,
+                'Realisasi': realisasi,
+                'Layak': layak,
+                'Tidak Layak': tidakLayak,
+                'Berfungsi': berfungsi,
+                'Tidak Berfungsi': tidakBerfungsi,
+                'Kesesuaian': kesesuaian,
+                'Kondisi Fisik': kondisiFisik,
+                'Kondisi Fungsi': kondisiFungsi,
+                'Skor': Math.round((a.total_score || 0) * 100) / 100
+            };
+        });
+
+        // ---- Sheet 2: Detail Peralatan ----
+        const sheet2Data = [];
+        let detailNo = 1;
+        fullData.forEach(a => {
+            const items = a.assessment_items || [];
+            items.forEach(item => {
+                sheet2Data.push({
+                    'No': detailNo++,
+                    'Tanggal': formatDateExcel(a.tanggal_penilaian),
+                    'Vendor': a.vendors?.vendor_name || '-',
+                    'Peruntukan': a.peruntukan?.deskripsi || '-',
+                    'Kendaraan': a.teams?.nomor_polisi || '-',
+                    'Nama Alat': item.equipment_master?.nama_alat || '-',
+                    'Kategori': item.equipment_master?.kategori || '-',
+                    'Jenis': item.equipment_master?.jenis || '-',
+                    'Standar': item.required_qty || 0,
+                    'Realisasi': item.actual_qty || 0,
+                    'Layak': item.layak || 0,
+                    'Tidak Layak': item.tidak_layak || 0,
+                    'Berfungsi': item.berfungsi || 0,
+                    'Tidak Berfungsi': item.tidak_berfungsi || 0,
+                    'Kesesuaian': item.kesesuaian_kontrak ?? 0,
+                    'Kondisi Fisik': item.kondisi_fisik ?? 0,
+                    'Kondisi Fungsi': item.kondisi_fungsi ?? 0,
+                    'Skor': item.score_item ?? 0
+                });
+            });
+        });
+
+        // Build workbook
+        const wb = XLSX.utils.book_new();
+
+        const ws1 = XLSX.utils.json_to_sheet(sheet1Data);
+        const ws2 = XLSX.utils.json_to_sheet(sheet2Data);
+
+        // Set column widths for Sheet 1
+        ws1['!cols'] = [
+            { wch: 4 },  // No
+            { wch: 12 }, // Tanggal
+            { wch: 6 },  // Shift
+            { wch: 25 }, // Vendor
+            { wch: 10 }, // Unit
+            { wch: 18 }, // Peruntukan
+            { wch: 14 }, // Kendaraan
+            { wch: 25 }, // Petugas
+            { wch: 8 },  // Total Item
+            { wch: 8 },  // Kontrak
+            { wch: 9 },  // Realisasi
+            { wch: 7 },  // Layak
+            { wch: 10 }, // Tidak Layak
+            { wch: 9 },  // Berfungsi
+            { wch: 13 }, // Tidak Berfungsi
+            { wch: 10 }, // Kesesuaian
+            { wch: 12 }, // Kondisi Fisik
+            { wch: 13 }, // Kondisi Fungsi
+            { wch: 7 }   // Skor
+        ];
+
+        // Set column widths for Sheet 2
+        ws2['!cols'] = [
+            { wch: 4 },  // No
+            { wch: 12 }, // Tanggal
+            { wch: 25 }, // Vendor
+            { wch: 18 }, // Peruntukan
+            { wch: 14 }, // Kendaraan
+            { wch: 25 }, // Nama Alat
+            { wch: 15 }, // Kategori
+            { wch: 10 }, // Jenis
+            { wch: 8 },  // Standar
+            { wch: 9 },  // Realisasi
+            { wch: 7 },  // Layak
+            { wch: 10 }, // Tidak Layak
+            { wch: 9 },  // Berfungsi
+            { wch: 13 }, // Tidak Berfungsi
+            { wch: 12 }, // Kesesuaian
+            { wch: 12 }, // Kondisi Fisik
+            { wch: 13 }, // Kondisi Fungsi
+            { wch: 7 }   // Skor
+        ];
+
+        XLSX.utils.book_append_sheet(wb, ws1, 'Rekap Penilaian');
+        XLSX.utils.book_append_sheet(wb, ws2, 'Detail Peralatan');
+
+        // Generate filename with date range
+        const now = new Date();
+        const dateStr = `${now.getFullYear()}${String(now.getMonth() + 1).padStart(2, '0')}${String(now.getDate()).padStart(2, '0')}`;
+        const fileName = `Riwayat_Penilaian_${dateStr}.xlsx`;
+
+        XLSX.writeFile(wb, fileName);
+        showNotification(`File ${fileName} berhasil di-download`, 'success');
+
+    } catch (error) {
+        console.error('Error downloading Excel:', error);
+        showNotification('Gagal mengunduh Excel: ' + error.message, 'error');
+    } finally {
+        btn.innerHTML = origHTML;
+        btn.disabled = false;
+    }
+}
+
+function formatDateExcel(dateString) {
+    if (!dateString) return '-';
+    try {
+        const d = new Date(dateString);
+        return `${String(d.getDate()).padStart(2, '0')}/${String(d.getMonth() + 1).padStart(2, '0')}/${d.getFullYear()}`;
+    } catch {
+        return dateString;
+    }
+}

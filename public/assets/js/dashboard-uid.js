@@ -10,8 +10,9 @@ async function loadUIDDashboard() {
         await loadUIDComparisonChart();
         await loadUIDConditionChart();
         await loadUIDEntryRealizationChart();
+        await loadUIDDailyEntryChart();
         await loadUIDUnitRecapTable();
-        await loadUIDEquipmentIssuesByUnit();
+        await initEquipmentIssuesDateFilter();
     } catch (error) {
         // Dashboard error
     }
@@ -38,7 +39,10 @@ async function loadUIDComprehensiveStats() {
         document.getElementById('uidTotalVendors').textContent = stats.unique_vendors || 0;
         document.getElementById('uidTotalUnits').textContent = stats.unique_units || 0;
         document.getElementById('uidTotalUnitsAll').textContent = stats.total_units || 0;
-        document.getElementById('uidAvgScore').textContent = (stats.avg_score || 0).toFixed(2);
+        const avgScoreVal = stats.avg_score || 0;
+        const avgScoreEl = document.getElementById('uidAvgScore');
+        avgScoreEl.textContent = avgScoreVal.toFixed(2);
+        avgScoreEl.className = avgScoreVal >= 1.8 ? 'text-success' : avgScoreVal >= 1.5 ? 'text-warning' : 'text-danger';
         document.getElementById('uidAvgPersonal').textContent = `P: ${(stats.avg_personal || 0).toFixed(2)}`;
         document.getElementById('uidAvgRegu').textContent = `R: ${(stats.avg_regu || 0).toFixed(2)}`;
 
@@ -97,7 +101,7 @@ async function loadUIDUnitRecapTable() {
                 const avgPersonal = r.avg_personal || 0;
                 const avgRegu = r.avg_regu || 0;
                 const kontrakPct = r.kontrak_pct || 0;
-                const scoreClass = avgScore >= 1.5 ? 'success' : avgScore > 0 ? 'warning' : 'secondary';
+                const scoreClass = avgScore >= 1.8 ? 'success' : avgScore >= 1.5 ? 'warning' : 'danger';
 
                 return `<tr style="cursor: pointer;" onclick="showUnitReportModal('${r.unit_code}', '${r.unit_name}')">
                     <td><strong>${r.unit_name}</strong></td>
@@ -105,8 +109,8 @@ async function loadUIDUnitRecapTable() {
                     <td class="text-center">${r.total_teams || '-'}</td>
                     <td class="text-center">${r.total_personnel || '-'}</td>
                     <td class="text-center"><span class="badge bg-${scoreClass}">${avgScore.toFixed(2)}</span></td>
-                    <td class="text-center"><span class="badge bg-info">${avgPersonal > 0 ? avgPersonal.toFixed(2) : '-'}</span></td>
-                    <td class="text-center"><span class="badge bg-warning">${avgRegu > 0 ? avgRegu.toFixed(2) : '-'}</span></td>
+                    <td class="text-center"><span class="badge bg-personal">${avgPersonal > 0 ? avgPersonal.toFixed(2) : '-'}</span></td>
+                    <td class="text-center"><span class="badge bg-regu">${avgRegu > 0 ? avgRegu.toFixed(2) : '-'}</span></td>
                     <td class="text-center text-danger">${r.tl_fisik || '-'}</td>
                     <td class="text-center text-warning">${r.tb_fungsi || '-'}</td>
                     <td class="text-center"><div class="progress" style="height: 15px;"><div class="progress-bar ${kontrakPct >= 80 ? 'bg-success' : kontrakPct >= 50 ? 'bg-warning' : 'bg-danger'}" style="width: ${kontrakPct}%">${Math.round(kontrakPct)}%</div></div></td>
@@ -127,15 +131,19 @@ window.uidEquipmentIssuesData = {};
  * Load equipment issues by unit - menggunakan RPC fn_equipment_issues
  * Data sudah diagregasi di database - cepat dan tidak ada limit issue
  */
-async function loadUIDEquipmentIssuesByUnit() {
+async function loadUIDEquipmentIssuesByUnit(startDate, endDate) {
     const tbody = document.querySelector('#uidIssuesByUnitTable tbody');
     tbody.innerHTML = '<tr><td colspan="6" class="text-center text-muted">Loading...</td></tr>';
 
     try {
         const client = getSupabaseClient();
 
-        // Panggil RPC function - data sudah diagregasi
-        const { data: issues, error } = await client.rpc('fn_equipment_issues');
+        // Build RPC params with optional date range
+        const params = {};
+        if (startDate) params.p_start_date = startDate;
+        if (endDate) params.p_end_date = endDate;
+
+        const { data: issues, error } = await client.rpc('fn_equipment_issues', params);
 
         if (error) throw error;
 
@@ -163,6 +171,50 @@ async function loadUIDEquipmentIssuesByUnit() {
 }
 
 /**
+ * Initialize equipment issues date filter
+ * Default: last assessment date as both start and end date
+ */
+async function initEquipmentIssuesDateFilter() {
+    const startInput = document.getElementById('uidIssuesStartDate');
+    const endInput = document.getElementById('uidIssuesEndDate');
+    if (!startInput || !endInput) return;
+
+    try {
+        // Get the last assessment date from database
+        const client = getSupabaseClient();
+        const { data, error } = await client
+            .from('vendor_assets')
+            .select('last_assessment_date')
+            .not('last_assessment_date', 'is', null)
+            .order('last_assessment_date', { ascending: false })
+            .limit(1)
+            .single();
+
+        if (!error && data) {
+            const lastDate = data.last_assessment_date;
+            startInput.value = lastDate;
+            endInput.value = lastDate;
+        }
+    } catch (e) {
+        // Fallback: use today
+        const today = new Date().toISOString().split('T')[0];
+        startInput.value = today;
+        endInput.value = today;
+    }
+
+    // Load with default dates
+    await loadUIDEquipmentIssuesByUnit(startInput.value, endInput.value);
+
+    // Add event listeners for date changes
+    startInput.addEventListener('change', () => {
+        loadUIDEquipmentIssuesByUnit(startInput.value, endInput.value);
+    });
+    endInput.addEventListener('change', () => {
+        loadUIDEquipmentIssuesByUnit(startInput.value, endInput.value);
+    });
+}
+
+/**
  * Show equipment issues modal - Query detail saat user klik
  * Detail data di-query on-demand (tidak perlu load semua upfront)
  */
@@ -185,7 +237,7 @@ async function showEquipmentIssuesModal(unitCode) {
         const { data: issueAssets, error } = await client
             .from('vendor_assets')
             .select(`
-                id, vendor_id, peruntukan_id, equipment_id,
+                id, vendor_id, peruntukan_id, equipment_id, owner_id,
                 kondisi_fisik, kondisi_fungsi, kesesuaian_kontrak, nilai,
                 realisasi_qty, last_assessment_date, last_assessment_id,
                 vendors!inner(vendor_name, unit_code, unit_name),
@@ -197,6 +249,7 @@ async function showEquipmentIssuesModal(unitCode) {
             .eq('vendors.unit_code', unitCode)
             .or('kondisi_fisik.eq.-1,kondisi_fungsi.eq.-1')
             .not('last_assessment_date', 'is', null)
+            .order('owner_id', { ascending: true })
             .order('last_assessment_date', { ascending: false });
 
         if (error) throw error;
@@ -217,7 +270,7 @@ async function showEquipmentIssuesModal(unitCode) {
         if (assessmentIds.length > 0) {
             const { data: items } = await client
                 .from('assessment_items')
-                .select('assessment_id, equipment_id, tidak_layak, tidak_berfungsi')
+                .select('assessment_id, equipment_id, tidak_layak, tidak_berfungsi, required_qty')
                 .in('assessment_id', assessmentIds);
             (items || []).forEach(item => {
                 itemsMap[`${item.assessment_id}_${item.equipment_id}`] = item;
@@ -230,6 +283,7 @@ async function showEquipmentIssuesModal(unitCode) {
             const assessmentItem = itemsMap[itemKey] || {};
             const tidakLayak = assessmentItem.tidak_layak || 0;
             const tidakBerfungsi = assessmentItem.tidak_berfungsi || 0;
+            const requiredQty = assessmentItem.required_qty || 0;
             const isPersonal = asset.equipment_master?.jenis === 'Personal';
 
             const targetName = isPersonal
@@ -249,17 +303,18 @@ async function showEquipmentIssuesModal(unitCode) {
                 tanggalDate.getFullYear();
 
             return `<tr>
-                <td>${index + 1}</td>
+                <td class="text-center">${index + 1}</td>
                 <td>${asset.equipment_master?.nama_alat || '-'}</td>
                 <td>${asset.equipment_master?.kategori || '-'}</td>
-                <td><span class="badge bg-${isPersonal ? 'info' : 'warning'}">${isPersonal ? 'Personal' : 'Regu'}</span></td>
+                <td class="text-center"><span class="badge bg-${isPersonal ? 'personal' : 'regu'}">${isPersonal ? 'Personal' : 'Regu'}</span></td>
                 <td>${targetName}</td>
-                <td class="text-center">${tanggal}</td>
+                <td class="text-center">${requiredQty}</td>
                 <td class="text-center">${asset.realisasi_qty || 0}</td>
                 <td class="text-center"><span class="badge bg-${kondisiClass}">${kondisiText}</span></td>
                 <td class="text-center"><span class="badge bg-${fungsiClass}">${fungsiText}</span></td>
                 <td class="text-center"><span class="badge bg-${kontrakClass}">${kontrakText}</span></td>
                 <td class="text-center">${asset.nilai !== null ? Number(asset.nilai).toFixed(2) : '-'}</td>
+                <td class="text-center">${tanggal}</td>
             </tr>`;
         }).join('');
 
@@ -324,7 +379,7 @@ async function loadUIDConditionChart() {
 
         const options = {
             series: [totalBaik, totalRusak],
-            chart: { height: 250, type: 'donut' },
+            chart: { height: 350, type: 'donut' },
             labels: ['Baik', 'Rusak'],
             colors: ['#2eca6a', '#e74c3c'],
             legend: { position: 'bottom' },
@@ -397,6 +452,142 @@ async function loadUIDEntryRealizationChart() {
 }
 
 /**
+ * Load Daily Entry Per Unit Chart - bar with target overlay
+ */
+async function loadUIDDailyEntryChart(dateStr) {
+    const chartEl = document.getElementById('uidDailyEntryChart');
+    const dateInput = document.getElementById('uidDailyEntryDate');
+    if (!chartEl) return;
+
+    // Set default date to today
+    if (!dateStr) {
+        const now = new Date();
+        dateStr = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
+    }
+    if (dateInput && dateInput.value !== dateStr) {
+        dateInput.value = dateStr;
+    }
+
+    // Attach change listener once
+    if (dateInput && !dateInput._listenerAttached) {
+        dateInput._listenerAttached = true;
+        dateInput.addEventListener('change', function () {
+            loadUIDDailyEntryChart(this.value);
+        });
+    }
+
+    chartEl.innerHTML = '<div class="text-center text-muted py-5"><div class="spinner-border spinner-border-sm" role="status"></div> Loading...</div>';
+
+    try {
+        const client = getSupabaseClient();
+
+        // Load daily entries and targets in parallel
+        const [entryResult, targetResult] = await Promise.all([
+            client.rpc('fn_daily_entry_per_unit', { p_date: dateStr }),
+            client.from('target_penilaian')
+                .select('unit_code, target_harian')
+        ]);
+
+        if (entryResult.error) throw entryResult.error;
+
+        // Build target map: unit_code -> sum of target_harian
+        const targetMap = {};
+        if (targetResult.data) {
+            targetResult.data.forEach(t => {
+                targetMap[t.unit_code] = (targetMap[t.unit_code] || 0) + (t.target_harian || 0);
+            });
+        }
+
+        // Get all unit codes (union of entries + targets)
+        const allUnits = new Set();
+        if (entryResult.data) entryResult.data.forEach(d => allUnits.add(d.unit_code));
+        Object.keys(targetMap).forEach(u => allUnits.add(u));
+
+        const categories = Array.from(allUnits).sort();
+
+        if (categories.length === 0) {
+            chartEl.innerHTML = '<p class="text-center text-muted py-5">Tidak ada data entri pada tanggal ini</p>';
+            if (window.uidDailyEntryChart) {
+                try { window.uidDailyEntryChart.destroy(); } catch (e) { }
+                window.uidDailyEntryChart = null;
+            }
+            return;
+        }
+
+        // Build entry map
+        const entryMap = {};
+        if (entryResult.data) {
+            entryResult.data.forEach(d => { entryMap[d.unit_code] = d.total_count; });
+        }
+
+        const totals = categories.map(u => entryMap[u] || 0);
+        const targets = categories.map(u => targetMap[u] || 0);
+        // Bagian pudar di atas realisasi = sisa menuju target
+        const remaining = categories.map((u, i) => Math.max(0, targets[i] - totals[i]));
+
+        const options = {
+            series: [
+                { name: 'Realisasi', data: totals },
+                { name: 'Target', data: remaining }
+            ],
+            chart: { type: 'bar', height: 320, toolbar: { show: false }, stacked: true },
+            plotOptions: {
+                bar: {
+                    horizontal: false,
+                    borderRadius: 4,
+                    columnWidth: '55%'
+                }
+            },
+            colors: ['#4154f1', 'rgba(65,84,241,0.15)'],
+            fill: {
+                opacity: [1, 1]
+            },
+            stroke: {
+                show: false
+            },
+            dataLabels: {
+                enabled: true,
+                enabledOnSeries: [0],
+                style: { fontSize: '11px' }
+            },
+            xaxis: { categories: categories, labels: { style: { fontSize: '11px' }, rotate: 0 } },
+            yaxis: { min: 0, forceNiceScale: true, labels: { formatter: (val) => Math.floor(val) } },
+            legend: {
+                show: true,
+                position: 'top',
+                horizontalAlign: 'right',
+                fontSize: '11px',
+                markers: { fillColors: ['#4154f1', 'rgba(65,84,241,0.15)'] }
+            },
+            tooltip: {
+                shared: true,
+                intersect: false,
+                custom: function ({ series, seriesIndex, dataPointIndex, w }) {
+                    const realisasi = series[0][dataPointIndex];
+                    const target = targets[dataPointIndex];
+                    const unit = categories[dataPointIndex];
+                    return `<div class="apexcharts-tooltip-title" style="font-size:12px">${unit}</div>` +
+                        `<div style="padding:4px 8px;font-size:12px">` +
+                        `<span style="color:#4154f1">●</span> Realisasi: <b>${realisasi}</b><br>` +
+                        `<span style="color:rgba(65,84,241,0.3)">●</span> Target: <b>${target}</b>` +
+                        `</div>`;
+                }
+            }
+        };
+
+        chartEl.innerHTML = '';
+        if (window.uidDailyEntryChart) {
+            try { window.uidDailyEntryChart.destroy(); } catch (e) { }
+        }
+        window.uidDailyEntryChart = new ApexCharts(chartEl, options);
+        window.uidDailyEntryChart.render();
+    } catch (error) {
+        console.error('Error loading daily entry chart:', error);
+        chartEl.innerHTML = '<p class="text-center text-danger py-4">Gagal memuat chart</p>';
+    }
+}
+
+/**
  * Load Trend Chart - menggunakan RPC fn_trend_monthly
  */
 async function loadUIDTrendChart() {
@@ -418,7 +609,7 @@ async function loadUIDTrendChart() {
 
         const options = {
             series: [{ name: 'Jumlah Penilaian', data: monthlyData }],
-            chart: { height: 250, type: 'area', toolbar: { show: false }, fontFamily: 'inherit' },
+            chart: { height: 380, type: 'area', toolbar: { show: false }, fontFamily: 'inherit' },
             colors: ['#4154f1'],
             fill: { type: 'gradient', gradient: { shadeIntensity: 1, opacityFrom: 0.4, opacityTo: 0.1, stops: [0, 90, 100] } },
             dataLabels: { enabled: false },
@@ -473,12 +664,12 @@ async function showUnitReportModal(unitCode, unitName) {
         const peruntukanBreakdown = report?.peruntukan_breakdown || [];
         const vendorBreakdown = report?.vendor_breakdown || [];
         const issuesByCategory = report?.issues_by_category || [];
+        const unfulfilledContracts = report?.unfulfilled_contracts || [];
 
         // Grade calculation
         const getGrade = (score) => {
-            if (score >= 1.5) return { class: 'success' };
-            if (score >= 1.0) return { class: 'info' };
-            if (score >= 0.5) return { class: 'warning' };
+            if (score >= 1.8) return { class: 'success' };
+            if (score >= 1.5) return { class: 'warning' };
             return { class: 'danger' };
         };
 
@@ -535,14 +726,14 @@ async function showUnitReportModal(unitCode, unitName) {
                 <div class="col-md-2 col-4">
                     <div class="border rounded p-2 text-center h-100">
                         <small class="text-muted d-block" style="font-size: 0.7rem;">Personal</small>
-                        <h5 class="mb-0 text-info">${(summary.avg_personal || 0).toFixed(2)}</h5>
+                        <h5 class="mb-0 text-personal">${(summary.avg_personal || 0).toFixed(2)}</h5>
                         <small class="text-muted" style="font-size: 0.65rem;">${summary.total_personal || 0} eq</small>
                     </div>
                 </div>
                 <div class="col-md-2 col-4">
                     <div class="border rounded p-2 text-center h-100">
                         <small class="text-muted d-block" style="font-size: 0.7rem;">Regu</small>
-                        <h5 class="mb-0 text-warning">${(summary.avg_regu || 0).toFixed(2)}</h5>
+                        <h5 class="mb-0 text-regu">${(summary.avg_regu || 0).toFixed(2)}</h5>
                         <small class="text-muted" style="font-size: 0.65rem;">${summary.total_regu || 0} eq</small>
                     </div>
                 </div>
@@ -578,6 +769,7 @@ async function showUnitReportModal(unitCode, unitName) {
                             <tr>
                                 <th>Peruntukan</th>
                                 <th class="text-center">Equipment</th>
+                                <th class="text-center text-warning">Regu</th>
                                 <th class="text-center">Avg Nilai</th>
                                 <th class="text-center text-danger">TL</th>
                                 <th class="text-center text-warning">TB</th>
@@ -585,10 +777,11 @@ async function showUnitReportModal(unitCode, unitName) {
                         </thead>
                         <tbody>
                             ${peruntukanBreakdown.map(p => {
-            const avgClass = p.avg_score >= 1.5 ? 'success' : p.avg_score >= 0 ? 'warning' : 'danger';
+            const avgClass = p.avg_score >= 1.8 ? 'success' : p.avg_score >= 1.5 ? 'warning' : 'danger';
             return `<tr>
                                     <td>${p.peruntukan}</td>
                                     <td class="text-center">${p.total_equipment}</td>
+                                    <td class="text-center">${p.total_regu > 0 ? p.total_regu : '-'}</td>
                                     <td class="text-center"><span class="badge bg-${avgClass}">${p.avg_score.toFixed(2)}</span></td>
                                     <td class="text-center text-danger">${p.tl_fisik || '-'}</td>
                                     <td class="text-center text-warning">${p.tb_fungsi || '-'}</td>
@@ -615,7 +808,7 @@ async function showUnitReportModal(unitCode, unitName) {
                         </thead>
                         <tbody>
                             ${vendorBreakdown.map(v => {
-            const avgClass = v.avg_score >= 1.5 ? 'success' : v.avg_score >= 0 ? 'warning' : 'danger';
+            const avgClass = v.avg_score >= 1.8 ? 'success' : v.avg_score >= 1.5 ? 'warning' : 'danger';
             return `<tr>
                                     <td>${v.vendor_name}</td>
                                     <td class="text-center">${v.total_equipment}</td>
@@ -651,6 +844,7 @@ async function showUnitReportModal(unitCode, unitName) {
                                         <th>Peralatan</th>
                                         <th>Vendor</th>
                                         <th>Peruntukan</th>
+                                        <th>Regu / Personil</th>
                                         <th class="text-center">Kondisi</th>
                                         <th class="text-center">Fungsi</th>
                                         <th class="text-center">Nilai</th>
@@ -660,11 +854,15 @@ async function showUnitReportModal(unitCode, unitName) {
                                     ${cat.items.map((eq, idx) => {
             const kondisiClass = eq.kondisi_fisik === -1 ? 'danger' : 'success';
             const fungsiClass = eq.kondisi_fungsi === -1 ? 'warning' : 'success';
+            const ownerBadge = eq.owner_type === 'tim'
+                ? `<i class="bi bi-truck me-1 text-regu"></i>${eq.owner_label || '-'}`
+                : `<i class="bi bi-person me-1 text-personal"></i>${eq.owner_label || '-'}`;
             return `<tr>
                                             <td>${idx + 1}</td>
                                             <td>${eq.nama_alat || '-'}</td>
                                             <td>${eq.vendor_name || '-'}</td>
                                             <td>${eq.peruntukan || '-'}</td>
+                                            <td>${ownerBadge}</td>
                                             <td class="text-center"><span class="badge bg-${kondisiClass}">${eq.kondisi_fisik === -1 ? 'TL' : 'OK'}</span></td>
                                             <td class="text-center"><span class="badge bg-${fungsiClass}">${eq.kondisi_fungsi === -1 ? 'TB' : 'OK'}</span></td>
                                             <td class="text-center">${eq.nilai?.toFixed(2) || '-'}</td>
@@ -675,6 +873,46 @@ async function showUnitReportModal(unitCode, unitName) {
                         </div>
                     </div>
                 `).join('')}
+            </div>
+            ` : ''}
+
+            <!-- Kontrak Belum Terpenuhi -->
+            ${unfulfilledContracts.length > 0 ? `
+            <div class="mb-3">
+                <h6 class="border-bottom pb-1 mb-2 text-info"><i class="bi bi-file-earmark-x me-2"></i>Kontrak Belum Terpenuhi (${unfulfilledContracts.length})</h6>
+                <div class="table-responsive">
+                    <table class="table table-sm table-bordered mb-0 small">
+                        <thead class="table-light">
+                            <tr>
+                                <th>#</th>
+                                <th>Peralatan</th>
+                                <th>Vendor</th>
+                                <th>Peruntukan</th>
+                                <th>Regu / Personil</th>
+                                <th class="text-center">Standar</th>
+                                <th class="text-center">Realisasi</th>
+                                <th class="text-center">Selisih</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${unfulfilledContracts.map((eq, idx) => {
+            const ownerBadge = eq.owner_type === 'tim'
+                ? `<i class="bi bi-truck me-1 text-regu"></i>${eq.owner_label || '-'}`
+                : `<i class="bi bi-person me-1 text-personal"></i>${eq.owner_label || '-'}`;
+            return `<tr>
+                                <td>${idx + 1}</td>
+                                <td>${eq.nama_alat || '-'}</td>
+                                <td>${eq.vendor_name || '-'}</td>
+                                <td>${eq.peruntukan || '-'}</td>
+                                <td>${ownerBadge}</td>
+                                <td class="text-center">${eq.required_qty || 0}</td>
+                                <td class="text-center">${eq.realisasi_qty || 0}</td>
+                                <td class="text-center"><span class="badge bg-danger">${eq.selisih > 0 ? '-' + eq.selisih : eq.selisih}</span></td>
+                            </tr>`;
+        }).join('')}
+                        </tbody>
+                    </table>
+                </div>
             </div>
             ` : ''}
 

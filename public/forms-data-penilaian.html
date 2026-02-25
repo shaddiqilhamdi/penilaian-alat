@@ -334,6 +334,11 @@
               <i class="bi bi-circle"></i><span>Inventaris Vendor</span>
             </a>
           </li>
+          <li id="menu-target">
+            <a href="data-target-penilaian.html">
+              <i class="bi bi-circle"></i><span>Target Penilaian</span>
+            </a>
+          </li>
 
         </ul>
       </li><!-- End Pengaturan Nav -->
@@ -401,6 +406,9 @@
               <div class="d-flex justify-content-between align-items-center card-header-actions">
                 <h5 class="card-title">Riwayat Penilaian</h5>
                 <div class="d-flex gap-1">
+                  <button class="btn btn-outline-success btn-sm" id="downloadExcelBtn" title="Download Excel">
+                    <i class="bi bi-file-earmark-excel"></i>
+                  </button>
                   <button class="btn btn-outline-primary btn-sm" id="refreshBtn" title="Refresh">
                     <i class="bi bi-arrow-clockwise"></i>
                   </button>
@@ -409,6 +417,31 @@
                   </a>
                 </div>
               </div>
+
+              <!-- Filter Tanggal -->
+              <form id="filterForm" class="mb-3">
+                <div class="row g-2 align-items-end">
+                  <div class="col-auto">
+                    <label for="filterStartDate" class="form-label mb-0 small text-muted">Dari:</label>
+                    <input type="date" class="form-control form-control-sm" id="filterStartDate" style="width:150px;">
+                  </div>
+                  <div class="col-auto">
+                    <label for="filterEndDate" class="form-label mb-0 small text-muted">Sampai:</label>
+                    <input type="date" class="form-control form-control-sm" id="filterEndDate" style="width:150px;">
+                  </div>
+                  <div class="col-auto">
+                    <button type="submit" class="btn btn-primary btn-sm" style="height:31px;" title="Filter">
+                      <i class="bi bi-funnel"></i> Filter
+                    </button>
+                  </div>
+                  <div class="col-auto">
+                    <button type="button" class="btn btn-outline-secondary btn-sm" style="height:31px;"
+                      id="clearFilterBtn" title="Reset">
+                      <i class="bi bi-x-circle"></i>
+                    </button>
+                  </div>
+                </div>
+              </form>
 
               <!-- Table with stripped rows -->
               <table class="table datatable table-sm table-hover" id="assessmentsTable">
@@ -484,6 +517,7 @@
   <!-- Supabase -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+  <script src="https://cdn.sheetjs.com/xlsx-0.20.3/package/dist/xlsx.full.min.js"></script>
   <script src="assets/js/config/supabase-client.js"></script>
   <script src="assets/js/auth/supabase-auth.js"></script>
 

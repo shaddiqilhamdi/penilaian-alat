@@ -55,9 +55,10 @@ async function loadUP3Stats() {
             document.getElementById('up3AvgScore').textContent = '0.00';
             document.getElementById('up3PersonalScoreBadge').textContent = 'P: 0.00';
             document.getElementById('up3ReguScoreBadge').textContent = 'R: 0.00';
-            document.getElementById('up3TidakLayak').textContent = '0';
-            document.getElementById('up3TidakBerfungsi').textContent = '0';
             document.getElementById('up3KontrakPct').textContent = '0%';
+            document.getElementById('up3JumlahKendaraan').textContent = '0';
+            document.getElementById('up3JumlahPersonil').textContent = '0';
+            renderUP3KondisiDonut(0, 0, { tlPersonal: 0, tlRegu: 0, tbPersonal: 0, tbRegu: 0 });
             window.up3VendorIds = [];
             return;
         }
@@ -119,12 +120,37 @@ async function loadUP3Stats() {
         // Update UI
         document.getElementById('up3TotalAssessments').textContent = totalAssessments;
         document.getElementById('up3TotalEquipment').textContent = totalEquipment;
-        document.getElementById('up3AvgScore').textContent = avgScore.toFixed(2);
+
+        const avgScoreEl = document.getElementById('up3AvgScore');
+        avgScoreEl.textContent = avgScore.toFixed(2);
+        avgScoreEl.className = avgScore >= 1.8 ? 'text-success' : avgScore >= 1.5 ? 'text-warning' : 'text-danger';
+
         document.getElementById('up3PersonalScoreBadge').textContent = 'P: ' + avgPersonal.toFixed(2);
         document.getElementById('up3ReguScoreBadge').textContent = 'R: ' + avgRegu.toFixed(2);
-        document.getElementById('up3TidakLayak').textContent = tidakLayak;
-        document.getElementById('up3TidakBerfungsi').textContent = tidakBerfungsi;
         document.getElementById('up3KontrakPct').textContent = kontrakPct.toFixed(0) + '%';
+
+        // Render Kondisi Alat donut chart
+        const bermasalah = new Set([
+            ...vendorAssets.filter(a => a.kondisi_fisik === -1).map(a => a.id),
+            ...vendorAssets.filter(a => a.kondisi_fungsi === -1).map(a => a.id)
+        ]).size;
+        const baik = totalEquipment - bermasalah;
+
+        // Breakdown TL/TB by jenis
+        const tlPersonal = vendorAssets.filter(a => a.kondisi_fisik === -1 && a.equipment_master?.jenis === 'Personal').length;
+        const tlRegu = vendorAssets.filter(a => a.kondisi_fisik === -1 && a.equipment_master?.jenis === 'Regu').length;
+        const tbPersonal = vendorAssets.filter(a => a.kondisi_fungsi === -1 && a.equipment_master?.jenis === 'Personal').length;
+        const tbRegu = vendorAssets.filter(a => a.kondisi_fungsi === -1 && a.equipment_master?.jenis === 'Regu').length;
+
+        renderUP3KondisiDonut(baik, bermasalah, { tlPersonal, tlRegu, tbPersonal, tbRegu });
+
+        // Load Kendaraan (teams) and Personil counts
+        const [teamsResult, personnelResult] = await Promise.all([
+            client.from('teams').select('id', { count: 'exact', head: true }).in('vendor_id', vendorIds),
+            client.from('personnel').select('id', { count: 'exact', head: true }).in('vendor_id', vendorIds)
+        ]);
+        document.getElementById('up3JumlahKendaraan').textContent = teamsResult.count || 0;
+        document.getElementById('up3JumlahPersonil').textContent = personnelResult.count || 0;
     } catch (error) {
         console.error('Error loading UP3 stats:', error);
         document.getElementById('up3TotalAssessments').textContent = 'Error';
@@ -132,21 +158,103 @@ async function loadUP3Stats() {
         document.getElementById('up3AvgScore').textContent = 'Error';
         document.getElementById('up3PersonalScoreBadge').textContent = 'P: -';
         document.getElementById('up3ReguScoreBadge').textContent = 'R: -';
-        document.getElementById('up3TidakLayak').textContent = '-';
-        document.getElementById('up3TidakBerfungsi').textContent = '-';
         document.getElementById('up3KontrakPct').textContent = '-';
+        document.getElementById('up3JumlahKendaraan').textContent = '-';
+        document.getElementById('up3JumlahPersonil').textContent = '-';
+    }
+}
+
+function renderUP3KondisiDonut(baik, bermasalah, breakdown) {
+    const el = document.getElementById('up3KondisiDonut');
+    if (!el) return;
+
+    el.innerHTML = '';
+    if (window.up3KondisiChart) {
+        try { window.up3KondisiChart.destroy(); } catch (e) { }
+    }
+
+    const total = baik + bermasalah;
+    const options = {
+        series: [baik, bermasalah],
+        chart: { type: 'donut', height: 220 },
+        labels: ['Baik', 'Bermasalah'],
+        colors: ['#2eca6a', '#ff771d'],
+        plotOptions: {
+            pie: {
+                donut: {
+                    size: '70%',
+                    labels: {
+                        show: true,
+                        name: { show: true, fontSize: '13px', offsetY: -4 },
+                        value: { show: true, fontSize: '18px', fontWeight: 700, offsetY: 4 },
+                        total: {
+                            show: true,
+                            label: 'Total',
+                            fontSize: '12px',
+                            formatter: () => total
+                        }
+                    }
+                }
+            }
+        },
+        dataLabels: { enabled: false },
+        legend: {
+            position: 'bottom',
+            fontSize: '11px',
+            markers: { width: 8, height: 8, fillColors: ['#2eca6a', '#ff771d'] },
+            itemMargin: { horizontal: 8 }
+        },
+        tooltip: {
+            y: {
+                formatter: function (val) {
+                    const pct = total > 0 ? (val / total * 100).toFixed(1) : 0;
+                    return val + ' (' + pct + '%)';
+                }
+            }
+        }
+    };
+
+    window.up3KondisiChart = new ApexCharts(el, options);
+    window.up3KondisiChart.render();
+
+    // Render breakdown detail
+    const detailEl = document.getElementById('up3KondisiDetail');
+    if (detailEl && breakdown) {
+        const { tlPersonal, tlRegu, tbPersonal, tbRegu } = breakdown;
+        const tlTotal = tlPersonal + tlRegu;
+        const tbTotal = tbPersonal + tbRegu;
+
+        const item = (label, val) => val > 0 ? `<span class="text-muted">${label}</span> <b>${val}</b>` : '';
+        const sep = (a, b) => (a && b) ? '&nbsp;&middot;&nbsp;' : '';
+
+        const tlP = item('Personal', tlPersonal);
+        const tlR = item('Regu', tlRegu);
+        const tbP = item('Personal', tbPersonal);
+        const tbR = item('Regu', tbRegu);
+
+        let html = `<div class="d-flex justify-content-center gap-4 mt-1" style="font-size:.78rem">`;
+        html += `<div class="text-center">`;
+        html += `<div class="text-danger fw-semibold mb-1">Tdk Layak: ${tlTotal}</div>`;
+        html += `<div>${tlP}${sep(tlP, tlR)}${tlR}${tlTotal === 0 ? '<span class="text-muted">-</span>' : ''}</div>`;
+        html += `</div>`;
+        html += `<div class="text-center">`;
+        html += `<div class="text-warning fw-semibold mb-1">Tdk Fungsi: ${tbTotal}</div>`;
+        html += `<div>${tbP}${sep(tbP, tbR)}${tbR}${tbTotal === 0 ? '<span class="text-muted">-</span>' : ''}</div>`;
+        html += `</div>`;
+        html += `</div>`;
+        detailEl.innerHTML = html;
     }
 }
 
 async function loadUP3VendorRecap() {
     const tbody = document.querySelector('#up3VendorRecapTable tbody');
-    tbody.innerHTML = '<tr><td colspan="9" class="text-center text-muted">Loading...</td></tr>';
+    tbody.innerHTML = '<tr><td colspan="8" class="text-center text-muted">Loading...</td></tr>';
 
     try {
         const vendorIds = window.up3VendorIds || [];
         console.log('VendorRecap - vendorIds:', vendorIds);
         if (vendorIds.length === 0) {
-            tbody.innerHTML = '<tr><td colspan="9" class="text-center text-muted">Tidak ada vendor</td></tr>';
+            tbody.innerHTML = '<tr><td colspan="8" class="text-center text-muted">Tidak ada vendor</td></tr>';
             return;
         }
 
@@ -252,15 +360,13 @@ async function loadUP3VendorRecap() {
             .sort((a, b) => a.vendorName.localeCompare(b.vendorName) || a.jenis.localeCompare(b.jenis))
             .map(r => {
                 const avgScore = r.equipmentCount > 0 ? (r.totalNilai / r.equipmentCount).toFixed(2) : '-';
-                const scoreClass = avgScore >= 1.5 ? 'success' : avgScore >= 0 ? 'warning' : 'danger';
+                const scoreClass = avgScore >= 1.8 ? 'success' : avgScore >= 1.5 ? 'warning' : 'danger';
                 const kontrakPct = r.equipmentCount > 0 ? (r.kontrakOk / r.equipmentCount * 100).toFixed(0) : 0;
                 const kontrakClass = kontrakPct >= 80 ? 'success' : kontrakPct >= 50 ? 'warning' : 'danger';
-                const jenisClass = r.jenis === 'Personal' ? 'info' : 'warning';
 
                 return `
                     <tr>
                         <td><strong>${r.vendorName}</strong></td>
-                        <td><span class="badge bg-${jenisClass}">${r.jenis}</span></td>
                         <td>${r.peruntukan}</td>
                         <td class="text-center">${r.jumlah || '-'}</td>
                         <td class="text-center">${r.equipmentCount || '-'}</td>
@@ -272,7 +378,7 @@ async function loadUP3VendorRecap() {
                 `;
             }).join('');
 
-        tbody.innerHTML = rows || '<tr><td colspan="9" class="text-center text-muted">Tidak ada data</td></tr>';
+        tbody.innerHTML = rows || '<tr><td colspan="8" class="text-center text-muted">Tidak ada data</td></tr>';
     } catch (error) {
         console.error('Error loading UP3 vendor recap:', error);
         tbody.innerHTML = '<tr><td colspan="9" class="text-center text-danger">Error loading data</td></tr>';
@@ -335,7 +441,7 @@ async function loadUP3EquipmentIssues() {
                 '<span class="badge bg-success">B</span>';
 
             const nilaiScore = asset.nilai ?? 0;
-            const scoreClass = nilaiScore >= 1 ? 'success' : nilaiScore >= 0 ? 'warning' : 'danger';
+            const scoreClass = nilaiScore >= 1.8 ? 'success' : nilaiScore >= 1.5 ? 'warning' : 'danger';
             const nilaiDisplay = asset.nilai !== null && asset.nilai !== undefined ? asset.nilai : '-';
 
             // Determine Tim/Personil display based on peruntukan type
@@ -372,6 +478,8 @@ async function loadUP3DailyChart() {
 
     try {
         const vendorIds = window.up3VendorIds || [];
+        const userUnitCode = window.currentUser?.unit_code;
+
         if (vendorIds.length === 0) {
             chartEl.innerHTML = '<p class="text-center text-muted py-4">Tidak ada vendor</p>';
             return;
@@ -395,63 +503,93 @@ async function loadUP3DailyChart() {
             });
         }
 
-        // Get all assessments for vendor IDs in last 30 days
         const thirtyDaysAgo = new Date(now);
         thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 29);
         thirtyDaysAgo.setHours(0, 0, 0, 0);
 
-        const { data: assessments, error } = await client
-            .from('assessments')
-            .select('id, tanggal_penilaian')
-            .in('vendor_id', vendorIds)
-            .gte('tanggal_penilaian', thirtyDaysAgo.toISOString())
-            .lte('tanggal_penilaian', now.toISOString());
+        // Load assessments and target in parallel
+        const [assessResult, targetResult] = await Promise.all([
+            client
+                .from('assessments')
+                .select('id, tanggal_penilaian')
+                .in('vendor_id', vendorIds)
+                .gte('tanggal_penilaian', thirtyDaysAgo.toISOString())
+                .lte('tanggal_penilaian', now.toISOString()),
+            userUnitCode
+                ? client.from('target_penilaian')
+                    .select('target_harian')
+                    .eq('unit_code', userUnitCode)
+                : Promise.resolve({ data: [] })
+        ]);
 
-        if (error) throw error;
+        if (assessResult.error) throw assessResult.error;
+
+        const assessments = assessResult.data || [];
+        const targets = targetResult.data || [];
+
+        // Sum all target_harian for this unit = daily target
+        const dailyTarget = targets.reduce((sum, t) => sum + (t.target_harian || 0), 0);
 
         // Count assessments per day
         const dailyData = days.map(day => {
-            return assessments?.filter(a => {
+            return assessments.filter(a => {
                 const assessDate = new Date(a.tanggal_penilaian);
                 return assessDate >= day.start && assessDate <= day.end;
-            }).length || 0;
+            }).length;
         });
 
+        // Remaining to target per day (faded bar on top)
+        const remaining = dailyData.map(count => Math.max(0, dailyTarget - count));
+        const categories = days.map(d => d.label);
+
         const options = {
-            series: [{ name: 'Entri Penilaian', data: dailyData }],
-            chart: {
-                height: 200,
-                type: 'bar',
-                toolbar: { show: false },
-                fontFamily: 'inherit',
-                sparkline: { enabled: false }
-            },
-            colors: ['#4154f1'],
+            series: [
+                { name: 'Realisasi', data: dailyData },
+                { name: 'Target', data: remaining }
+            ],
+            chart: { type: 'bar', height: 320, toolbar: { show: false }, stacked: true },
             plotOptions: {
                 bar: { borderRadius: 2, columnWidth: '60%' }
             },
-            dataLabels: { enabled: false },
-            xaxis: {
-                categories: days.map(d => d.label),
-                labels: {
-                    rotate: -45,
-                    rotateAlways: true,
-                    style: { fontSize: '9px' }
-                },
-                tickAmount: 10
+            colors: ['#4154f1', 'rgba(65,84,241,0.15)'],
+            fill: { opacity: [1, 1] },
+            stroke: { show: false },
+            dataLabels: {
+                enabled: true,
+                enabledOnSeries: [0],
+                formatter: function (val) { return val > 0 ? val : ''; },
+                style: { fontSize: '10px' }
             },
-            yaxis: {
-                min: 0,
-                forceNiceScale: true,
-                labels: { style: { fontSize: '10px' } }
+            xaxis: {
+                categories: categories,
+                labels: { rotate: 0, rotateAlways: false, style: { fontSize: '9px' } },
+                tickAmount: 15
+            },
+            yaxis: { min: 0, forceNiceScale: true, labels: { formatter: (val) => Math.floor(val) } },
+            legend: {
+                show: true,
+                position: 'top',
+                horizontalAlign: 'right',
+                fontSize: '11px',
+                markers: { fillColors: ['#4154f1', 'rgba(65,84,241,0.15)'] }
             },
             tooltip: {
-                y: { formatter: (val) => val + ' penilaian' }
+                shared: true,
+                intersect: false,
+                custom: function ({ series, seriesIndex, dataPointIndex, w }) {
+                    const realisasi = series[0][dataPointIndex];
+                    const cat = categories[dataPointIndex];
+                    return `<div class="apexcharts-tooltip-title" style="font-size:12px">${cat}</div>` +
+                        `<div style="padding:4px 8px;font-size:12px">` +
+                        `<span style="color:#4154f1">●</span> Realisasi: <b>${realisasi}</b><br>` +
+                        `<span style="color:rgba(65,84,241,0.3)">●</span> Target: <b>${dailyTarget}</b>` +
+                        `</div>`;
+                }
             },
             grid: { padding: { left: 10, right: 10 } }
         };
 
-        // Destroy existing chart to prevent memory leak
+        chartEl.innerHTML = '';
         if (window.up3DailyChart) {
             try { window.up3DailyChart.destroy(); } catch (e) { }
         }

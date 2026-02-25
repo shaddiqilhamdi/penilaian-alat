@@ -1250,11 +1250,11 @@ async function executeCopyStandard() {
     }
 
     // Confirm
-    const totalOps = selectedPeruntukan.length * targetVendorIds.length;
+    const totalItems = selectedPeruntukan.reduce((sum, g) => sum + g.items.length, 0);
     const confirm = await Swal.fire({
         title: 'Konfirmasi Salin Standar',
-        html: `Salin <strong>${selectedPeruntukan.length}</strong> peruntukan ke <strong>${targetVendorIds.length}</strong> vendor?<br>
-               <small class="text-muted">(Total ${totalOps} operasi, peruntukan yang sudah ada akan dilewati)</small>`,
+        html: `Salin <strong>${totalItems}</strong> alat dari <strong>${selectedPeruntukan.length}</strong> peruntukan ke <strong>${targetVendorIds.length}</strong> vendor?<br>
+               <small class="text-muted">(Alat yang sudah ada dilewati, alat yang tidak ada di sumber akan dihapus)</small>`,
         icon: 'question',
         showCancelButton: true,
         confirmButtonColor: '#198754',
@@ -1271,25 +1271,50 @@ async function executeCopyStandard() {
 
     let successCount = 0;
     let skippedCount = 0;
+    let deletedCount = 0;
     let errorCount = 0;
 
     try {
         for (const targetVendorId of targetVendorIds) {
-            // Get existing standards for this target vendor to check duplicates
+            // Get existing standards for this target vendor to check duplicates per item
             const existingData = await EquipmentStandardsAPI.getByVendor(targetVendorId);
-            const existingPeruntukanIds = new Set((existingData || []).map(d => d.peruntukan_id));
+            const existingKeys = new Set(
+                (existingData || []).map(d => `${d.peruntukan_id}__${d.equipment_id}`)
+            );
             const targetUnitCode = targetVendorUnits[targetVendorId] ||
                 vendorsList.find(v => v.id === targetVendorId)?.unit_code || '';
 
             for (const group of selectedPeruntukan) {
-                // Skip if this peruntukan already exists for target vendor
-                if (existingPeruntukanIds.has(group.peruntukan_id)) {
-                    skippedCount++;
+                const sourceEquipmentIds = new Set(group.items.map(i => i.equipment_id));
+
+                // Delete items in target that exist for this peruntukan but are NOT in source
+                const itemsToDelete = (existingData || []).filter(d =>
+                    d.peruntukan_id === group.peruntukan_id && !sourceEquipmentIds.has(d.equipment_id)
+                );
+                for (const item of itemsToDelete) {
+                    try {
+                        await EquipmentStandardsAPI.delete(item.id);
+                        deletedCount++;
+                    } catch (e) {
+                        console.error(`Failed to delete item ${item.id}:`, e);
+                        errorCount++;
+                    }
+                }
+
+                // Filter items: skip only items that already exist (same peruntukan + equipment)
+                const newItems = group.items.filter(item =>
+                    !existingKeys.has(`${group.peruntukan_id}__${item.equipment_id}`)
+                );
+
+                if (newItems.length === 0) {
+                    skippedCount += group.items.length;
                     continue;
                 }
 
-                // Build batch insert data
-                const batchData = group.items.map(item => ({
+                skippedCount += group.items.length - newItems.length;
+
+                // Build batch insert data only for new items
+                const batchData = newItems.map(item => ({
                     vendor_id: targetVendorId,
                     unit_code: targetUnitCode,
                     peruntukan_id: group.peruntukan_id,
@@ -1300,17 +1325,18 @@ async function executeCopyStandard() {
 
                 const result = await EquipmentStandardsAPI.createBatch(batchData);
                 if (result.success) {
-                    successCount++;
+                    successCount += newItems.length;
                 } else {
-                    errorCount++;
-                    console.error(`Failed to copy peruntukan ${group.peruntukan_id} to vendor ${targetVendorId}:`, result.error);
+                    errorCount += newItems.length;
+                    console.error(`Failed to copy items to vendor ${targetVendorId}:`, result.error);
                 }
             }
         }
 
         // Show results
-        let message = `<strong>${successCount}</strong> peruntukan berhasil disalin`;
-        if (skippedCount > 0) message += `<br><strong>${skippedCount}</strong> dilewati (sudah ada)`;
+        let message = `<strong>${successCount}</strong> alat berhasil disalin`;
+        if (skippedCount > 0) message += `<br><strong>${skippedCount}</strong> alat dilewati (sudah ada)`;
+        if (deletedCount > 0) message += `<br><strong>${deletedCount}</strong> alat dihapus (tidak ada di sumber)`;
         if (errorCount > 0) message += `<br><strong>${errorCount}</strong> gagal`;
 
         await Swal.fire({

@@ -187,65 +187,43 @@ serve(async (req) => {
         }
 
         // ========== STEP 3: Upsert Vendor Assets ==========
-        // LOGIC per item berdasarkan equipment_master.jenis:
-        // - Regu: unique key = vendor + peruntukan + team + equipment (personnel_id = NULL)
-        // - Personal: unique key = vendor + peruntukan + personnel + equipment
-        // Dalam 1 assessment bisa ada KEDUA jenis sekaligus
+        // LOGIC: owner_id ditentukan per PERUNTUKAN, bukan per item.
+        // Jika peruntukan punya salah satu alat berkategori 'Kendaraan' → owner_id = team_id
+        // Jika tidak → owner_id = personnel_id
         const upsertResults = []
         const now = new Date().toISOString()
 
-        // Fetch jenis for all equipment in this assessment
-        const equipmentIds = processedItems.map(i => i.equipment_id)
-        const { data: equipmentList } = await supabaseClient
-            .from('equipment_master')
-            .select('id, jenis')
-            .in('id', equipmentIds)
+        // Cek apakah peruntukan ini punya equipment berkategori 'Kendaraan'
+        const { data: kendaraanCheck } = await supabaseClient
+            .from('equipment_standards')
+            .select('equipment_id, equipment_master!inner(kategori)')
+            .eq('peruntukan_id', body.peruntukan_id)
+            .eq('equipment_master.kategori', 'Kendaraan')
+            .limit(1)
 
-        // Build lookup map: equipment_id -> jenis
-        const jenisMap: Record<string, string | null> = {}
-        if (equipmentList) {
-            for (const eq of equipmentList) {
-                jenisMap[eq.id] = eq.jenis
-            }
-        }
+        const peruntukanHasKendaraan = kendaraanCheck && kendaraanCheck.length > 0
+        const owner_id = peruntukanHasKendaraan ? (body.team_id || null) : (body.personnel_id || null)
 
         for (const item of processedItems) {
-            const jenis = jenisMap[item.equipment_id] || null
-            const isRegu = jenis === 'Regu'
 
-            // Build unique key for lookup
-            const lookupQuery = supabaseClient
-                .from('vendor_assets')
-                .select('id')
-                .eq('vendor_id', body.vendor_id)
-                .eq('peruntukan_id', body.peruntukan_id)
-                .eq('equipment_id', item.equipment_id)
-
-            if (isRegu) {
-                // REGU: lookup by team_id, personnel_id must be NULL
-                if (body.team_id) {
-                    lookupQuery.eq('team_id', body.team_id)
-                } else {
-                    lookupQuery.is('team_id', null)
-                }
-                lookupQuery.is('personnel_id', null)
-            } else {
-                // PERSONAL: lookup by personnel_id, team_id is NULL
-                lookupQuery.is('team_id', null)
-                if (body.personnel_id) {
-                    lookupQuery.eq('personnel_id', body.personnel_id)
-                } else {
-                    lookupQuery.is('personnel_id', null)
-                }
+            // Lookup by owner_id + equipment_id (unique key)
+            let existingAsset = null
+            if (owner_id) {
+                const { data } = await supabaseClient
+                    .from('vendor_assets')
+                    .select('id')
+                    .eq('owner_id', owner_id)
+                    .eq('equipment_id', item.equipment_id)
+                    .maybeSingle()
+                existingAsset = data
             }
-
-            const { data: existingAsset } = await lookupQuery.maybeSingle()
 
             const assetData = {
                 vendor_id: body.vendor_id,
                 peruntukan_id: body.peruntukan_id,
-                team_id: isRegu ? (body.team_id || null) : null,
-                personnel_id: isRegu ? null : (body.personnel_id || null),
+                team_id: body.team_id || null,
+                personnel_id: body.personnel_id || null,
+                owner_id: owner_id,
                 equipment_id: item.equipment_id,
                 realisasi_qty: item.actual_qty,
                 distribution_date: body.tanggal_penilaian,

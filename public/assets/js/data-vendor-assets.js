@@ -233,6 +233,12 @@ function renderAssets(assets) {
                 <td class="text-center">${fungsiBadge}</td>
                 <td class="text-center">${kontrakBadge}</td>
                 <td><small>${lastDate}</small></td>
+                <td class="text-center">
+                    <button class="btn btn-sm btn-outline-danger" onclick="deleteAsset('${asset.id}', '${equipmentName.replace(/'/g, "\\'")}')"
+                        title="Hapus">
+                        <i class="bi bi-trash"></i>
+                    </button>
+                </td>
             </tr>
         `;
     }).join('');
@@ -327,6 +333,42 @@ function formatDate(dateString) {
         return `${day}-${month}-${year} ${hours}:${minutes}`;
     } catch {
         return dateString;
+    }
+}
+
+// Delete a vendor asset
+async function deleteAsset(assetId, equipmentName) {
+    const result = await Swal.fire({
+        title: 'Hapus Inventaris?',
+        html: `<p class="mb-1">Anda yakin ingin menghapus:</p><strong>${equipmentName}</strong>`,
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#d33',
+        cancelButtonColor: '#6c757d',
+        confirmButtonText: '<i class="bi bi-trash"></i> Ya, Hapus',
+        cancelButtonText: 'Batal'
+    });
+
+    if (!result.isConfirmed) return;
+
+    try {
+        const res = await VendorAssetsAPI.delete(assetId);
+        if (!res.success) throw new Error(res.error);
+
+        // Remove from local array
+        allAssets = allAssets.filter(a => a.id !== assetId);
+        renderAssets(allAssets);
+
+        Swal.fire({
+            icon: 'success',
+            title: 'Berhasil',
+            text: `${equipmentName} telah dihapus`,
+            timer: 1500,
+            showConfirmButton: false
+        });
+    } catch (error) {
+        console.error('Delete error:', error);
+        Swal.fire('Gagal', 'Gagal menghapus data: ' + error.message, 'error');
     }
 }
 

@@ -497,6 +497,25 @@ h6 {
   background-color: rgba(255, 255, 255, 0.6);
 }
 
+/* Personal & Regu color utilities */
+.bg-personal {
+  background-color: #4154f1 !important;
+  color: #fff !important;
+}
+
+.bg-regu {
+  background-color: #ff771d !important;
+  color: #fff !important;
+}
+
+.text-personal {
+  color: #4154f1 !important;
+}
+
+.text-regu {
+  color: #ff771d !important;
+}
+
 /* Alerts */
 .alert-heading {
   font-weight: 500;

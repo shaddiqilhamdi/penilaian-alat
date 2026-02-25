@@ -1,0 +1,418 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8">
+    <meta content="width=device-width, initial-scale=1.0" name="viewport">
+
+    <title>Target Penilaian - PPE Health Index</title>
+    <meta content="" name="description">
+    <meta content="" name="keywords">
+
+    <!-- Favicons -->
+    <link href="assets/img/logo-portrait.png" rel="icon">
+
+    <!-- Google Fonts -->
+    <link href="https://fonts.gstatic.com" rel="preconnect">
+    <link
+        href="https://fonts.googleapis.com/css?family=Open+Sans:300,300i,400,400i,600,600i,700,700i|Nunito:300,300i,400,400i,600,600i,700,700i|Poppins:300,300i,400,400i,500,500i,600,600i,700,700i"
+        rel="stylesheet">
+
+    <!-- Vendor CSS Files -->
+    <link href="assets/vendor/bootstrap/css/bootstrap.min.css" rel="stylesheet">
+    <link href="assets/vendor/bootstrap-icons/bootstrap-icons.css" rel="stylesheet">
+    <link href="assets/vendor/boxicons/css/boxicons.min.css" rel="stylesheet">
+    <link href="assets/vendor/quill/quill.snow.css" rel="stylesheet">
+    <link href="assets/vendor/quill/quill.bubble.css" rel="stylesheet">
+    <link href="assets/vendor/remixicon/remixicon.css" rel="stylesheet">
+    <link href="assets/vendor/simple-datatables/style.css" rel="stylesheet">
+
+    <!-- Template Main CSS File -->
+    <link href="assets/css/style.css" rel="stylesheet">
+
+    <!-- Custom Styles -->
+    <style>
+        body {
+            font-size: 13px;
+        }
+
+        .table {
+            font-size: 12px;
+        }
+
+        .table th,
+        .table td {
+            padding: 0.4rem 0.5rem;
+            vertical-align: middle;
+        }
+
+        .table th {
+            font-weight: 600;
+        }
+
+        .card-title {
+            font-size: 14px;
+            font-weight: 600;
+        }
+
+        .btn-sm {
+            padding: 0.2rem 0.4rem;
+            font-size: 11px;
+        }
+
+        .form-control,
+        .form-select {
+            font-size: 13px;
+            padding: 0.375rem 0.75rem;
+        }
+
+        .form-label {
+            font-size: 13px;
+            margin-bottom: 0.25rem;
+        }
+
+        .modal-title {
+            font-size: 14px;
+        }
+
+        .modal-body {
+            font-size: 13px;
+        }
+
+        .input-target {
+            width: 70px;
+            text-align: center;
+            font-size: 12px;
+            padding: 0.25rem 0.4rem;
+        }
+
+        .target-computed {
+            font-weight: 700;
+            color: #4154f1;
+        }
+
+        .save-indicator {
+            font-size: 10px;
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+
+        .save-indicator.show {
+            opacity: 1;
+        }
+    </style>
+
+    <!-- Role-based menu visibility -->
+    <script>
+        (function () {
+            var role = localStorage.getItem('user_role') || '';
+            if (role) {
+                document.documentElement.className += ' role-' + role;
+            }
+            if (role === 'petugas') {
+                window.location.href = 'forms-penilaian.html';
+            }
+        })();
+    </script>
+
+</head>
+
+<body>
+
+    <!-- ======= Header ======= -->
+    <header id="header" class="header fixed-top d-flex align-items-center">
+
+        <div class="d-flex align-items-center justify-content-between">
+            <a href="index.html" class="logo d-flex align-items-center">
+                <i class="bi bi-shield-check fs-4 text-primary me-2"></i>
+                <span class="d-none d-lg-block">PPE Health Index</span>
+            </a>
+            <i class="bi bi-list toggle-sidebar-btn"></i>
+        </div>
+
+        <nav class="header-nav ms-auto">
+            <ul class="d-flex align-items-center">
+
+                <li class="nav-item dropdown pe-3">
+                    <a class="nav-link nav-profile d-flex align-items-center pe-0" href="#" data-bs-toggle="dropdown">
+                        <div id="navProfileInitial"
+                            class="rounded-circle bg-primary text-white d-flex align-items-center justify-content-center"
+                            style="width: 36px; height: 36px; font-size: 16px; font-weight: 600;">?</div>
+                        <span id="navProfileName" class="d-none d-md-block dropdown-toggle ps-2">Loading...</span>
+                    </a>
+
+                    <ul class="dropdown-menu dropdown-menu-end dropdown-menu-arrow profile">
+                        <li class="dropdown-header">
+                            <h6 id="navProfileFullName">Loading...</h6>
+                            <span id="navProfileRole">-</span>
+                        </li>
+                        <li>
+                            <hr class="dropdown-divider">
+                        </li>
+                        <li>
+                            <a class="dropdown-item d-flex align-items-center" href="users-profile.html">
+                                <i class="bi bi-person"></i>
+                                <span>My Profile</span>
+                            </a>
+                        </li>
+                        <li>
+                            <hr class="dropdown-divider">
+                        </li>
+                        <li>
+                            <a class="dropdown-item d-flex align-items-center" href="#" id="logoutBtn">
+                                <i class="bi bi-box-arrow-right"></i>
+                                <span>Sign Out</span>
+                            </a>
+                        </li>
+                    </ul>
+                </li>
+
+            </ul>
+        </nav>
+
+    </header>
+
+    <!-- ======= Sidebar ======= -->
+    <aside id="sidebar" class="sidebar">
+
+        <ul class="sidebar-nav" id="sidebar-nav">
+
+            <li class="nav-item">
+                <a class="nav-link collapsed" href="index.html">
+                    <i class="bi bi-grid"></i>
+                    <span>Dashboard</span>
+                </a>
+            </li>
+
+            <li class="nav-heading">Penilaian</li>
+
+            <li class="nav-item">
+                <a class="nav-link collapsed" data-bs-target="#forms-nav" data-bs-toggle="collapse" href="#">
+                    <i class="bi bi-menu-button-wide"></i><span>Formulir</span><i
+                        class="bi bi-chevron-down ms-auto"></i>
+                </a>
+                <ul id="forms-nav" class="nav-content collapse " data-bs-parent="#sidebar-nav">
+                    <li>
+                        <a href="forms-penilaian.html">
+                            <i class="bi bi-circle"></i><span>Form Penilaian</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="forms-data-penilaian.html">
+                            <i class="bi bi-circle"></i><span>Riwayat Penilaian</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="data-standar-peralatan.html">
+                            <i class="bi bi-circle"></i><span>Standar Peralatan</span>
+                        </a>
+                    </li>
+                </ul>
+            </li>
+
+            <li class="nav-heading">Pengaturan</li>
+
+            <li class="nav-item">
+                <a class="nav-link" data-bs-target="#data-nav" data-bs-toggle="collapse" href="#">
+                    <i class="bi bi-journal-text"></i><span>Data Master</span><i class="bi bi-chevron-down ms-auto"></i>
+                </a>
+                <ul id="data-nav" class="nav-content collapse show" data-bs-parent="#sidebar-nav">
+                    <li id="menu-unit"><a href="data-unit.html">
+                            <i class="bi bi-circle"></i><span>Unit</span>
+                        </a>
+                    </li>
+                    <li id="menu-vendor">
+                        <a href="data-vendor.html">
+                            <i class="bi bi-circle"></i><span>Pelaksana</span>
+                        </a>
+                    </li>
+                    <li id="menu-peruntukan">
+                        <a href="data-peruntukan.html">
+                            <i class="bi bi-circle"></i><span>Peruntukan</span>
+                        </a>
+                    </li>
+                    <li id="menu-peralatan">
+                        <a href="data-peralatan.html">
+                            <i class="bi bi-circle"></i><span>Peralatan</span>
+                        </a>
+                    </li>
+                    <li id="menu-kendaraan">
+                        <a href="data-kendaraan.html">
+                            <i class="bi bi-circle"></i><span>Kendaraan</span>
+                        </a>
+                    </li>
+                    <li id="menu-personil">
+                        <a href="data-personil.html">
+                            <i class="bi bi-circle"></i><span>Personil</span>
+                        </a>
+                    </li>
+                    <li id="menu-vendor-assets">
+                        <a href="data-vendor-assets.html">
+                            <i class="bi bi-circle"></i><span>Inventaris Vendor</span>
+                        </a>
+                    </li>
+                    <li id="menu-target">
+                        <a href="data-target-penilaian.html" class="active">
+                            <i class="bi bi-circle"></i><span>Target Penilaian</span>
+                        </a>
+                    </li>
+                </ul>
+            </li>
+
+            <li class="nav-item">
+                <a class="nav-link collapsed" data-bs-target="#users-nav" data-bs-toggle="collapse" href="#">
+                    <i class="bi bi-layout-text-window-reverse"></i><span>Pengguna</span><i
+                        class="bi bi-chevron-down ms-auto"></i>
+                </a>
+                <ul id="users-nav" class="nav-content collapse " data-bs-parent="#sidebar-nav">
+                    <li>
+                        <a href="users-tambah-pengguna.html">
+                            <i class="bi bi-circle"></i><span>Tambah Pengguna</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="users-data-pengguna.html">
+                            <i class="bi bi-circle"></i><span>Daftar Pengguna</span>
+                        </a>
+                    </li>
+                </ul>
+            </li>
+
+            <li class="nav-heading">Profil</li>
+
+            <li class="nav-item">
+                <a class="nav-link collapsed" href="users-profile.html">
+                    <i class="bi bi-person"></i>
+                    <span>Profil</span>
+                </a>
+            </li>
+
+            <li class="nav-item" id="menu-log">
+                <a class="nav-link collapsed" href="users-log.html">
+                    <i class="bi bi-file-earmark-text"></i>
+                    <span>Log</span>
+                </a>
+            </li>
+
+        </ul>
+
+    </aside>
+
+    <main id="main" class="main">
+
+        <div class="pagetitle">
+            <h1>Target Penilaian</h1>
+            <nav>
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a href="index.html">Home</a></li>
+                    <li class="breadcrumb-item">Pengaturan</li>
+                    <li class="breadcrumb-item active">Target Penilaian</li>
+                </ol>
+            </nav>
+        </div>
+
+        <section class="section">
+            <div class="row">
+                <div class="col-lg-12">
+
+                    <div class="card">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <h5 class="card-title">Setting Target Penilaian Harian</h5>
+                                <div class="d-flex align-items-center gap-2">
+                                    <!-- Unit pagination for UID -->
+                                    <div class="d-flex align-items-center gap-1" id="unitPagination"
+                                        style="display: none !important;">
+                                        <button class="btn btn-outline-secondary btn-sm" id="prevUnitBtn"
+                                            title="Unit Sebelumnya">
+                                            <i class="bi bi-chevron-left"></i>
+                                        </button>
+                                        <span class="badge bg-primary px-3 py-2" id="currentUnitLabel"
+                                            style="font-size: 12px; min-width: 160px; text-align: center;">-</span>
+                                        <button class="btn btn-outline-secondary btn-sm" id="nextUnitBtn"
+                                            title="Unit Berikutnya">
+                                            <i class="bi bi-chevron-right"></i>
+                                        </button>
+                                    </div>
+                                    <!-- UP3 unit label -->
+                                    <span class="badge bg-secondary px-3 py-2" id="up3UnitLabel"
+                                        style="font-size: 12px; display: none;">-</span>
+                                    <button class="btn btn-outline-primary btn-sm" id="refreshBtn" title="Refresh">
+                                        <i class="bi bi-arrow-clockwise"></i>
+                                    </button>
+                                </div>
+                            </div>
+
+                            <div class="alert alert-info small py-2 mb-3" id="infoAlert">
+                                <i class="bi bi-info-circle me-1"></i>
+                                Target harian = Jumlah Regu &times; Penilaian/Hari. Data otomatis tersimpan saat Anda
+                                mengubah nilai.
+                            </div>
+
+                            <div class="table-responsive">
+                                <table class="table table-hover table-sm table-bordered mb-0" id="target-table">
+                                    <thead class="table-light">
+                                        <tr>
+                                            <th style="width: 35px;">#</th>
+                                            <th>Peruntukan</th>
+                                            <th class="text-center" style="width: 100px;">Jml Regu</th>
+                                            <th class="text-center" style="width: 100px;">Penilaian/Hari</th>
+                                            <th class="text-center" style="width: 100px;">Target Harian</th>
+                                            <th class="text-center" style="width: 60px;"></th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="target-table-body">
+                                        <tr>
+                                            <td colspan="6" class="text-center text-muted">Memuat data...</td>
+                                        </tr>
+                                    </tbody>
+                                    <tfoot class="table-light">
+                                        <tr>
+                                            <th colspan="2" class="text-end">Total Target Harian:</th>
+                                            <th class="text-center" id="totalRegu">0</th>
+                                            <th class="text-center">-</th>
+                                            <th class="text-center target-computed" id="totalTarget">0</th>
+                                            <th></th>
+                                        </tr>
+                                    </tfoot>
+                                </table>
+                            </div>
+
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- ======= Footer ======= -->
+    <footer id="footer" class="footer">
+    </footer>
+
+    <a href="#" class="back-to-top d-flex align-items-center justify-content-center"><i
+            class="bi bi-arrow-up-short"></i></a>
+
+    <!-- Vendor JS Files -->
+    <script src="assets/vendor/bootstrap/js/bootstrap.bundle.min.js"></script>
+    <script src="assets/vendor/simple-datatables/simple-datatables.js"></script>
+
+    <!-- Supabase & SweetAlert2 -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+    <!-- Supabase Config & API -->
+    <script src="assets/js/config/supabase-client.js"></script>
+    <script src="assets/js/auth/supabase-auth.js"></script>
+    <script src="assets/js/api/profiles.js"></script>
+
+    <!-- Template Main JS File -->
+    <script src="assets/js/main.js"></script>
+
+    <!-- Page Specific JS File -->
+    <script src="assets/js/data-target-penilaian.js"></script>
+
+</body>
+
+</html>

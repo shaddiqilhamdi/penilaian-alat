@@ -219,6 +219,11 @@
               <i class="bi bi-circle"></i><span>Inventaris Vendor</span>
             </a>
           </li>
+          <li id="menu-target">
+            <a href="data-target-penilaian.html">
+              <i class="bi bi-circle"></i><span>Target Penilaian</span>
+            </a>
+          </li>
 
         </ul>
       </li><!-- End Pengaturan Nav -->
@@ -283,21 +288,20 @@
       <div id="uidDashboard" style="display: none;">
 
         <!-- Row 1: Main Stats Cards -->
-        <div class="row g-2 mb-2">
-          <div class="col-lg-3 col-md-6">
-            <div class="card info-card sales-card mb-0 h-100">
-              <div class="card-body py-2 px-3">
-                <h5 class="card-title mb-2">Total Penilaian <span>| Bulan Ini</span></h5>
+        <div class="row">
+          <div class="col-xxl-3 col-md-6">
+            <div class="card info-card sales-card">
+              <div class="card-body">
+                <h5 class="card-title">Total Penilaian <span>| Bulan Ini</span></h5>
                 <div class="d-flex align-items-center">
-                  <div class="card-icon rounded-circle d-flex align-items-center justify-content-center bg-primary"
-                    style="width:40px;height:40px;">
-                    <i class="bi bi-clipboard-check text-white"></i>
+                  <div class="card-icon rounded-circle d-flex align-items-center justify-content-center">
+                    <i class="bi bi-clipboard-check"></i>
                   </div>
                   <div class="ps-3">
-                    <h6 class="mb-0" id="uidTotalAssessments">-</h6>
-                    <div class="d-flex gap-1 mt-1">
-                      <span class="badge bg-info" id="uidPersonalCount">P: -</span>
-                      <span class="badge bg-warning" id="uidReguCount">R: -</span>
+                    <h6 id="uidTotalAssessments">-</h6>
+                    <div class="d-flex gap-1">
+                      <span class="badge bg-personal" id="uidPersonalCount">P: -</span>
+                      <span class="badge bg-regu" id="uidReguCount">R: -</span>
                     </div>
                   </div>
                 </div>
@@ -305,56 +309,54 @@
             </div>
           </div>
 
-          <div class="col-lg-3 col-md-6">
-            <div class="card info-card revenue-card mb-0 h-100">
-              <div class="card-body py-2 px-3">
-                <h5 class="card-title mb-2">Vendor Aktif <span>| Bulan Ini</span></h5>
+          <div class="col-xxl-3 col-md-6">
+            <div class="card info-card revenue-card">
+              <div class="card-body">
+                <h5 class="card-title">Vendor Aktif <span>| Bulan Ini</span></h5>
                 <div class="d-flex align-items-center">
-                  <div class="card-icon rounded-circle d-flex align-items-center justify-content-center bg-success"
-                    style="width:40px;height:40px;">
-                    <i class="bi bi-building text-white"></i>
+                  <div class="card-icon rounded-circle d-flex align-items-center justify-content-center">
+                    <i class="bi bi-building"></i>
                   </div>
                   <div class="ps-3">
-                    <h6 class="mb-0" id="uidTotalVendors">-</h6>
-                    <span class="text-muted small">Vendor dinilai</span>
+                    <h6 id="uidTotalVendors">-</h6>
+                    <span class="text-success small pt-1 fw-bold">Vendor dinilai</span>
                   </div>
                 </div>
               </div>
             </div>
           </div>
 
-          <div class="col-lg-3 col-md-6">
-            <div class="card info-card customers-card mb-0 h-100">
-              <div class="card-body py-2 px-3">
-                <h5 class="card-title mb-2">Unit Aktif <span>| Bulan Ini</span></h5>
+          <div class="col-xxl-3 col-md-6">
+            <div class="card info-card customers-card">
+              <div class="card-body">
+                <h5 class="card-title">Unit Aktif <span>| Bulan Ini</span></h5>
                 <div class="d-flex align-items-center">
-                  <div class="card-icon rounded-circle d-flex align-items-center justify-content-center bg-warning"
-                    style="width:40px;height:40px;">
-                    <i class="bi bi-geo-alt text-white"></i>
+                  <div class="card-icon rounded-circle d-flex align-items-center justify-content-center">
+                    <i class="bi bi-geo-alt"></i>
                   </div>
                   <div class="ps-3">
-                    <h6 class="mb-0" id="uidTotalUnits">-</h6>
-                    <span class="text-muted small">dari <span id="uidTotalUnitsAll">-</span> unit</span>
+                    <h6 id="uidTotalUnits">-</h6>
+                    <span class="text-muted small pt-1">dari <span id="uidTotalUnitsAll">-</span> unit</span>
                   </div>
                 </div>
               </div>
             </div>
           </div>
 
-          <div class="col-lg-3 col-md-6">
-            <div class="card info-card mb-0 h-100">
-              <div class="card-body py-2 px-3">
-                <h5 class="card-title mb-2">Rata-rata Score <span>| Bulan Ini</span></h5>
+          <div class="col-xxl-3 col-md-6">
+            <div class="card info-card">
+              <div class="card-body">
+                <h5 class="card-title">Rata-rata Score <span>| Bulan Ini</span></h5>
                 <div class="d-flex align-items-center">
-                  <div class="card-icon rounded-circle d-flex align-items-center justify-content-center bg-info"
-                    style="width:40px;height:40px;">
-                    <i class="bi bi-star-fill text-white"></i>
+                  <div class="card-icon rounded-circle d-flex align-items-center justify-content-center"
+                    style="background: #e0f7fa;">
+                    <i class="bi bi-star-fill" style="color: #0dcaf0;"></i>
                   </div>
                   <div class="ps-3">
-                    <h6 class="mb-0" id="uidAvgScore">-</h6>
-                    <div class="d-flex gap-1 mt-1">
-                      <span class="badge bg-info" id="uidAvgPersonal">P: -</span>
-                      <span class="badge bg-warning" id="uidAvgRegu">R: -</span>
+                    <h6 id="uidAvgScore" style="font-size: 1.5rem;">-</h6>
+                    <div class="d-flex gap-1">
+                      <span class="badge bg-personal" id="uidAvgPersonal">P: -</span>
+                      <span class="badge bg-regu" id="uidAvgRegu">R: -</span>
                     </div>
                   </div>
                 </div>
@@ -363,107 +365,119 @@
           </div>
         </div>
 
-        <!-- Row 2: Issue Stats Mini Cards -->
-        <div class="row g-2 mb-2">
-          <div class="col-lg-3 col-md-6">
-            <div class="card border-danger mb-0 h-100">
-              <div class="card-body py-2 px-3">
-                <div class="d-flex justify-content-between align-items-center">
-                  <div>
-                    <small class="text-danger mb-0">Tidak Layak Fisik</small>
-                    <h5 class="mb-0" id="uidTidakLayak">-</h5>
-                  </div>
-                  <div class="text-end small">
-                    <div>P: <span id="uidTidakLayakPersonal">-</span></div>
-                    <div>R: <span id="uidTidakLayakRegu">-</span></div>
-                  </div>
-                </div>
+        <!-- Row 2: Tren Penilaian + Statistik Alert Sidebar -->
+        <div class="row">
+          <div class="col-lg-8 d-flex">
+            <div class="card flex-fill" style="margin-bottom: 30px;">
+              <div class="card-body">
+                <h5 class="card-title">Tren Penilaian <span>| 6 Bulan Terakhir</span></h5>
+                <div id="uidTrendChart" style="min-height: 380px;"></div>
               </div>
             </div>
           </div>
 
-          <div class="col-lg-3 col-md-6">
-            <div class="card border-warning mb-0 h-100">
-              <div class="card-body py-2 px-3">
-                <div class="d-flex justify-content-between align-items-center">
-                  <div>
-                    <small class="text-warning mb-0">Tidak Berfungsi</small>
-                    <h5 class="mb-0" id="uidTidakBerfungsi">-</h5>
-                  </div>
-                  <div class="text-end small">
-                    <div>P: <span id="uidTidakBerfungsiPersonal">-</span></div>
-                    <div>R: <span id="uidTidakBerfungsiRegu">-</span></div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
+          <div class="col-lg-4 d-flex">
+            <div class="card flex-fill" style="margin-bottom: 30px;">
+              <div class="card-body pb-2">
+                <h5 class="card-title">Statistik <span>| Bulan Ini</span></h5>
 
-          <div class="col-lg-3 col-md-6">
-            <div class="card border-primary mb-0 h-100">
-              <div class="card-body py-2 px-3">
-                <div class="d-flex justify-content-between align-items-center">
-                  <div>
-                    <small class="text-primary mb-0">Kendaraan Dinilai</small>
-                    <h5 class="mb-0" id="uidTotalRegu">-</h5>
+                <div class="d-flex align-items-center p-3 mb-2 rounded-3"
+                  style="background: linear-gradient(135deg, #fce4ec 0%, #fff0f0 100%);">
+                  <div class="rounded-circle d-flex align-items-center justify-content-center flex-shrink-0"
+                    style="width: 44px; height: 44px; background: #fff; box-shadow: 0 2px 6px rgba(231,76,60,0.15);">
+                    <i class="bi bi-x-circle-fill" style="color: #e74c3c; font-size: 18px;"></i>
                   </div>
-                  <i class="bi bi-truck fs-4 text-primary opacity-50"></i>
+                  <div class="ps-3 flex-grow-1">
+                    <span class="text-muted small d-block" style="font-size: 11px;">Tidak Layak Fisik</span>
+                    <div class="d-flex align-items-baseline gap-2">
+                      <span class="fw-bold text-danger" style="font-size: 22px;" id="uidTidakLayak">-</span>
+                      <span class="text-muted" style="font-size: 11px;">Personal: <strong
+                          id="uidTidakLayakPersonal">-</strong>
+                        Regu: <strong id="uidTidakLayakRegu">-</strong></span>
+                    </div>
+                  </div>
                 </div>
-              </div>
-            </div>
-          </div>
 
-          <div class="col-lg-3 col-md-6">
-            <div class="card border-info mb-0 h-100">
-              <div class="card-body py-2 px-3">
-                <div class="d-flex justify-content-between align-items-center">
-                  <div>
-                    <small class="text-info mb-0">Personil Dinilai</small>
-                    <h5 class="mb-0" id="uidTotalPersonil">-</h5>
+                <div class="d-flex align-items-center p-3 mb-2 rounded-3"
+                  style="background: linear-gradient(135deg, #fff8e1 0%, #fffef5 100%);">
+                  <div class="rounded-circle d-flex align-items-center justify-content-center flex-shrink-0"
+                    style="width: 44px; height: 44px; background: #fff; box-shadow: 0 2px 6px rgba(255,152,0,0.15);">
+                    <i class="bi bi-exclamation-triangle-fill" style="color: #ff9800; font-size: 18px;"></i>
                   </div>
-                  <i class="bi bi-people fs-4 text-info opacity-50"></i>
+                  <div class="ps-3 flex-grow-1">
+                    <span class="text-muted small d-block" style="font-size: 11px;">Tidak Berfungsi</span>
+                    <div class="d-flex align-items-baseline gap-2">
+                      <span class="fw-bold text-warning" style="font-size: 22px;" id="uidTidakBerfungsi">-</span>
+                      <span class="text-muted" style="font-size: 11px;">Personal: <strong
+                          id="uidTidakBerfungsiPersonal">-</strong> Regu: <strong
+                          id="uidTidakBerfungsiRegu">-</strong></span>
+                    </div>
+                  </div>
                 </div>
+
+                <div class="d-flex align-items-center p-3 mb-2 rounded-3"
+                  style="background: linear-gradient(135deg, #e8eaf6 0%, #f3f4fc 100%);">
+                  <div class="rounded-circle d-flex align-items-center justify-content-center flex-shrink-0"
+                    style="width: 44px; height: 44px; background: #fff; box-shadow: 0 2px 6px rgba(65,84,241,0.15);">
+                    <i class="bi bi-truck" style="color: #4154f1; font-size: 18px;"></i>
+                  </div>
+                  <div class="ps-3">
+                    <span class="text-muted small d-block" style="font-size: 11px;">Kendaraan Dinilai</span>
+                    <span class="fw-bold" style="font-size: 22px; color: #4154f1;" id="uidTotalRegu">-</span>
+                  </div>
+                </div>
+
+                <div class="d-flex align-items-center p-3 rounded-3"
+                  style="background: linear-gradient(135deg, #e0f7fa 0%, #f0fcfe 100%);">
+                  <div class="rounded-circle d-flex align-items-center justify-content-center flex-shrink-0"
+                    style="width: 44px; height: 44px; background: #fff; box-shadow: 0 2px 6px rgba(13,202,240,0.15);">
+                    <i class="bi bi-people-fill" style="color: #0dcaf0; font-size: 18px;"></i>
+                  </div>
+                  <div class="ps-3">
+                    <span class="text-muted small d-block" style="font-size: 11px;">Personil Dinilai</span>
+                    <span class="fw-bold" style="font-size: 22px; color: #0dcaf0;" id="uidTotalPersonil">-</span>
+                  </div>
+                </div>
+
               </div>
             </div>
           </div>
         </div>
 
-        <!-- Row 3: Charts -->
-        <div class="row g-2 mb-2">
-          <div class="col-lg-6">
-            <div class="card mb-0 h-100">
-              <div class="card-body py-2 px-3">
-                <h5 class="card-title mb-1">Tren Penilaian <span>| 6 Bulan Terakhir</span></h5>
-                <div id="uidTrendChart" style="min-height: 250px;"></div>
+        <!-- Row 3: Daily Entry + Kondisi Alat -->
+        <div class="row">
+          <div class="col-lg-8 d-flex">
+            <div class="card flex-fill">
+              <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center mb-2">
+                  <h5 class="card-title mb-0">Realisasi Entri Unit <span>| Per Tanggal</span></h5>
+                  <div class="d-flex align-items-center gap-2">
+                    <label for="uidDailyEntryDate" class="form-label mb-0 small text-muted">Tanggal:</label>
+                    <input type="date" class="form-control form-control-sm" id="uidDailyEntryDate"
+                      style="width: 160px;">
+                  </div>
+                </div>
+                <div id="uidDailyEntryChart" style="min-height: 280px;"></div>
               </div>
             </div>
           </div>
 
-          <div class="col-lg-3">
-            <div class="card mb-0 h-100">
-              <div class="card-body py-2 px-3">
-                <h5 class="card-title mb-1">Perbandingan <span>| Personal vs Regu</span></h5>
-                <div id="uidComparisonChart" style="min-height: 250px;"></div>
-              </div>
-            </div>
-          </div>
-
-          <div class="col-lg-3">
-            <div class="card mb-0 h-100">
-              <div class="card-body py-2 px-3">
-                <h5 class="card-title mb-1">Kondisi Alat <span>| Baik vs Rusak</span></h5>
-                <div id="uidConditionChart" style="min-height: 250px;"></div>
+          <div class="col-lg-4 d-flex">
+            <div class="card flex-fill">
+              <div class="card-body">
+                <h5 class="card-title">Kondisi Alat <span>| Baik vs Rusak</span></h5>
+                <div id="uidConditionChart" style="min-height: 350px;"></div>
               </div>
             </div>
           </div>
         </div>
 
         <!-- Row 4: Main Table - Rekapitulasi -->
-        <div class="row g-2 mb-2">
+        <div class="row">
           <div class="col-12">
-            <div class="card mb-0">
-              <div class="card-body py-2 px-3">
-                <h5 class="card-title mb-1">Rekapitulasi Per Unit <span>| Bulan Ini</span></h5>
+            <div class="card">
+              <div class="card-body">
+                <h5 class="card-title">Rekapitulasi Per Unit <span>| Bulan Ini</span></h5>
                 <div class="table-responsive">
                   <table class="table table-hover table-sm mb-0 small" id="uidUnitRecapTable">
                     <thead class="table-light">
@@ -492,13 +506,22 @@
           </div>
         </div>
 
-        <!-- Row 5: Equipment Issues & Entry Chart -->
-        <div class="row g-2 mb-2">
-          <div class="col-lg-6">
-            <div class="card mb-0">
-              <div class="card-body py-2 px-3">
-                <h5 class="card-title mb-1">Equipment Bermasalah <span>| Per Unit</span></h5>
-                <div class="table-responsive" style="max-height: 280px; overflow-y: auto;">
+        <!-- Row 5: Equipment Issues -->
+        <div class="row">
+          <div class="col-lg-12">
+            <div class="card">
+              <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center mb-2">
+                  <h5 class="card-title mb-0">Equipment Bermasalah <span>| Per Unit</span></h5>
+                  <div class="d-flex align-items-center gap-2">
+                    <input type="date" class="form-control form-control-sm" id="uidIssuesStartDate"
+                      style="width: 140px;" title="Dari tanggal">
+                    <span class="text-muted small">s/d</span>
+                    <input type="date" class="form-control form-control-sm" id="uidIssuesEndDate" style="width: 140px;"
+                      title="Sampai tanggal">
+                  </div>
+                </div>
+                <div class="table-responsive">
                   <table class="table table-hover table-sm mb-0 small" id="uidIssuesByUnitTable">
                     <thead class="table-light sticky-top">
                       <tr>
@@ -526,15 +549,6 @@
               </div>
             </div>
           </div>
-
-          <div class="col-lg-6">
-            <div class="card mb-0">
-              <div class="card-body py-2 px-3">
-                <h5 class="card-title mb-1">Realisasi Entri <span>| Per Unit</span></h5>
-                <div id="uidEntryRealizationChart" style="min-height: 280px;"></div>
-              </div>
-            </div>
-          </div>
         </div>
 
       </div>
@@ -544,21 +558,21 @@
       <div id="up3Dashboard" style="display: none;">
 
         <!-- Row 1: Main Stats Cards (UID Style) -->
-        <div class="row g-2 mb-2">
-          <div class="col-lg-3 col-md-6">
-            <div class="card info-card mb-0 h-100">
-              <div class="card-body py-2 px-3">
-                <h5 class="card-title mb-2">Rata-rata Score <span>| Bulan Ini</span></h5>
+        <div class="row">
+          <div class="col-xxl-3 col-md-6">
+            <div class="card info-card">
+              <div class="card-body">
+                <h5 class="card-title">Rata-rata Score <span>| Bulan Ini</span></h5>
                 <div class="d-flex align-items-center">
-                  <div class="card-icon rounded-circle d-flex align-items-center justify-content-center bg-info"
-                    style="width:40px;height:40px;">
-                    <i class="bi bi-star-fill text-white"></i>
+                  <div class="card-icon rounded-circle d-flex align-items-center justify-content-center"
+                    style="background: #e0f7fa;">
+                    <i class="bi bi-star-fill" style="color: #0dcaf0;"></i>
                   </div>
                   <div class="ps-3">
-                    <h6 class="mb-0" id="up3AvgScore">-</h6>
-                    <div class="d-flex gap-1 mt-1">
-                      <span class="badge bg-primary" id="up3PersonalScoreBadge">P: -</span>
-                      <span class="badge bg-success" id="up3ReguScoreBadge">R: -</span>
+                    <h6 id="up3AvgScore" style="font-size: 1.5rem;">-</h6>
+                    <div class="d-flex gap-1">
+                      <span class="badge bg-personal" id="up3PersonalScoreBadge">P: -</span>
+                      <span class="badge bg-regu" id="up3ReguScoreBadge">R: -</span>
                     </div>
                   </div>
                 </div>
@@ -566,54 +580,51 @@
             </div>
           </div>
 
-          <div class="col-lg-3 col-md-6">
-            <div class="card info-card sales-card mb-0 h-100">
-              <div class="card-body py-2 px-3">
-                <h5 class="card-title mb-2">Total Penilaian <span>| Bulan Ini</span></h5>
+          <div class="col-xxl-3 col-md-6">
+            <div class="card info-card sales-card">
+              <div class="card-body">
+                <h5 class="card-title">Total Penilaian <span>| Bulan Ini</span></h5>
                 <div class="d-flex align-items-center">
-                  <div class="card-icon rounded-circle d-flex align-items-center justify-content-center bg-primary"
-                    style="width:40px;height:40px;">
-                    <i class="bi bi-clipboard-check text-white"></i>
+                  <div class="card-icon rounded-circle d-flex align-items-center justify-content-center">
+                    <i class="bi bi-clipboard-check"></i>
                   </div>
                   <div class="ps-3">
-                    <h6 class="mb-0" id="up3TotalAssessments">-</h6>
-                    <span class="text-muted small">Penilaian</span>
+                    <h6 id="up3TotalAssessments">-</h6>
+                    <span class="text-muted small pt-1">Penilaian</span>
                   </div>
                 </div>
               </div>
             </div>
           </div>
 
-          <div class="col-lg-3 col-md-6">
-            <div class="card info-card revenue-card mb-0 h-100">
-              <div class="card-body py-2 px-3">
-                <h5 class="card-title mb-2">Total Equipment <span>| Bulan Ini</span></h5>
+          <div class="col-xxl-3 col-md-6">
+            <div class="card info-card revenue-card">
+              <div class="card-body">
+                <h5 class="card-title">Total Equipment <span>| Bulan Ini</span></h5>
                 <div class="d-flex align-items-center">
-                  <div class="card-icon rounded-circle d-flex align-items-center justify-content-center bg-warning"
-                    style="width:40px;height:40px;">
-                    <i class="bi bi-tools text-white"></i>
+                  <div class="card-icon rounded-circle d-flex align-items-center justify-content-center">
+                    <i class="bi bi-tools"></i>
                   </div>
                   <div class="ps-3">
-                    <h6 class="mb-0" id="up3TotalEquipment">-</h6>
-                    <span class="text-muted small">Item dinilai</span>
+                    <h6 id="up3TotalEquipment">-</h6>
+                    <span class="text-muted small pt-1">Item dinilai</span>
                   </div>
                 </div>
               </div>
             </div>
           </div>
 
-          <div class="col-lg-3 col-md-6">
-            <div class="card info-card mb-0 h-100">
-              <div class="card-body py-2 px-3">
-                <h5 class="card-title mb-2">Kesesuaian Kontrak <span>| %</span></h5>
+          <div class="col-xxl-3 col-md-6">
+            <div class="card info-card customers-card">
+              <div class="card-body">
+                <h5 class="card-title">Kesesuaian Kontrak <span>| %</span></h5>
                 <div class="d-flex align-items-center">
-                  <div class="card-icon rounded-circle d-flex align-items-center justify-content-center bg-success"
-                    style="width:40px;height:40px;">
-                    <i class="bi bi-check-circle text-white"></i>
+                  <div class="card-icon rounded-circle d-flex align-items-center justify-content-center">
+                    <i class="bi bi-check-circle"></i>
                   </div>
                   <div class="ps-3">
-                    <h6 class="mb-0" id="up3KontrakPct">-</h6>
-                    <span class="text-muted small">Sesuai kontrak</span>
+                    <h6 id="up3KontrakPct">-</h6>
+                    <span class="text-muted small pt-1">Sesuai kontrak</span>
                   </div>
                 </div>
               </div>
@@ -621,61 +632,56 @@
           </div>
         </div>
 
-        <!-- Row 2: Issue Stats Mini Cards -->
-        <div class="row g-2 mb-2">
-          <div class="col-lg-6 col-md-6">
-            <div class="card border-danger mb-0 h-100">
-              <div class="card-body py-2 px-3">
-                <div class="d-flex justify-content-between align-items-center">
-                  <div>
-                    <small class="text-danger mb-0">Tidak Layak Fisik</small>
-                    <h5 class="mb-0" id="up3TidakLayak">-</h5>
-                  </div>
-                  <i class="bi bi-x-circle fs-3 text-danger opacity-50"></i>
-                </div>
+        <!-- Row 2: Daily Entry Chart + Statistik -->
+        <div class="row" style="align-items: stretch;">
+          <div class="col-lg-8 d-flex">
+            <div class="card w-100">
+              <div class="card-body">
+                <h5 class="card-title">Entri Penilaian Harian <span>| 30 Hari Terakhir</span></h5>
+                <div id="up3DailyChart" style="min-height: 320px;"></div>
               </div>
             </div>
           </div>
 
-          <div class="col-lg-6 col-md-6">
-            <div class="card border-warning mb-0 h-100">
-              <div class="card-body py-2 px-3">
-                <div class="d-flex justify-content-between align-items-center">
-                  <div>
-                    <small class="text-warning mb-0">Tidak Berfungsi</small>
-                    <h5 class="mb-0" id="up3TidakBerfungsi">-</h5>
+          <div class="col-lg-4 d-flex">
+            <div class="card w-100">
+              <div class="card-body d-flex flex-column">
+                <h5 class="card-title">Kondisi Alat <span>| Bulan Ini</span></h5>
+                <div id="up3KondisiDonut" style="min-height: 220px;"></div>
+                <div id="up3KondisiDetail" class="small"></div>
+                <div class="mt-auto">
+                  <hr class="my-2">
+                  <div class="d-flex align-items-center justify-content-between py-1">
+                    <div class="d-flex align-items-center">
+                      <i class="bi bi-truck text-success me-2" style="font-size: 1.1rem;"></i>
+                      <span class="small">Kendaraan</span>
+                    </div>
+                    <span class="fw-bold" id="up3JumlahKendaraan">-</span>
                   </div>
-                  <i class="bi bi-exclamation-triangle fs-3 text-warning opacity-50"></i>
+                  <div class="d-flex align-items-center justify-content-between py-1">
+                    <div class="d-flex align-items-center">
+                      <i class="bi bi-people text-primary me-2" style="font-size: 1.1rem;"></i>
+                      <span class="small">Personil</span>
+                    </div>
+                    <span class="fw-bold" id="up3JumlahPersonil">-</span>
+                  </div>
                 </div>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <!-- Row 3: Daily Entry Chart -->
-        <div class="row g-2 mb-2">
-          <div class="col-12">
-            <div class="card mb-0">
-              <div class="card-body py-2 px-3">
-                <h5 class="card-title mb-1">Entri Penilaian Harian <span>| 30 Hari Terakhir</span></h5>
-                <div id="up3DailyChart" style="min-height: 200px;"></div>
               </div>
             </div>
           </div>
         </div>
 
         <!-- Row 4: Penilaian per Vendor & Peruntukan -->
-        <div class="row g-2 mb-2">
+        <div class="row">
           <div class="col-12">
-            <div class="card mb-0">
-              <div class="card-body py-2 px-3">
-                <h5 class="card-title mb-1">Rekap Penilaian <span>| Per Vendor & Peruntukan (Bulan Ini)</span></h5>
+            <div class="card">
+              <div class="card-body">
+                <h5 class="card-title">Rekap Penilaian <span>| Per Vendor & Peruntukan (Bulan Ini)</span></h5>
                 <div class="table-responsive">
                   <table class="table table-hover table-sm mb-0 small" id="up3VendorRecapTable">
                     <thead class="table-light sticky-top">
                       <tr>
                         <th scope="col">Vendor</th>
-                        <th scope="col">Jenis</th>
                         <th scope="col">Peruntukan</th>
                         <th scope="col" class="text-center">Jumlah</th>
                         <th scope="col" class="text-center">Equipment</th>
@@ -698,11 +704,11 @@
         </div>
 
         <!-- Row 5: Equipment Bermasalah -->
-        <div class="row g-2 mb-2">
+        <div class="row">
           <div class="col-12">
-            <div class="card mb-0">
-              <div class="card-body py-2 px-3">
-                <h5 class="card-title mb-1">Equipment Bermasalah <span>| Unit Saya</span></h5>
+            <div class="card">
+              <div class="card-body">
+                <h5 class="card-title">Equipment Bermasalah <span>| Unit Saya</span></h5>
                 <div class="table-responsive">
                   <table class="table table-hover table-sm mb-0 small" id="up3IssuesTable">
                     <thead class="table-light sticky-top">
@@ -773,17 +779,17 @@
               <thead class="table-light sticky-top">
                 <tr>
                   <th class="text-center" style="width: 35px;">#</th>
-                  <th>Peruntukan</th>
+                  <th>Nama Alat</th>
+                  <th>Kategori</th>
+                  <th class="text-center" style="width: 80px;">Jenis</th>
                   <th>Tim/Personil</th>
-                  <th>Peralatan</th>
-                  <th class="text-center" style="width: 80px;">Kategori</th>
                   <th class="text-center" style="width: 45px;">Std.</th>
                   <th class="text-center" style="width: 45px;">Act.</th>
                   <th class="text-center" style="width: 70px;">Kondisi</th>
                   <th class="text-center" style="width: 70px;">Fungsi</th>
                   <th class="text-center" style="width: 90px;">Kontrak</th>
                   <th class="text-center" style="width: 55px;">Nilai</th>
-                  <th class="text-center" style="width: 130px;">Tgl. Penilaian</th>
+                  <th class="text-center" style="width: 100px;">Tgl. Penilaian</th>
                 </tr>
               </thead>
               <tbody id="tbody-equipment-issues">
