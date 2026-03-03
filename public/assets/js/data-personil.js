@@ -1,4 +1,4 @@
-/**
+﻿/**
  * Data Personil (Personnel) Page
  * Handle personnel list display with CRUD operations
  * All users can add/edit/delete
@@ -13,6 +13,7 @@ let vendorsList = [];
 let peruntukanList = [];
 let teamsList = [];
 let dataTable = null;
+let showActiveOnly = true;
 
 // Role labels for display
 const ROLE_LABELS = {
@@ -187,20 +188,31 @@ async function loadTeams() {
 }
 
 // Load personnel from database (filtered by unit)
-async function loadPersonnel() {
+// showLoading=false for seamless refresh after edit/delete
+async function loadPersonnel(showLoading = true) {
     try {
+        // Destroy existing DataTable FIRST â€” destroy() replaces the
+        // <table> element in the DOM, so any earlier reference is stale.
+        if (dataTable) {
+            dataTable.destroy();
+            dataTable = null;
+        }
+
+        // Get fresh tbody reference AFTER destroy
         const tableBody = document.getElementById('personil-table-body');
         if (!tableBody) {
             return;
         }
 
-        // Show loading
-        tableBody.innerHTML = '<tr><td colspan="6" class="text-center"><div class="spinner-border spinner-border-sm" role="status"></div> Memuat data...</td></tr>';
+        // Show loading spinner only on initial / manual refresh
+        if (showLoading) {
+            tableBody.innerHTML = '<tr><td colspan="8" class="text-center"><div class="spinner-border spinner-border-sm" role="status"></div> Memuat data...</td></tr>';
+        }
 
-        const result = await PersonnelAPI.getAll();
+        const result = await PersonnelAPI.getAll(showActiveOnly);
 
         if (!result.success) {
-            tableBody.innerHTML = '<tr><td colspan="6" class="text-center text-danger">Gagal memuat data: ' + result.error + '</td></tr>';
+            tableBody.innerHTML = '<tr><td colspan="8" class="text-center text-danger">Gagal memuat data: ' + result.error + '</td></tr>';
             return;
         }
 
@@ -218,7 +230,7 @@ async function loadPersonnel() {
         personnelList = data;
 
         if (personnelList.length === 0) {
-            tableBody.innerHTML = '<tr><td colspan="6" class="text-center">Tidak ada data personil</td></tr>';
+            tableBody.innerHTML = '<tr><td colspan="8" class="text-center">Tidak ada data personil</td></tr>';
             return;
         }
 
@@ -227,7 +239,7 @@ async function loadPersonnel() {
     } catch (error) {
         const tableBody = document.getElementById('personil-table-body');
         if (tableBody) {
-            tableBody.innerHTML = '<tr><td colspan="6" class="text-center text-danger">Error: ' + error.message + '</td></tr>';
+            tableBody.innerHTML = '<tr><td colspan="8" class="text-center text-danger">Error: ' + error.message + '</td></tr>';
         }
     }
 }
@@ -247,13 +259,19 @@ function renderPersonnelTable() {
         const peruntukanDesc = item.peruntukan?.deskripsi || '-';
         const peruntukan = peruntukanDesc;
         const teamInfo = item.teams ? `${item.teams.nomor_polisi || '-'} (${item.teams.category || '-'})` : '-';
+        const isActive = item.is_active !== false;
+        const statusBadge = isActive
+            ? '<span class="badge bg-success">Aktif</span>'
+            : '<span class="badge bg-secondary">Nonaktif</span>';
 
         row.innerHTML = `
             <td>${index + 1}</td>
             <td><strong>${item.nama_personil || '-'}</strong></td>
+            <td>${item.nik || '<span class="text-muted">-</span>'}</td>
             <td>${vendorName}</td>
             <td>${unitCode}</td>
             <td>${peruntukan}</td>
+            <td>${statusBadge}</td>
             <td>
                 <button class="btn btn-warning btn-sm edit-btn" 
                     data-id="${item.id}"
@@ -262,6 +280,7 @@ function renderPersonnelTable() {
                     data-peruntukan-id="${item.peruntukan_id || ''}"
                     data-nama="${item.nama_personil || ''}"
                     data-nik="${item.nik || ''}"
+                    data-is-active="${isActive}"
                     title="Edit">
                     <i class="bi bi-pencil"></i>
                 </button>
@@ -301,9 +320,9 @@ function initDataTable() {
 
 // Attach event delegation for edit/delete buttons (survives simple-datatables re-rendering)
 function attachTableEventDelegation() {
-    const table = document.getElementById('personil-table');
-    if (!table) return;
-    table.addEventListener('click', (event) => {
+    document.addEventListener('click', (event) => {
+        const table = document.getElementById('personil-table');
+        if (!table || !table.contains(event.target)) return;
         const editBtn = event.target.closest('.edit-btn');
         if (editBtn) {
             handleEdit(event);
@@ -326,7 +345,6 @@ function setupEventListeners() {
     const refreshBtn = document.getElementById('refreshBtn');
     if (refreshBtn) {
         refreshBtn.addEventListener('click', () => {
-            if (dataTable) { dataTable.destroy(); dataTable = null; }
             loadPersonnel();
         });
     }
@@ -345,6 +363,30 @@ function setupEventListeners() {
     const form = document.getElementById('personilForm');
     if (form) {
         form.addEventListener('submit', handleFormSubmit);
+    }
+
+    // Auto uppercase nama personil
+    const namaInput = document.getElementById('namaPersonil');
+    if (namaInput) {
+        namaInput.addEventListener('input', () => {
+            const start = namaInput.selectionStart;
+            const end = namaInput.selectionEnd;
+            namaInput.value = namaInput.value.toUpperCase();
+            namaInput.setSelectionRange(start, end);
+        });
+    }
+
+    // Toggle active filter
+    const toggleActiveBtn = document.getElementById('toggleActiveBtn');
+    if (toggleActiveBtn) {
+        toggleActiveBtn.addEventListener('click', () => {
+            showActiveOnly = !showActiveOnly;
+            const label = document.getElementById('toggleActiveLabel');
+            if (label) label.textContent = showActiveOnly ? 'Aktif' : 'Semua';
+            toggleActiveBtn.classList.toggle('btn-outline-secondary', showActiveOnly);
+            toggleActiveBtn.classList.toggle('btn-secondary', !showActiveOnly);
+            loadPersonnel();
+        });
     }
 
     // Modal hidden - reset form
@@ -384,9 +426,11 @@ function setupEventListeners() {
 function resetForm() {
     const form = document.getElementById('personilForm');
     const idInput = document.getElementById('personilId');
+    const isActiveCheck = document.getElementById('isActivePersonil');
 
     if (form) form.reset();
     if (idInput) idInput.value = '';
+    if (isActiveCheck) isActiveCheck.checked = true;
 }
 
 // Handle edit button click
@@ -398,6 +442,7 @@ function handleEdit(event) {
     const peruntukanId = btn.dataset.peruntukanId;
     const nama = btn.dataset.nama;
     const nik = btn.dataset.nik;
+    const isActive = btn.dataset.isActive !== 'false';
 
     // Set form values
     const idInput = document.getElementById('personilId');
@@ -406,6 +451,7 @@ function handleEdit(event) {
     const peruntukanSelect = document.getElementById('peruntukanPersonilSelect');
     const namaInput = document.getElementById('namaPersonil');
     const nikInput = document.getElementById('nikPersonil');
+    const isActiveCheck = document.getElementById('isActivePersonil');
     const modalLabel = document.getElementById('personilModalLabel');
 
     if (idInput) idInput.value = id;
@@ -414,6 +460,7 @@ function handleEdit(event) {
     if (peruntukanSelect) peruntukanSelect.value = peruntukanId;
     if (namaInput) namaInput.value = nama;
     if (nikInput) nikInput.value = nik;
+    if (isActiveCheck) isActiveCheck.checked = isActive;
     if (modalLabel) modalLabel.textContent = 'Edit Data Personil';
 
     // Show modal
@@ -431,25 +478,32 @@ async function handleFormSubmit(event) {
     const peruntukanSelect = document.getElementById('peruntukanPersonilSelect');
     const namaInput = document.getElementById('namaPersonil');
     const nikInput = document.getElementById('nikPersonil');
+    const isActiveCheck = document.getElementById('isActivePersonil');
 
     const personnelId = idInput?.value;
     const personnelData = {
         vendor_id: vendorSelect?.value || null,
         team_id: teamSelect?.value || null,
         peruntukan_id: peruntukanSelect?.value || null,
-        nama_personil: namaInput?.value?.trim(),
-        nik: nikInput?.value?.trim()
+        nama_personil: namaInput?.value?.trim().toUpperCase(),
+        nik: nikInput?.value?.trim(),
+        is_active: isActiveCheck ? isActiveCheck.checked : true
     };
 
     // Validation
-    if (!personnelData.vendor_id || !personnelData.peruntukan_id || !personnelData.nama_personil) {
-        Swal.fire('Validasi Gagal!', 'Vendor, Peruntukan, dan Nama harus diisi.', 'warning');
+    if (!personnelData.vendor_id || !personnelData.peruntukan_id || !personnelData.nama_personil || !personnelData.nik) {
+        Swal.fire('Validasi Gagal!', 'Vendor, Peruntukan, Nama, dan NIK harus diisi.', 'warning');
         return;
     }
 
-    // Set NIK to null if empty (to avoid unique constraint violation)
-    if (!personnelData.nik) {
-        personnelData.nik = null;
+    // Check NIK uniqueness
+    const nikCheck = await PersonnelAPI.getByNIK(personnelData.nik);
+    if (nikCheck.success && nikCheck.data) {
+        // If editing, allow same NIK for the same record
+        if (!personnelId || nikCheck.data.id !== personnelId) {
+            Swal.fire('NIK Sudah Digunakan!', `NIK "${personnelData.nik}" sudah terdaftar atas nama <strong>${nikCheck.data.nama_personil || '-'}</strong>.`, 'warning');
+            return;
+        }
     }
 
     // Remove empty team_id
@@ -480,7 +534,7 @@ async function handleFormSubmit(event) {
             showConfirmButton: false
         });
 
-        await loadPersonnel();
+        await loadPersonnel(false);
     } else {
         Swal.fire('Gagal!', `Terjadi kesalahan: ${result.error || 'Unknown error'}`, 'error');
     }
@@ -506,7 +560,7 @@ async function handleDelete(event) {
         const deleteResult = await PersonnelAPI.delete(personnelId);
         if (deleteResult.success) {
             Swal.fire('Dihapus!', 'Data personil telah dihapus.', 'success');
-            await loadPersonnel();
+            await loadPersonnel(false);
         } else {
             Swal.fire('Gagal!', 'Terjadi kesalahan saat menghapus data: ' + (deleteResult.error || ''), 'error');
         }

@@ -148,15 +148,26 @@ async function loadPeruntukan() {
 }
 
 // Load teams from database (filtered by role)
-async function loadTeams() {
+// showLoading=false for seamless refresh after edit/delete
+async function loadTeams(showLoading = true) {
     try {
+        // Destroy existing DataTable FIRST — destroy() replaces the
+        // <table> element in the DOM, so any earlier reference is stale.
+        if (dataTable) {
+            dataTable.destroy();
+            dataTable = null;
+        }
+
+        // Get fresh tbody reference AFTER destroy
         const tableBody = document.getElementById('kendaraan-table-body');
         if (!tableBody) {
             return;
         }
 
-        // Show loading
-        tableBody.innerHTML = '<tr><td colspan="7" class="text-center"><div class="spinner-border spinner-border-sm" role="status"></div> Memuat data...</td></tr>';
+        // Show loading spinner only on initial / manual refresh
+        if (showLoading) {
+            tableBody.innerHTML = '<tr><td colspan="7" class="text-center"><div class="spinner-border spinner-border-sm" role="status"></div> Memuat data...</td></tr>';
+        }
 
         let result;
         const role = currentProfile?.role;
@@ -267,11 +278,14 @@ function initDataTable() {
     }
 }
 
-// Attach event delegation for edit/delete buttons (survives simple-datatables re-rendering)
+// Attach event delegation for edit/delete buttons at document level
+// Uses document-level delegation so it always works regardless of
+// simple-datatables destroy/re-create cycles that may alter DOM
 function attachTableEventDelegation() {
-    const table = document.getElementById('kendaraan-table');
-    if (!table) return;
-    table.addEventListener('click', (event) => {
+    document.addEventListener('click', (event) => {
+        const table = document.getElementById('kendaraan-table');
+        if (!table || !table.contains(event.target)) return;
+
         const editBtn = event.target.closest('.edit-btn');
         if (editBtn) {
             handleEdit(event);
@@ -290,11 +304,10 @@ function setupEventListeners() {
     // Event delegation for table buttons (set up once, survives pagination)
     attachTableEventDelegation();
 
-    // Refresh button
+    // Refresh button (loadTeams already handles DataTable destroy)
     const refreshBtn = document.getElementById('refreshBtn');
     if (refreshBtn) {
         refreshBtn.addEventListener('click', () => {
-            if (dataTable) { dataTable.destroy(); dataTable = null; }
             loadTeams();
         });
     }
@@ -494,7 +507,7 @@ async function handleFormSubmit(event) {
             showConfirmButton: false
         });
 
-        await loadTeams();
+        await loadTeams(false);
     } else {
         Swal.fire('Gagal!', `Terjadi kesalahan: ${result.error || 'Unknown error'}`, 'error');
     }
@@ -520,7 +533,7 @@ async function handleDelete(event) {
         const deleteResult = await TeamsAPI.delete(teamId);
         if (deleteResult.success) {
             Swal.fire('Dihapus!', 'Data kendaraan telah dihapus.', 'success');
-            await loadTeams();
+            await loadTeams(false);
         } else {
             Swal.fire('Gagal!', 'Terjadi kesalahan saat menghapus data: ' + (deleteResult.error || ''), 'error');
         }

@@ -50,8 +50,8 @@ async function checkAuthAndLoadData() {
             return;
         }
 
-        // Only admin roles can access this page
-        const allowedRoles = ['uid_admin', 'uid_user', 'up3_admin'];
+        // Roles allowed to access this page
+        const allowedRoles = ['uid_admin', 'uid_user', 'up3_admin', 'up3_user'];
         if (!allowedRoles.includes(currentProfile.role)) {
             Swal.fire('Akses Ditolak', 'Anda tidak memiliki akses ke halaman ini.', 'warning')
                 .then(() => window.location.href = 'index.html');
@@ -141,8 +141,8 @@ function setupUnitFilter() {
             currentUnitIndex = 0;
             updateUnitPagination();
         }
-    } else if (role === 'up3_admin') {
-        // UP3 admin: show locked label
+    } else if (role === 'up3_admin' || role === 'up3_user') {
+        // UP3 admin/user: show locked label for own unit
         const labelEl = document.getElementById('up3UnitLabel');
         labelEl.style.display = 'inline-block';
         const myUnit = currentProfile.unit_code;

@@ -93,15 +93,26 @@ function applyRoleBasedControl() {
 }
 
 // Load peruntukan from database
-async function loadPeruntukan() {
+// showLoading=false for seamless refresh after edit/delete
+async function loadPeruntukan(showLoading = true) {
     try {
+        // Destroy existing DataTable FIRST — destroy() replaces the
+        // <table> element in the DOM, so any earlier reference is stale.
+        if (dataTable) {
+            dataTable.destroy();
+            dataTable = null;
+        }
+
+        // Get fresh tbody reference AFTER destroy
         const tableBody = document.getElementById('peruntukan-table-body');
         if (!tableBody) {
             return;
         }
 
-        // Show loading
-        tableBody.innerHTML = '<tr><td colspan="3" class="text-center"><div class="spinner-border spinner-border-sm" role="status"></div> Memuat data...</td></tr>';
+        // Show loading spinner only on initial / manual refresh
+        if (showLoading) {
+            tableBody.innerHTML = '<tr><td colspan="3" class="text-center"><div class="spinner-border spinner-border-sm" role="status"></div> Memuat data...</td></tr>';
+        }
 
         const result = await PeruntukanAPI.getAll();
 
@@ -200,9 +211,9 @@ function initDataTable() {
 
 // Attach event delegation for edit/delete buttons (survives simple-datatables re-rendering)
 function attachTableEventDelegation() {
-    const table = document.getElementById('peruntukan-table');
-    if (!table) return;
-    table.addEventListener('click', (event) => {
+    document.addEventListener('click', (event) => {
+        const table = document.getElementById('peruntukan-table');
+        if (!table || !table.contains(event.target)) return;
         const editBtn = event.target.closest('.edit-btn');
         if (editBtn) {
             handleEdit(event);
@@ -225,7 +236,6 @@ function setupEventListeners() {
     const refreshBtn = document.getElementById('refreshBtn');
     if (refreshBtn) {
         refreshBtn.addEventListener('click', () => {
-            if (dataTable) { dataTable.destroy(); dataTable = null; }
             loadPeruntukan();
         });
     }
@@ -329,7 +339,7 @@ async function handleDelete(event) {
         const deleteResult = await PeruntukanAPI.delete(peruntukanId);
         if (deleteResult.success) {
             Swal.fire('Dihapus!', 'Data peruntukan telah dihapus.', 'success');
-            await loadPeruntukan();
+            await loadPeruntukan(false);
         } else {
             Swal.fire('Gagal!', 'Terjadi kesalahan saat menghapus data: ' + (deleteResult.error || ''), 'error');
         }
@@ -377,7 +387,7 @@ async function handleFormSubmit(event) {
             showConfirmButton: false
         });
 
-        await loadPeruntukan();
+        await loadPeruntukan(false);
     } else {
         Swal.fire('Gagal!', `Terjadi kesalahan saat ${peruntukanId ? 'memperbarui' : 'menyimpan'} data: ` + (result.error || ''), 'error');
     }

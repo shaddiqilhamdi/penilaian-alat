@@ -76,9 +76,9 @@ async function loadUIDComprehensiveStats() {
  * Load Unit Recap Table menggunakan RPC fn_unit_recap
  * Data sudah diagregasi di database - tidak ada masalah limit
  */
-async function loadUIDUnitRecapTable() {
+async function loadUIDUnitRecapTable(silent = false) {
     const tbody = document.querySelector('#uidUnitRecapTable tbody');
-    tbody.innerHTML = '<tr><td colspan="10" class="text-center text-muted">Loading...</td></tr>';
+    if (!silent) tbody.innerHTML = '<tr><td colspan="10" class="text-center text-muted">Loading...</td></tr>';
 
     try {
         const client = getSupabaseClient();
@@ -104,7 +104,7 @@ async function loadUIDUnitRecapTable() {
                 const kontrakPct = r.kontrak_pct || 0;
                 const scoreClass = avgScore >= 1.8 ? 'success' : avgScore >= 1.5 ? 'warning' : 'danger';
 
-                return `<tr style="cursor: pointer;" onclick="showUnitReportModal('${r.unit_code}', '${r.unit_name}')">
+                return `<tr data-unit-code="${r.unit_code}" style="cursor: pointer;" onclick="showUnitReportModal('${r.unit_code}', '${r.unit_name}')">
                     <td><strong>${r.unit_name}</strong></td>
                     <td class="text-center">${r.total_equipment}</td>
                     <td class="text-center">${r.total_teams || '-'}</td>
@@ -131,20 +131,20 @@ window.uidEquipmentIssuesData = {};
 /**
  * Load equipment issues by unit - menggunakan RPC fn_equipment_issues
  * Data sudah diagregasi di database - cepat dan tidak ada limit issue
+ * Menggunakan parameter p_month (sama seperti fn_unit_recap) agar data konsisten
  */
-async function loadUIDEquipmentIssuesByUnit(startDate, endDate) {
+async function loadUIDEquipmentIssuesByUnit() {
     const tbody = document.querySelector('#uidIssuesByUnitTable tbody');
     tbody.innerHTML = '<tr><td colspan="6" class="text-center text-muted">Loading...</td></tr>';
 
     try {
         const client = getSupabaseClient();
+        const now = new Date();
+        const monthParam = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-01`;
 
-        // Build RPC params with optional date range
-        const params = {};
-        if (startDate) params.p_start_date = startDate;
-        if (endDate) params.p_end_date = endDate;
-
-        const { data: issues, error } = await client.rpc('fn_equipment_issues', params);
+        const { data: issues, error } = await client.rpc('fn_equipment_issues', {
+            p_month: monthParam
+        });
 
         if (error) throw error;
 
@@ -172,52 +172,16 @@ async function loadUIDEquipmentIssuesByUnit(startDate, endDate) {
 }
 
 /**
- * Initialize equipment issues date filter
- * Default: last assessment date as both start and end date
+ * Initialize equipment issues - load data for current month
+ * (No longer needs date range filter, uses same monthly period as fn_unit_recap)
  */
 async function initEquipmentIssuesDateFilter() {
-    const startInput = document.getElementById('uidIssuesStartDate');
-    const endInput = document.getElementById('uidIssuesEndDate');
-    if (!startInput || !endInput) return;
-
-    try {
-        // Get the last assessment date from database
-        const client = getSupabaseClient();
-        const { data, error } = await client
-            .from('vendor_assets')
-            .select('last_assessment_date')
-            .not('last_assessment_date', 'is', null)
-            .order('last_assessment_date', { ascending: false })
-            .limit(1)
-            .single();
-
-        if (!error && data) {
-            const lastDate = data.last_assessment_date;
-            startInput.value = lastDate;
-            endInput.value = lastDate;
-        }
-    } catch (e) {
-        // Fallback: use today
-        const today = new Date().toISOString().split('T')[0];
-        startInput.value = today;
-        endInput.value = today;
-    }
-
-    // Load with default dates
-    await loadUIDEquipmentIssuesByUnit(startInput.value, endInput.value);
-
-    // Add event listeners for date changes
-    startInput.addEventListener('change', () => {
-        loadUIDEquipmentIssuesByUnit(startInput.value, endInput.value);
-    });
-    endInput.addEventListener('change', () => {
-        loadUIDEquipmentIssuesByUnit(startInput.value, endInput.value);
-    });
+    await loadUIDEquipmentIssuesByUnit();
 }
 
 /**
- * Show equipment issues modal - Query detail saat user klik
- * Detail data di-query on-demand (tidak perlu load semua upfront)
+ * Show equipment issues modal - Menggunakan fn_unit_report agar data 100% konsisten
+ * dengan Raport Unit dan tabel Equipment Bermasalah (semua dari vendor_assets + filter identik)
  */
 async function showEquipmentIssuesModal(unitCode) {
     // Set modal title
@@ -233,88 +197,56 @@ async function showEquipmentIssuesModal(unitCode) {
 
     try {
         const client = getSupabaseClient();
+        const now = new Date();
+        const monthParam = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-01`;
 
-        // Query detail equipment bermasalah untuk unit ini
-        const { data: issueAssets, error } = await client
-            .from('vendor_assets')
-            .select(`
-                id, vendor_id, peruntukan_id, equipment_id, owner_id,
-                kondisi_fisik, kondisi_fungsi, kesesuaian_kontrak, nilai,
-                realisasi_qty, last_assessment_date, last_assessment_id,
-                vendors!inner(vendor_name, unit_code, unit_name),
-                peruntukan(deskripsi),
-                teams(nomor_polisi),
-                personnel(nama_personil),
-                equipment_master(nama_alat, kategori, jenis)
-            `)
-            .eq('vendors.unit_code', unitCode)
-            .or('kondisi_fisik.eq.-1,kondisi_fungsi.eq.-1')
-            .not('last_assessment_date', 'is', null)
-            .order('owner_id', { ascending: true })
-            .order('last_assessment_date', { ascending: false });
+        // Gunakan fn_unit_report — sumber data yang SAMA dengan semua view lain
+        const { data: report, error } = await client.rpc('fn_unit_report', {
+            p_unit_code: unitCode,
+            p_month: monthParam
+        });
 
         if (error) throw error;
 
-        // Filter untuk unit yang tepat
-        const unitAssets = issueAssets?.filter(a => a.vendors?.unit_code === unitCode) || [];
+        const issuesByCategory = report?.issues_by_category || [];
 
-        document.getElementById('modalTotalItems').textContent = unitAssets.length + ' item';
+        // Flatten semua items dari semua kategori
+        const allItems = [];
+        issuesByCategory.forEach(cat => {
+            (cat.items || []).forEach(item => allItems.push(item));
+        });
 
-        if (unitAssets.length === 0) {
+        document.getElementById('modalTotalItems').textContent = allItems.length + ' item';
+
+        if (allItems.length === 0) {
             tbody.innerHTML = '<tr><td colspan="12" class="text-center text-muted">Tidak ada equipment bermasalah</td></tr>';
             return;
         }
 
-        // Get assessment_items detail
-        const assessmentIds = [...new Set(unitAssets.map(a => a.last_assessment_id).filter(Boolean))];
-        let itemsMap = {};
-        if (assessmentIds.length > 0) {
-            const { data: items } = await client
-                .from('assessment_items')
-                .select('assessment_id, equipment_id, tidak_layak, tidak_berfungsi, required_qty')
-                .in('assessment_id', assessmentIds);
-            (items || []).forEach(item => {
-                itemsMap[`${item.assessment_id}_${item.equipment_id}`] = item;
-            });
-        }
-
         // Render rows
-        const rows = unitAssets.map((asset, index) => {
-            const itemKey = `${asset.last_assessment_id}_${asset.equipment_id}`;
-            const assessmentItem = itemsMap[itemKey] || {};
-            const tidakLayak = assessmentItem.tidak_layak || 0;
-            const tidakBerfungsi = assessmentItem.tidak_berfungsi || 0;
-            const requiredQty = assessmentItem.required_qty || 0;
-            const isPersonal = asset.equipment_master?.jenis === 'Personal';
+        const rows = allItems.map((item, index) => {
+            const isPersonal = item.jenis === 'Personal';
+            const targetName = item.owner_label || '-';
 
-            const targetName = isPersonal
-                ? (asset.personnel?.nama_personil || '-')
-                : (asset.teams?.nomor_polisi || '-');
+            const kondisiClass = item.kondisi_fisik !== -1 ? 'success' : 'danger';
+            const kondisiText = item.kondisi_fisik !== -1 ? 'OK' : 'TL';
+            const fungsiClass = item.kondisi_fungsi !== -1 ? 'success' : 'warning';
+            const fungsiText = item.kondisi_fungsi !== -1 ? 'OK' : 'TB';
 
-            const kondisiClass = tidakLayak === 0 ? 'success' : 'danger';
-            const kondisiText = tidakLayak === 0 ? 'OK' : `${tidakLayak} TL`;
-            const fungsiClass = tidakBerfungsi === 0 ? 'success' : 'warning';
-            const fungsiText = tidakBerfungsi === 0 ? 'OK' : `${tidakBerfungsi} TB`;
-            const kontrakClass = asset.kesesuaian_kontrak >= 2 ? 'success' : 'danger';
-            const kontrakText = asset.kesesuaian_kontrak >= 2 ? 'Sesuai' : 'Tidak Sesuai';
-
-            const tanggalDate = new Date(asset.last_assessment_date);
+            const tanggalDate = new Date(item.last_assessment_date);
             const tanggal = String(tanggalDate.getDate()).padStart(2, '0') + '-' +
                 String(tanggalDate.getMonth() + 1).padStart(2, '0') + '-' +
                 tanggalDate.getFullYear();
 
             return `<tr>
                 <td class="text-center">${index + 1}</td>
-                <td>${asset.equipment_master?.nama_alat || '-'}</td>
-                <td>${asset.equipment_master?.kategori || '-'}</td>
+                <td>${item.nama_alat || '-'}</td>
+                <td>${item.kategori || '-'}</td>
                 <td class="text-center"><span class="badge bg-${isPersonal ? 'personal' : 'regu'}">${isPersonal ? 'Personal' : 'Regu'}</span></td>
                 <td>${targetName}</td>
-                <td class="text-center">${requiredQty}</td>
-                <td class="text-center">${asset.realisasi_qty || 0}</td>
                 <td class="text-center"><span class="badge bg-${kondisiClass}">${kondisiText}</span></td>
                 <td class="text-center"><span class="badge bg-${fungsiClass}">${fungsiText}</span></td>
-                <td class="text-center"><span class="badge bg-${kontrakClass}">${kontrakText}</span></td>
-                <td class="text-center">${asset.nilai !== null ? Number(asset.nilai).toFixed(2) : '-'}</td>
+                <td class="text-center">${item.nilai !== null ? Number(item.nilai).toFixed(2) : '-'}</td>
                 <td class="text-center">${tanggal}</td>
             </tr>`;
         }).join('');
@@ -632,10 +564,42 @@ async function loadUIDTrendChart() {
 }
 
 /**
+ * Update a single recap table row in-place using fn_unit_report summary data.
+ * This avoids a full table reload (no flash).
+ */
+function updateRecapRowFromSummary(unitCode, summary) {
+    const row = document.querySelector(`#uidUnitRecapTable tbody tr[data-unit-code="${unitCode}"]`);
+    if (!row) return;
+
+    const avgScore = summary.avg_score || 0;
+    const avgPersonal = summary.avg_personal || 0;
+    const avgRegu = summary.avg_regu || 0;
+    const kontrakPct = summary.total_equipment > 0
+        ? Math.round((summary.kontrak_ok / summary.total_equipment) * 100)
+        : 0;
+    const scoreClass = avgScore >= 1.8 ? 'success' : avgScore >= 1.5 ? 'warning' : 'danger';
+
+    const cells = row.querySelectorAll('td');
+    if (cells.length < 10) return;
+
+    // cells[0] = unit_name (unchanged)
+    cells[1].textContent = summary.total_equipment || 0;
+    cells[2].textContent = summary.unique_teams || '-';
+    cells[3].textContent = summary.unique_personnel || '-';
+    cells[4].innerHTML = `<span class="badge bg-${scoreClass}">${avgScore.toFixed(2)}</span>`;
+    cells[5].innerHTML = `<span class="badge bg-personal">${avgPersonal > 0 ? avgPersonal.toFixed(2) : '-'}</span>`;
+    cells[6].innerHTML = `<span class="badge bg-regu">${avgRegu > 0 ? avgRegu.toFixed(2) : '-'}</span>`;
+    cells[7].textContent = summary.tl_fisik || '-';
+    cells[8].textContent = summary.tb_fungsi || '-';
+    cells[9].innerHTML = `<div class="progress" style="height: 15px;"><div class="progress-bar ${kontrakPct >= 80 ? 'bg-success' : kontrakPct >= 50 ? 'bg-warning' : 'bg-danger'}" style="width: ${kontrakPct}%">${kontrakPct}%</div></div>`;
+}
+
+/**
  * Show Unit Report Modal - Raport detail per unit menggunakan RPC fn_unit_report
  */
 async function showUnitReportModal(unitCode, unitName) {
-    const modal = new bootstrap.Modal(document.getElementById('unitReportModal'));
+    const modalEl = document.getElementById('unitReportModal');
+    const modal = new bootstrap.Modal(modalEl);
     document.getElementById('reportUnitCode').textContent = unitCode;
     document.getElementById('unitReportContent').innerHTML = `
         <div class="text-center py-5">
@@ -645,6 +609,7 @@ async function showUnitReportModal(unitCode, unitName) {
             <p class="mt-2 text-muted">Memuat data raport...</p>
         </div>
     `;
+
     modal.show();
 
     try {
@@ -662,6 +627,9 @@ async function showUnitReportModal(unitCode, unitName) {
         if (error) throw error;
 
         const summary = report?.summary || {};
+
+        // Sync recap table row in-place (no flash) using report data
+        updateRecapRowFromSummary(unitCode, summary);
         const peruntukanBreakdown = report?.peruntukan_breakdown || [];
         const vendorBreakdown = report?.vendor_breakdown || [];
         const issuesByCategory = report?.issues_by_category || [];

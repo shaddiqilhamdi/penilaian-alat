@@ -525,8 +525,8 @@ async function loadKendaraanData(vendorId, peruntukanId = null) {
 }
 
 // Load Personil based on selected Vendor
-// Single select dropdown with badge system for multiple selection
-// Set preserveSelection=true to keep existing selections (e.g., after adding new petugas)
+// Searchable text input with badge system for multiple selection
+// Set preserveSelection=true to keep existing selections (e.g., after vendor re-load)
 async function loadPersonilData(vendorId, preserveSelection = false) {
     try {
         if (typeof PersonnelAPI === 'undefined') {
@@ -536,29 +536,24 @@ async function loadPersonilData(vendorId, preserveSelection = false) {
 
         const result = await PersonnelAPI.getByVendor(vendorId);
 
-        const petugasSelect = document.getElementById('modalPetugasSelect');
+        const petugasSearch = document.getElementById('modalPetugasSearch');
+        const petugasSuggestions = document.getElementById('petugasSuggestions');
         const personnelIdInput = document.getElementById('modalPersonnelId');
         const selectedPetugasContainer = document.getElementById('selectedPetugasContainer');
 
-        if (!petugasSelect) {
-            console.error('Petugas select element not found');
+        if (!petugasSearch) {
+            console.error('Petugas search input not found');
             return;
         }
 
         const personilData = result.success ? (result.data || []) : [];
 
-        // Reset dropdown (single select with placeholder)
-        petugasSelect.innerHTML = '<option value="">-- Pilih Petugas --</option>';
+        // Store personnel list for search filtering
+        window.petugasDataList = personilData;
 
-        // Populate dropdown with existing personnel
-        personilData.forEach(personil => {
-            const option = document.createElement('option');
-            option.value = personil.id;
-            option.textContent = personil.nama_personil;
-            option.dataset.nama = personil.nama_personil;
-            option.dataset.nik = personil.nik || '';
-            petugasSelect.appendChild(option);
-        });
+        // Reset search input
+        petugasSearch.value = '';
+        if (petugasSuggestions) petugasSuggestions.style.display = 'none';
 
         // Reset state
         if (personnelIdInput) personnelIdInput.value = '';
@@ -566,32 +561,98 @@ async function loadPersonilData(vendorId, preserveSelection = false) {
 
         // Initialize or preserve selected personnel arrays
         if (!preserveSelection) {
-            // Clear previous selections when vendor changes
             window.selectedPetugasIds = [];
             window.selectedPetugasNames = {};
             window.newPetugasList = [];
         } else {
-            // Preserve existing selections
             window.selectedPetugasIds = window.selectedPetugasIds || [];
             window.selectedPetugasNames = window.selectedPetugasNames || {};
             window.newPetugasList = window.newPetugasList || [];
         }
 
-        // Setup event listener for single select - add to badge on select
-        petugasSelect.onchange = function () {
-            const selectedValue = this.value;
-            const selectedText = this.options[this.selectedIndex]?.text;
+        // Remove old listeners by cloning
+        const newSearch = petugasSearch.cloneNode(true);
+        petugasSearch.parentNode.replaceChild(newSearch, petugasSearch);
 
-            if (selectedValue && !window.selectedPetugasIds.includes(selectedValue)) {
-                // Add to selected list
-                window.selectedPetugasIds.push(selectedValue);
-                window.selectedPetugasNames[selectedValue] = selectedText;
-                updateSelectedPetugasDisplay();
+        // Helper: render suggestion list filtered by query
+        function renderPetugasSuggestions(query) {
+            const sugBox = document.getElementById('petugasSuggestions');
+            if (!sugBox) return;
+
+            const q = (query || '').trim().toLowerCase();
+
+            // Filter personnel (exclude already selected)
+            const matches = (window.petugasDataList || []).filter(p => {
+                const alreadySelected = (window.selectedPetugasIds || []).includes(p.id);
+                if (alreadySelected) return false;
+                if (!q) return true; // show all when empty
+                const nameMatch = (p.nama_personil || '').toLowerCase().includes(q);
+                const nikMatch = (p.nik || '').toLowerCase().includes(q);
+                return nameMatch || nikMatch;
+            });
+
+            if (matches.length === 0) {
+                sugBox.innerHTML = '<div class="list-group-item text-muted small py-2 px-3">Tidak ditemukan</div>';
+                sugBox.style.display = 'block';
+                return;
             }
 
-            // Reset dropdown to placeholder
-            this.value = '';
-        };
+            sugBox.innerHTML = matches.map(p => `
+                <button type="button" class="list-group-item list-group-item-action py-1 px-2"
+                    data-id="${p.id}" data-nama="${(p.nama_personil || '').replace(/"/g, '&quot;')}">
+                    <span class="fw-semibold">${p.nama_personil || '-'}</span>
+                    ${p.nik ? '<small class="text-muted ms-2">NIK: ' + p.nik + '</small>' : ''}
+                </button>
+            `).join('');
+            sugBox.style.display = 'block';
+
+            // Attach click handlers to suggestion items
+            sugBox.querySelectorAll('button[data-id]').forEach(btn => {
+                btn.addEventListener('mousedown', function (e) {
+                    e.preventDefault(); // prevent blur before click registers
+                    const id = this.dataset.id;
+                    const nama = this.dataset.nama;
+
+                    if (!window.selectedPetugasIds.includes(id)) {
+                        window.selectedPetugasIds.push(id);
+                        window.selectedPetugasNames[id] = nama;
+                        updateSelectedPetugasDisplay();
+                    }
+
+                    // Clear search & hide suggestions
+                    const searchInput = document.getElementById('modalPetugasSearch');
+                    if (searchInput) searchInput.value = '';
+                    sugBox.style.display = 'none';
+                });
+            });
+        }
+
+        // Show full dropdown list on focus or click
+        // (click needed because after selecting, input keeps focus — focus won't re-fire)
+        newSearch.addEventListener('focus', function () {
+            renderPetugasSuggestions(this.value);
+        });
+        newSearch.addEventListener('click', function () {
+            renderPetugasSuggestions(this.value);
+        });
+
+        // Filter list as user types
+        let debounceTimer = null;
+        newSearch.addEventListener('input', function () {
+            clearTimeout(debounceTimer);
+            debounceTimer = setTimeout(() => {
+                renderPetugasSuggestions(this.value);
+            }, 150);
+        });
+
+        // Hide suggestions when focus leaves
+        newSearch.addEventListener('blur', function () {
+            // Small delay so mousedown on suggestion registers first
+            setTimeout(() => {
+                const sugBox = document.getElementById('petugasSuggestions');
+                if (sugBox) sugBox.style.display = 'none';
+            }, 200);
+        });
 
         // Update display
         updateSelectedPetugasDisplay();
@@ -989,6 +1050,19 @@ function renderEquipmentTable(equipmentData, isFromVendorAssets = false) {
         row.dataset.sourceId = item.id; // Original record ID (vendor_asset, equipment_standard, or equipment_master)
         row.dataset.source = dataSource;
 
+        // Store previous assessment condition for change-detection alerts
+        const vendorAsset = window.vendorAssetsMap ? window.vendorAssetsMap.get(equipmentId) : null;
+        if (vendorAsset) {
+            row.dataset.prevKesesuaian = vendorAsset.kesesuaian_kontrak != null ? vendorAsset.kesesuaian_kontrak : '';
+            row.dataset.prevKondisiFisik = vendorAsset.kondisi_fisik != null ? vendorAsset.kondisi_fisik : '';
+            row.dataset.prevKondisiFungsi = vendorAsset.kondisi_fungsi != null ? vendorAsset.kondisi_fungsi : '';
+            row.dataset.prevRealisasi = vendorAsset.realisasi_qty != null ? vendorAsset.realisasi_qty : '';
+            row.dataset.prevNilai = vendorAsset.nilai != null ? vendorAsset.nilai : '';
+            row.dataset.hasPrevAssessment = 'true';
+        } else {
+            row.dataset.hasPrevAssessment = 'false';
+        }
+
         tableBody.appendChild(row);
     });
 
@@ -1331,26 +1405,7 @@ function setupModalEventListeners() {
         }
     }
 
-    // Modal Tambah Petugas - Pre-fill locked fields when modal opens
-    const modalPetugas = document.getElementById('modalTambahPetugas');
-    if (modalPetugas) {
-        modalPetugas.addEventListener('show.bs.modal', function () {
-            // Pre-fill locked fields from form
-            const unitSelect = document.getElementById('modalUnit');
-            const vendorSelect = document.getElementById('modalVendor');
-            const peruntukanSelect = document.getElementById('modalPeruntukan');
-
-            document.getElementById('modalPetugas_Unit').value =
-                unitSelect?.options[unitSelect.selectedIndex]?.text || '-';
-            document.getElementById('modalPetugas_Vendor').value =
-                vendorSelect?.options[vendorSelect.selectedIndex]?.text || '-';
-            document.getElementById('modalPetugas_Peruntukan').value =
-                peruntukanSelect?.options[peruntukanSelect.selectedIndex]?.text || '-';
-
-            // Clear input fields
-            document.getElementById('inputNamaPetugas').value = '';
-        });
-    }
+    // Modal Tambah Petugas dihapus - menggunakan search input
 
     // Button Simpan Kendaraan
     const btnSimpanKendaraan = document.getElementById('btnSimpanKendaraan');
@@ -1430,75 +1485,7 @@ function setupModalEventListeners() {
         });
     }
 
-    // Button Simpan Petugas
-    const btnSimpanPetugas = document.getElementById('btnSimpanPetugas');
-    if (btnSimpanPetugas) {
-        btnSimpanPetugas.addEventListener('click', async function () {
-            const namaPetugas = document.getElementById('inputNamaPetugas').value.trim();
-            const vendorId = document.getElementById('modalVendor').value;
-            const peruntukanId = document.getElementById('modalPeruntukan').value;
-
-            if (!namaPetugas) {
-                showNotification('Nama Petugas harus diisi', 'warning');
-                return;
-            }
-
-            if (!vendorId) {
-                showNotification('Vendor harus dipilih terlebih dahulu', 'warning');
-                return;
-            }
-
-            if (!peruntukanId) {
-                showNotification('Peruntukan harus dipilih terlebih dahulu', 'warning');
-                return;
-            }
-
-            try {
-                // Disable button and show loading
-                btnSimpanPetugas.disabled = true;
-                btnSimpanPetugas.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span>Menyimpan...';
-
-                // Create new personnel via API (including peruntukan_id)
-                const newPersonnel = {
-                    vendor_id: vendorId,
-                    peruntukan_id: peruntukanId,
-                    nama_personil: namaPetugas
-                };
-
-                const result = await PersonnelAPI.create(newPersonnel);
-
-                if (result.success) {
-                    showNotification('Petugas berhasil ditambahkan', 'success');
-
-                    // Close modal
-                    const modal = bootstrap.Modal.getInstance(modalPetugas);
-                    modal.hide();
-
-                    // Add newly created petugas to newPetugasList for badge display
-                    if (!window.newPetugasList) window.newPetugasList = [];
-                    window.newPetugasList.push({
-                        id: result.data?.id,
-                        name: namaPetugas
-                    });
-
-                    // Reload petugas dropdown to include new petugas (preserve existing selections)
-                    await loadPersonilData(vendorId, true);
-
-                    // Restore the new petugas badges
-                    updateSelectedPetugasDisplay();
-                } else {
-                    showNotification(result.message || 'Gagal menambahkan petugas', 'error');
-                }
-            } catch (error) {
-                console.error('Error creating new personnel:', error);
-                showNotification('Gagal menambahkan petugas', 'error');
-            } finally {
-                // Re-enable button
-                btnSimpanPetugas.disabled = false;
-                btnSimpanPetugas.innerHTML = '<i class="bi bi-check-lg me-1"></i>Simpan';
-            }
-        });
-    }
+    // Button Simpan Petugas dihapus - menggunakan search input
 
     // Logout button
     const logoutBtn = document.getElementById('logoutBtn');

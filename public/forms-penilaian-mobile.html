@@ -1,0 +1,404 @@
+<!DOCTYPE html>
+<html lang="id">
+
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+    <title>Form Penilaian Mobile - PPE Health Index</title>
+    <meta name="description" content="Form Penilaian APD - Mobile Optimized" />
+
+    <!-- Favicons -->
+    <link href="assets/img/logo-portrait.png" rel="icon">
+
+    <!-- Bootstrap CSS -->
+    <link href="assets/vendor/bootstrap/css/bootstrap.min.css" rel="stylesheet" />
+    <link href="assets/vendor/bootstrap-icons/bootstrap-icons.css" rel="stylesheet" />
+
+    <!-- Mobile-specific CSS -->
+    <link href="assets/css/mobile-penilaian.css" rel="stylesheet" />
+</head>
+
+<body class="mobile-penilaian-page">
+
+    <!-- ===== Top Bar ===== -->
+    <div class="mobile-top-bar">
+        <div class="brand">
+            <i class="bi bi-shield-check"></i>
+            <span>PPE Mobile</span>
+        </div>
+        <div class="user-badge">
+            <div class="user-avatar" id="mobileUserInitial">?</div>
+            <span id="mobileUserName">Loading...</span>
+        </div>
+    </div>
+
+    <!-- ===== Step Indicator ===== -->
+    <div class="step-indicator" id="stepIndicator">
+        <div class="step-dot active" data-step="1"></div>
+        <div class="step-dot" data-step="2"></div>
+        <div class="step-dot" data-step="3"></div>
+        <div class="step-dot" data-step="4"></div>
+    </div>
+
+    <!-- ===== Main Content ===== -->
+    <div class="main-content">
+
+        <!-- == STEP 1: Informasi Sesi == -->
+        <div class="mobile-step-section active" id="step1" data-step="1">
+            <div class="mobile-section-card">
+                <div class="section-header">
+                    <i class="bi bi-calendar-event text-primary"></i>
+                    <h6>Informasi Sesi Penilaian</h6>
+                </div>
+                <div class="section-body">
+                    <div class="row g-2">
+                        <div class="col-6">
+                            <div class="mobile-field">
+                                <label><i class="bi bi-calendar3"></i>Tanggal</label>
+                                <input type="date" class="form-control" id="modalTanggal" required />
+                            </div>
+                        </div>
+                        <div class="col-6">
+                            <div class="mobile-field">
+                                <label><i class="bi bi-clock"></i>Shift</label>
+                                <select id="modalShift" class="form-select" required>
+                                    <option value="">-- Pilih --</option>
+                                    <option value="1">Shift 1</option>
+                                    <option value="2">Shift 2</option>
+                                    <option value="3">Shift 3</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="col-12">
+                            <div class="mobile-field">
+                                <label><i class="bi bi-building"></i>Unit</label>
+                                <select id="modalUnit" class="form-select" required>
+                                    <option value="">-- Pilih Unit --</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="col-12">
+                            <div class="mobile-field">
+                                <label><i class="bi bi-truck"></i>Pelaksana</label>
+                                <select id="modalVendor" class="form-select" required>
+                                    <option value="">-- Pilih Pelaksana --</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- == STEP 2: Detail Penilaian == -->
+        <div class="mobile-step-section" id="step2" data-step="2">
+            <div class="mobile-section-card">
+                <div class="section-header">
+                    <i class="bi bi-bullseye text-success"></i>
+                    <h6>Detail Penilaian</h6>
+                </div>
+                <div class="section-body">
+                    <div class="mobile-field">
+                        <label><i class="bi bi-diagram-3"></i>Peruntukan</label>
+                        <select id="modalPeruntukan" class="form-select" required>
+                            <option value="">-- Pilih Peruntukan --</option>
+                        </select>
+                        <div class="form-hint">Sesuai standar peralatan vendor</div>
+                    </div>
+
+                    <div class="mobile-field">
+                        <label><i class="bi bi-car-front"></i>Kendaraan / Regu</label>
+                        <div class="input-group">
+                            <select id="modalNopolSelect" class="form-select">
+                                <option value="">-- Pilih Kendaraan --</option>
+                            </select>
+                            <button type="button" class="btn btn-outline-secondary" id="btnAddKendaraan"
+                                data-bs-toggle="modal" data-bs-target="#modalTambahKendaraan"
+                                title="Tambah Kendaraan Baru">
+                                <i class="bi bi-plus-lg"></i>
+                            </button>
+                        </div>
+                        <input type="hidden" id="modalTeamId" value="" />
+                    </div>
+
+                    <div class="mobile-field">
+                        <label><i class="bi bi-people"></i>Petugas Penilai <small class="fw-normal text-muted">(pilih
+                                atau ketik untuk mencari)</small></label>
+                        <div class="position-relative">
+                            <input type="text" id="modalPetugasSearch" class="form-control pe-5"
+                                placeholder="Pilih atau cari petugas..." autocomplete="off" />
+                            <i class="bi bi-chevron-down position-absolute"
+                                style="right: 12px; top: 50%; transform: translateY(-50%); pointer-events: none; color: #6c757d;"></i>
+                            <div id="petugasSuggestions" class="list-group position-absolute w-100 shadow-sm border"
+                                style="z-index: 1050; max-height: 200px; overflow-y: auto; display: none;"></div>
+                        </div>
+                        <select id="modalPetugasSelect" class="d-none"></select>
+                        <input type="hidden" id="modalPersonnelId" value="" />
+                        <div id="selectedPetugasContainer" class="mt-2 d-flex flex-wrap gap-1"></div>
+                    </div>
+                    <!-- Hidden compatibility -->
+                    <input type="hidden" id="modalJenis" value="" />
+                </div>
+            </div>
+        </div>
+
+        <!-- == STEP 3: Penilaian Peralatan (Card-based) == -->
+        <div class="mobile-step-section" id="step3" data-step="3">
+
+            <!-- Progress & Quick Actions -->
+            <div class="mobile-progress-section">
+                <div class="progress-stats">
+                    <span class="stat-label"><i class="bi bi-box-seam me-1"></i>Peralatan</span>
+                    <span class="stat-value"><span id="progressText">0/0</span> Item</span>
+                </div>
+                <div class="mobile-progress-bar">
+                    <div class="fill" id="progressBar" style="width: 0%"></div>
+                </div>
+                <div class="total-score-display">
+                    <span class="score-label">Total Skor</span>
+                    <span class="score-value" id="totalScore">0.00</span>
+                </div>
+            </div>
+
+            <!-- Quick Action Buttons -->
+            <div class="quick-action-bar">
+                <button type="button" class="btn btn-outline-success" id="btnMarkAllOK">
+                    <i class="bi bi-check-all"></i>
+                    <span>Semua OK</span>
+                </button>
+                <button type="button" class="btn btn-outline-secondary" id="btnResetEquipment">
+                    <i class="bi bi-arrow-counterclockwise"></i>
+                    <span>Reset</span>
+                </button>
+            </div>
+
+            <!-- Equipment Cards Container -->
+            <div id="equipmentCardsContainer">
+                <!-- Cards will be rendered by JavaScript -->
+                <div class="empty-state" id="equipmentEmptyState">
+                    <div class="empty-icon">
+                        <i class="bi bi-inbox"></i>
+                    </div>
+                    <h6>Belum Ada Data Peralatan</h6>
+                    <p><i class="bi bi-arrow-left me-1"></i>Lengkapi langkah sebelumnya</p>
+                </div>
+            </div>
+
+            <!-- Hidden table for compatibility with FormPenilaianManager -->
+            <table style="display:none;">
+                <tbody id="equipmentTableBody"></tbody>
+            </table>
+            <span id="equipmentCountBadge" style="display:none;">0</span>
+        </div>
+
+        <!-- == STEP 4: Review & Submit == -->
+        <div class="mobile-step-section" id="step4" data-step="4">
+            <div class="mobile-section-card">
+                <div class="section-header">
+                    <i class="bi bi-clipboard-check text-primary"></i>
+                    <h6>Review & Kirim</h6>
+                </div>
+                <div class="section-body">
+                    <!-- Summary -->
+                    <div class="mb-3">
+                        <div class="d-flex justify-content-between mb-1">
+                            <span class="text-muted" style="font-size:0.8rem;">Tanggal</span>
+                            <span class="fw-semibold" style="font-size:0.85rem;" id="reviewTanggal">-</span>
+                        </div>
+                        <div class="d-flex justify-content-between mb-1">
+                            <span class="text-muted" style="font-size:0.8rem;">Shift</span>
+                            <span class="fw-semibold" style="font-size:0.85rem;" id="reviewShift">-</span>
+                        </div>
+                        <div class="d-flex justify-content-between mb-1">
+                            <span class="text-muted" style="font-size:0.8rem;">Unit</span>
+                            <span class="fw-semibold" style="font-size:0.85rem;" id="reviewUnit">-</span>
+                        </div>
+                        <div class="d-flex justify-content-between mb-1">
+                            <span class="text-muted" style="font-size:0.8rem;">Pelaksana</span>
+                            <span class="fw-semibold" style="font-size:0.85rem;" id="reviewVendor">-</span>
+                        </div>
+                        <div class="d-flex justify-content-between mb-1">
+                            <span class="text-muted" style="font-size:0.8rem;">Peruntukan</span>
+                            <span class="fw-semibold" style="font-size:0.85rem;" id="reviewPeruntukan">-</span>
+                        </div>
+                        <div class="d-flex justify-content-between mb-1">
+                            <span class="text-muted" style="font-size:0.8rem;">Kendaraan</span>
+                            <span class="fw-semibold" style="font-size:0.85rem;" id="reviewKendaraan">-</span>
+                        </div>
+                        <div class="d-flex justify-content-between mb-1">
+                            <span class="text-muted" style="font-size:0.8rem;">Petugas</span>
+                            <span class="fw-semibold" style="font-size:0.85rem;" id="reviewPetugas">-</span>
+                        </div>
+                        <hr class="my-2">
+                        <div class="d-flex justify-content-between mb-1">
+                            <span class="text-muted" style="font-size:0.8rem;">Jumlah Item</span>
+                            <span class="fw-bold" style="font-size:0.9rem;" id="reviewItemCount">0</span>
+                        </div>
+                        <div class="d-flex justify-content-between">
+                            <span class="text-muted" style="font-size:0.8rem;">Total Skor</span>
+                            <span class="fw-bold text-primary" style="font-size:1.1rem;"
+                                id="reviewTotalScore">0.00</span>
+                        </div>
+                    </div>
+
+                    <!-- Equipment Status Summary -->
+                    <div class="d-flex gap-2 mb-3">
+                        <div class="flex-fill text-center p-2 rounded" style="background:#d1fae5;">
+                            <div class="fw-bold text-success" id="reviewCountOK">0</div>
+                            <div style="font-size:0.7rem; color:#065f46;">OK</div>
+                        </div>
+                        <div class="flex-fill text-center p-2 rounded" style="background:#fef3c7;">
+                            <div class="fw-bold text-warning" id="reviewCountKurang">0</div>
+                            <div style="font-size:0.7rem; color:#92400e;">Kurang</div>
+                        </div>
+                        <div class="flex-fill text-center p-2 rounded" style="background:#fee2e2;">
+                            <div class="fw-bold text-danger" id="reviewCountTidak">0</div>
+                            <div style="font-size:0.7rem; color:#991b1b;">Tidak Ada</div>
+                        </div>
+                        <div class="flex-fill text-center p-2 rounded" style="background:#f3f4f6;">
+                            <div class="fw-bold text-secondary" id="reviewCountBelum">0</div>
+                            <div style="font-size:0.7rem; color:#6b7280;">Belum</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Integrity Section -->
+            <div class="mobile-integrity" id="integritySectionWrapper">
+                <input type="checkbox" class="integrity-check" id="integrityCheckbox" />
+                <div class="integrity-text">
+                    <strong><i class="bi bi-shield-lock-fill text-warning me-1"></i>Pernyataan Integritas</strong>
+                    Dengan prinsip integritas, saya menyatakan bahwa data yang diisi adalah sesuai dengan fakta dan
+                    kondisi sebenarnya.
+                </div>
+            </div>
+
+            <!-- Desktop link -->
+            <div class="mobile-desktop-link">
+                <a href="forms-penilaian.html"><i class="bi bi-display me-1"></i>Buka versi Desktop</a>
+            </div>
+        </div>
+
+    </div><!-- End Main Content -->
+
+    <!-- ===== Bottom Action Bar ===== -->
+    <div class="mobile-bottom-bar">
+        <button type="button" class="btn btn-outline-secondary btn-prev" id="btnPrev" style="display:none;">
+            <i class="bi bi-chevron-left"></i>
+        </button>
+        <button type="button" class="btn btn-primary btn-next" id="btnNext">
+            Lanjut <i class="bi bi-chevron-right ms-1"></i>
+        </button>
+        <button type="button" class="btn btn-success btn-submit" id="submitEvaluationBtn" style="display:none;"
+            disabled>
+            <i class="bi bi-check-circle me-1"></i> Simpan Penilaian
+        </button>
+    </div>
+
+    <!-- ===== Loading Overlay ===== -->
+    <div class="mobile-loading-overlay" id="mobileLoadingOverlay">
+        <div class="spinner-border" role="status"></div>
+        <span>Menyimpan...</span>
+    </div>
+
+    <!-- ===== Hidden form for compatibility ===== -->
+    <form id="modalPenilaianForm" style="display:none;"></form>
+
+    <!-- ===== Modal Tambah Kendaraan Baru ===== -->
+    <div class="modal fade" id="modalTambahKendaraan" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header py-2 bg-light">
+                    <h6 class="modal-title"><i class="bi bi-car-front me-2"></i>Tambah Kendaraan Baru</h6>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="row g-3">
+                        <div class="col-6">
+                            <label class="form-label text-muted small">Unit</label>
+                            <input type="text" class="form-control form-control-sm bg-light" id="modalKendaraan_Unit"
+                                readonly />
+                        </div>
+                        <div class="col-6">
+                            <label class="form-label text-muted small">Vendor</label>
+                            <input type="text" class="form-control form-control-sm bg-light" id="modalKendaraan_Vendor"
+                                readonly />
+                        </div>
+                        <div class="col-12">
+                            <label class="form-label text-muted small">Peruntukan</label>
+                            <input type="text" class="form-control form-control-sm bg-light"
+                                id="modalKendaraan_Peruntukan" readonly />
+                        </div>
+                        <hr class="my-2" />
+                        <div class="col-6">
+                            <label class="form-label fw-semibold">Nomor Polisi <span
+                                    class="text-danger">*</span></label>
+                            <input type="text" class="form-control" id="inputNomorPolisi" placeholder="B 1234 XYZ"
+                                pattern="^[A-Z]{1,2}\s?\d{1,4}\s?[A-Z]{1,3}$" style="text-transform: uppercase;"
+                                required />
+                            <small class="text-muted">Format: B 1234 XYZ</small>
+                        </div>
+                        <div class="col-6">
+                            <label class="form-label fw-semibold">Kategori <span class="text-danger">*</span></label>
+                            <select class="form-select" id="inputKategoriKendaraan" required>
+                                <option value="">-- Pilih --</option>
+                                <option value="Roda 2">Roda 2 (Motor)</option>
+                                <option value="Roda 4">Roda 4 (Mobil)</option>
+                                <option value="Roda 6">Roda 6 (Truk)</option>
+                                <option value="Lainnya">Lainnya</option>
+                            </select>
+                        </div>
+                        <div class="col-12">
+                            <label class="form-label fw-semibold">Deskripsi</label>
+                            <textarea class="form-control" id="inputDeskripsiKendaraan" rows="2"
+                                placeholder="Opsional"></textarea>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer py-2">
+                    <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Batal</button>
+                    <button type="button" class="btn btn-primary btn-sm" id="btnSimpanKendaraan">
+                        <i class="bi bi-check-lg me-1"></i>Simpan
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Tambah Petugas dihapus - cukup search dari data yang ada -->
+
+    <!-- ===== Hidden loading indicator for compatibility ===== -->
+    <div id="submitLoadingIndicator" style="display:none;"></div>
+
+    <!-- Vendor JS Files -->
+    <script src="assets/vendor/bootstrap/js/bootstrap.bundle.min.js"></script>
+
+    <!-- Supabase CDN & SweetAlert2 -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+    <!-- Supabase Config & API (shared) -->
+    <script src="assets/js/config/supabase-client.js"></script>
+    <script src="assets/js/auth/supabase-auth.js"></script>
+    <script src="assets/js/api/profiles.js"></script>
+    <script src="assets/js/api/units.js"></script>
+    <script src="assets/js/api/vendors.js"></script>
+    <script src="assets/js/api/peruntukan.js"></script>
+    <script src="assets/js/api/teams.js"></script>
+    <script src="assets/js/api/personnel.js"></script>
+    <script src="assets/js/api/equipment.js"></script>
+    <script src="assets/js/api/equipment-standards.js"></script>
+    <script src="assets/js/api/vendor-assets.js"></script>
+    <script src="assets/js/api/assessments.js"></script>
+
+    <!-- Core form logic (shared) -->
+    <script src="assets/js/form-penilaian-manager.js"></script>
+    <script src="assets/js/form-penilaian-load.js"></script>
+    <script src="assets/js/form-penilaian-submit.js"></script>
+
+    <!-- Mobile-specific logic -->
+    <script src="assets/js/form-penilaian-mobile.js"></script>
+
+</body>
+
+</html>

@@ -709,28 +709,29 @@
                           <select id="modalNopolSelect" class="form-select">
                             <option value="">-- Pilih Kendaraan --</option>
                           </select>
-                          <button type="button" class="btn btn-outline-secondary" id="btnAddKendaraan"
+                          <button type="button" class="btn btn-outline-secondary d-none" id="btnAddKendaraan"
                             data-bs-toggle="modal" data-bs-target="#modalTambahKendaraan" title="Tambah Kendaraan Baru">
                             <i class="bi bi-plus-lg"></i>
                           </button>
                         </div>
                         <input type="hidden" id="modalTeamId" value="" />
                       </div>
-                      <!-- Petugas - Dropdown + Tombol Tambah -->
+                      <!-- Petugas - Searchable Dropdown -->
                       <div class="col-md-4">
                         <label class="form-label fw-semibold">
-                          <i class="bi bi-people me-1 text-muted"></i>Petugas Penilai
-                          <small class="text-muted fw-normal">(pilih satu atau lebih)</small>
+                          <i class="bi bi-people me-1 text-muted"></i>Petugas
+                          <small class="text-muted fw-normal">(pilih atau ketik untuk mencari)</small>
                         </label>
-                        <div class="input-group">
-                          <select id="modalPetugasSelect" class="form-select">
-                            <option value="">-- Pilih Petugas --</option>
-                          </select>
-                          <button type="button" class="btn btn-outline-secondary" id="btnAddPetugas"
-                            data-bs-toggle="modal" data-bs-target="#modalTambahPetugas" title="Tambah Petugas Baru">
-                            <i class="bi bi-plus-lg"></i>
-                          </button>
+                        <div class="position-relative">
+                          <input type="text" id="modalPetugasSearch" class="form-control pe-5"
+                            placeholder="Pilih atau cari petugas..." autocomplete="off" />
+                          <i class="bi bi-chevron-down position-absolute"
+                            style="right: 12px; top: 50%; transform: translateY(-50%); pointer-events: none; color: #6c757d;"></i>
+                          <div id="petugasSuggestions" class="list-group position-absolute w-100 shadow-sm border"
+                            style="z-index: 1050; max-height: 200px; overflow-y: auto; display: none;"></div>
                         </div>
+                        <!-- Hidden: keeps backward compat with select id -->
+                        <select id="modalPetugasSelect" class="d-none"></select>
                         <input type="hidden" id="modalPersonnelId" value="" />
                         <!-- Container untuk selected petugas badges -->
                         <div id="selectedPetugasContainer" class="mt-2 d-flex flex-wrap gap-1">
@@ -962,52 +963,7 @@
     </div>
   </div>
 
-  <!-- Modal Tambah Petugas Baru -->
-  <div class="modal fade" id="modalTambahPetugas" tabindex="-1" aria-labelledby="modalTambahPetugasLabel"
-    aria-hidden="true">
-    <div class="modal-dialog">
-      <div class="modal-content">
-        <div class="modal-header py-2 bg-light">
-          <h6 class="modal-title" id="modalTambahPetugasLabel">
-            <i class="bi bi-person-plus me-2"></i>Tambah Petugas Baru
-          </h6>
-          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-        </div>
-        <div class="modal-body">
-          <div class="row g-3">
-            <!-- Field Terkunci -->
-            <div class="col-6">
-              <label class="form-label text-muted small">Unit</label>
-              <input type="text" class="form-control form-control-sm bg-light" id="modalPetugas_Unit" readonly />
-            </div>
-            <div class="col-6">
-              <label class="form-label text-muted small">Vendor</label>
-              <input type="text" class="form-control form-control-sm bg-light" id="modalPetugas_Vendor" readonly />
-            </div>
-            <div class="col-12">
-              <label class="form-label text-muted small">Peruntukan</label>
-              <input type="text" class="form-control form-control-sm bg-light" id="modalPetugas_Peruntukan" readonly />
-            </div>
-            <hr class="my-2" />
-            <!-- Input Nama Petugas -->
-            <div class="col-12">
-              <label class="form-label fw-semibold">Nama Petugas <span class="text-danger">*</span></label>
-              <input type="text" class="form-control" id="inputNamaPetugas" placeholder="Masukkan nama petugas"
-                required />
-            </div>
-          </div>
-        </div>
-        <div class="modal-footer py-2">
-          <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">
-            <i class="bi bi-x-lg me-1"></i>Batal
-          </button>
-          <button type="button" class="btn btn-primary btn-sm" id="btnSimpanPetugas">
-            <i class="bi bi-check-lg me-1"></i>Simpan
-          </button>
-        </div>
-      </div>
-    </div>
-  </div>
+  <!-- Modal Tambah Petugas dihapus - cukup search dari data yang ada -->
 
   <!-- ======= Footer ======= -->
   <footer id="footer" class="footer">

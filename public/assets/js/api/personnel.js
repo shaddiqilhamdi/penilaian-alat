@@ -11,17 +11,23 @@ if (typeof window.PersonnelAPI === 'undefined') {
         /**
          * Get all personnel
          */
-        async getAll() {
+        async getAll(activeOnly = true) {
             try {
                 const client = getSupabaseClient();
-                const { data, error } = await client
+                let query = client
                     .from('personnel')
                     .select(`
                         *,
                         vendors(vendor_name, unit_code),
                         teams(nomor_polisi, category),
                         peruntukan(deskripsi)
-                    `)
+                    `);
+
+                if (activeOnly) {
+                    query = query.eq('is_active', true);
+                }
+
+                const { data, error } = await query
                     .order('created_at', { ascending: false });
 
                 if (error) {
@@ -68,17 +74,23 @@ if (typeof window.PersonnelAPI === 'undefined') {
         /**
          * Get personnel by vendor ID
          */
-        async getByVendor(vendorId) {
+        async getByVendor(vendorId, activeOnly = true) {
             try {
                 const client = getSupabaseClient();
-                const { data, error } = await client
+                let query = client
                     .from('personnel')
                     .select(`
                         *,
                         teams(nomor_polisi, category),
                         peruntukan(deskripsi)
                     `)
-                    .eq('vendor_id', vendorId)
+                    .eq('vendor_id', vendorId);
+
+                if (activeOnly) {
+                    query = query.eq('is_active', true);
+                }
+
+                const { data, error } = await query
                     .order('nama_personil', { ascending: true });
 
                 if (error) {

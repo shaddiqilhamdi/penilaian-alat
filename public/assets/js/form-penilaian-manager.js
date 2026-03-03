@@ -126,6 +126,9 @@ const FormPenilaianManager = {
         this.calculateEquipmentScore(row);
         this.calculateTotalScore();
         this.updateSubmitButton();
+
+        // Check kesesuaian_kontrak change (async alert)
+        this.checkKesesuaianKontrakChange(row, realisasi, input);
     },
 
     // Handle layak input change
@@ -147,6 +150,9 @@ const FormPenilaianManager = {
         this.calculateEquipmentScore(row);
         this.calculateTotalScore();
         this.updateSubmitButton();
+
+        // Check kondisi fisik change (async alert)
+        this.checkKondisiFisikChange(row, input);
     },
 
     // Handle berfungsi input change
@@ -168,6 +174,256 @@ const FormPenilaianManager = {
         this.calculateEquipmentScore(row);
         this.calculateTotalScore();
         this.updateSubmitButton();
+
+        // Check kondisi fungsi change (async alert)
+        this.checkKondisiFungsiChange(row, input);
+    },
+
+    // ─── Condition Change Alerts ───────────────────────────────────────
+
+    /**
+     * Check kesesuaian kontrak change: sesuai (2) ↔ tidak sesuai (0)
+     */
+    async checkKesesuaianKontrakChange(row, realisasi, input) {
+        if (row.dataset.hasPrevAssessment !== 'true') return;
+        const prevVal = parseInt(row.dataset.prevKesesuaian);
+        if (isNaN(prevVal)) return;
+
+        const volumePerRegu = parseInt(row.dataset.volumePerRegu) || 0;
+        const nowVal = (realisasi >= volumePerRegu) ? 2 : 0;
+
+        const namaAlat = row.dataset.namaAlat || 'Alat';
+
+        if (prevVal === 2 && nowVal === 0) {
+            // Sebelumnya sesuai → sekarang tidak sesuai
+            const result = await Swal.fire({
+                icon: 'warning',
+                title: 'Kesesuaian Kontrak Berubah',
+                html: `<div class="text-start">
+                    <p><strong>${namaAlat}</strong></p>
+                    <p>Penilaian sebelumnya: <span class="badge bg-success">Sesuai Kontrak</span></p>
+                    <p>Penilaian sekarang: <span class="badge bg-danger">Tidak Sesuai Kontrak</span></p>
+                    <p class="mb-0">Realisasi (<strong>${realisasi}</strong>) kurang dari standar (<strong>${volumePerRegu}</strong>).</p>
+                    <hr><p class="mb-0 text-muted small"><i class="bi bi-info-circle me-1"></i>Apakah benar jumlah realisasi berkurang?</p>
+                </div>`,
+                showCancelButton: true,
+                confirmButtonText: 'Ya, Benar',
+                cancelButtonText: 'Batalkan',
+                confirmButtonColor: '#dc3545',
+                cancelButtonColor: '#6c757d',
+                customClass: { popup: 'swal-wide-mobile' }
+            });
+            if (!result.isConfirmed) {
+                // Restore previous value
+                input.value = row.dataset.prevRealisasi || '';
+                FormPenilaianManager.handleRealisasiChange(input);
+            }
+        } else if (prevVal === 0 && nowVal === 2) {
+            // Sebelumnya tidak sesuai → sekarang sesuai
+            const result = await Swal.fire({
+                icon: 'question',
+                title: 'Kesesuaian Kontrak Membaik',
+                html: `<div class="text-start">
+                    <p><strong>${namaAlat}</strong></p>
+                    <p>Penilaian sebelumnya: <span class="badge bg-danger">Tidak Sesuai Kontrak</span></p>
+                    <p>Penilaian sekarang: <span class="badge bg-success">Sesuai Kontrak</span></p>
+                    <hr><p class="mb-0 text-muted small"><i class="bi bi-info-circle me-1"></i>Apakah benar jumlah alat sudah sesuai kontrak? Pastikan sudah ada tindak lanjut.</p>
+                </div>`,
+                showCancelButton: true,
+                confirmButtonText: 'Ya, Sudah Sesuai',
+                cancelButtonText: 'Batalkan',
+                confirmButtonColor: '#198754',
+                cancelButtonColor: '#6c757d',
+                customClass: { popup: 'swal-wide-mobile' }
+            });
+            if (!result.isConfirmed) {
+                input.value = row.dataset.prevRealisasi || '';
+                FormPenilaianManager.handleRealisasiChange(input);
+            }
+        }
+    },
+
+    /**
+     * Check kondisi fisik change: baik (0) ↔ bermasalah (-1)
+     */
+    async checkKondisiFisikChange(row, input) {
+        if (row.dataset.hasPrevAssessment !== 'true') return;
+        const prevVal = parseInt(row.dataset.prevKondisiFisik);
+        if (isNaN(prevVal)) return;
+
+        const realisasi = parseInt(row.querySelector('.realisasi-input').value) || 0;
+        const layak = parseInt(input.value) || 0;
+        const tidakLayak = realisasi - layak;
+        const nowVal = (tidakLayak === 0) ? 0 : -1;
+
+        const namaAlat = row.dataset.namaAlat || 'Alat';
+
+        if (prevVal === 0 && nowVal === -1) {
+            // Sebelumnya fisik baik → sekarang ada yg tidak layak
+            const result = await Swal.fire({
+                icon: 'warning',
+                title: 'Kondisi Fisik Berubah',
+                html: `<div class="text-start">
+                    <p><strong>${namaAlat}</strong></p>
+                    <p>Penilaian sebelumnya: <span class="badge bg-success">Fisik Baik</span> (semua layak)</p>
+                    <p>Penilaian sekarang: <span class="badge bg-danger">Ada Tidak Layak</span> (${tidakLayak} tidak layak)</p>
+                    <hr><p class="mb-0 text-muted small"><i class="bi bi-info-circle me-1"></i>Apakah benar ada peralatan yang kondisi fisiknya tidak layak?</p>
+                </div>`,
+                showCancelButton: true,
+                confirmButtonText: 'Ya, Ada Tidak Layak',
+                cancelButtonText: 'Batalkan',
+                confirmButtonColor: '#dc3545',
+                cancelButtonColor: '#6c757d',
+                customClass: { popup: 'swal-wide-mobile' }
+            });
+            if (!result.isConfirmed) {
+                input.value = realisasi; // restore to all layak
+                const tidakLayakEl = row.querySelector('.tidak-layak-value');
+                if (tidakLayakEl) tidakLayakEl.textContent = '0';
+                FormPenilaianManager.calculateEquipmentScore(row);
+                FormPenilaianManager.calculateTotalScore();
+                FormPenilaianManager.updateSubmitButton();
+                FormPenilaianManager.syncMobileFromTable(row.dataset.equipmentId);
+            }
+        } else if (prevVal === -1 && nowVal === 0) {
+            // Sebelumnya ada yg tidak layak → sekarang semua layak
+            const result = await Swal.fire({
+                icon: 'question',
+                title: 'Kondisi Fisik Membaik',
+                html: `<div class="text-start">
+                    <p><strong>${namaAlat}</strong></p>
+                    <p>Penilaian sebelumnya: <span class="badge bg-danger">Ada Tidak Layak</span></p>
+                    <p>Penilaian sekarang: <span class="badge bg-success">Fisik Baik</span> (semua layak)</p>
+                    <hr><p class="mb-0 text-muted small"><i class="bi bi-info-circle me-1"></i>Apakah benar kondisi fisik sudah diperbaiki / ditindaklanjuti?</p>
+                </div>`,
+                showCancelButton: true,
+                confirmButtonText: 'Ya, Sudah Ditindaklanjuti',
+                cancelButtonText: 'Batalkan',
+                confirmButtonColor: '#198754',
+                cancelButtonColor: '#6c757d',
+                customClass: { popup: 'swal-wide-mobile' }
+            });
+            if (!result.isConfirmed) {
+                // Restore to previous (not all layak) - set layak < realisasi
+                const prevRealisasi = parseInt(row.dataset.prevRealisasi) || realisasi;
+                input.value = Math.max(0, prevRealisasi - 1); // at least 1 tidak layak
+                const tidakLayakNew = realisasi - (parseInt(input.value) || 0);
+                const tidakLayakEl = row.querySelector('.tidak-layak-value');
+                if (tidakLayakEl) tidakLayakEl.textContent = tidakLayakNew;
+                FormPenilaianManager.calculateEquipmentScore(row);
+                FormPenilaianManager.calculateTotalScore();
+                FormPenilaianManager.updateSubmitButton();
+                FormPenilaianManager.syncMobileFromTable(row.dataset.equipmentId);
+            }
+        }
+    },
+
+    /**
+     * Check kondisi fungsi change: baik (0) ↔ bermasalah (-1)
+     */
+    async checkKondisiFungsiChange(row, input) {
+        if (row.dataset.hasPrevAssessment !== 'true') return;
+        const prevVal = parseInt(row.dataset.prevKondisiFungsi);
+        if (isNaN(prevVal)) return;
+
+        const realisasi = parseInt(row.querySelector('.realisasi-input').value) || 0;
+        const berfungsi = parseInt(input.value) || 0;
+        const tidakBerfungsi = realisasi - berfungsi;
+        const nowVal = (tidakBerfungsi === 0) ? 0 : -1;
+
+        const namaAlat = row.dataset.namaAlat || 'Alat';
+
+        if (prevVal === 0 && nowVal === -1) {
+            // Sebelumnya fungsi baik → sekarang ada yg tidak berfungsi
+            const result = await Swal.fire({
+                icon: 'warning',
+                title: 'Kondisi Fungsi Berubah',
+                html: `<div class="text-start">
+                    <p><strong>${namaAlat}</strong></p>
+                    <p>Penilaian sebelumnya: <span class="badge bg-success">Fungsi Baik</span> (semua berfungsi)</p>
+                    <p>Penilaian sekarang: <span class="badge bg-danger">Ada Tidak Berfungsi</span> (${tidakBerfungsi} tidak berfungsi)</p>
+                    <hr><p class="mb-0 text-muted small"><i class="bi bi-info-circle me-1"></i>Apakah benar ada peralatan yang tidak berfungsi?</p>
+                </div>`,
+                showCancelButton: true,
+                confirmButtonText: 'Ya, Ada Tidak Berfungsi',
+                cancelButtonText: 'Batalkan',
+                confirmButtonColor: '#dc3545',
+                cancelButtonColor: '#6c757d',
+                customClass: { popup: 'swal-wide-mobile' }
+            });
+            if (!result.isConfirmed) {
+                input.value = realisasi; // restore to all berfungsi
+                const tidakBerfungsiEl = row.querySelector('.tidak-berfungsi-value');
+                if (tidakBerfungsiEl) tidakBerfungsiEl.textContent = '0';
+                FormPenilaianManager.calculateEquipmentScore(row);
+                FormPenilaianManager.calculateTotalScore();
+                FormPenilaianManager.updateSubmitButton();
+                FormPenilaianManager.syncMobileFromTable(row.dataset.equipmentId);
+            }
+        } else if (prevVal === -1 && nowVal === 0) {
+            // Sebelumnya ada yg tidak berfungsi → sekarang semua berfungsi
+            const result = await Swal.fire({
+                icon: 'question',
+                title: 'Kondisi Fungsi Membaik',
+                html: `<div class="text-start">
+                    <p><strong>${namaAlat}</strong></p>
+                    <p>Penilaian sebelumnya: <span class="badge bg-danger">Ada Tidak Berfungsi</span></p>
+                    <p>Penilaian sekarang: <span class="badge bg-success">Fungsi Baik</span> (semua berfungsi)</p>
+                    <hr><p class="mb-0 text-muted small"><i class="bi bi-info-circle me-1"></i>Apakah benar kondisi fungsi sudah diperbaiki / ditindaklanjuti?</p>
+                </div>`,
+                showCancelButton: true,
+                confirmButtonText: 'Ya, Sudah Ditindaklanjuti',
+                cancelButtonText: 'Batalkan',
+                confirmButtonColor: '#198754',
+                cancelButtonColor: '#6c757d',
+                customClass: { popup: 'swal-wide-mobile' }
+            });
+            if (!result.isConfirmed) {
+                const prevRealisasi = parseInt(row.dataset.prevRealisasi) || realisasi;
+                input.value = Math.max(0, prevRealisasi - 1); // at least 1 tidak berfungsi
+                const tidakBerfungsiNew = realisasi - (parseInt(input.value) || 0);
+                const tidakBerfungsiEl = row.querySelector('.tidak-berfungsi-value');
+                if (tidakBerfungsiEl) tidakBerfungsiEl.textContent = tidakBerfungsiNew;
+                FormPenilaianManager.calculateEquipmentScore(row);
+                FormPenilaianManager.calculateTotalScore();
+                FormPenilaianManager.updateSubmitButton();
+                FormPenilaianManager.syncMobileFromTable(row.dataset.equipmentId);
+            }
+        }
+    },
+
+    /**
+     * Sync mobile accordion inputs from table row values
+     */
+    syncMobileFromTable(equipmentId) {
+        const tableRow = document.querySelector(`#equipmentTableBody tr[data-equipment-id="${equipmentId}"]`);
+        const accItem = document.querySelector(`#equipmentAccordion .accordion-item[data-equipment-id="${equipmentId}"]`);
+        if (!tableRow || !accItem) return;
+
+        const realisasi = tableRow.querySelector('.realisasi-input')?.value || '';
+        const layak = tableRow.querySelector('.layak-input')?.value || '';
+        const berfungsi = tableRow.querySelector('.berfungsi-input')?.value || '';
+
+        const rMobile = accItem.querySelector('.realisasi-input-mobile');
+        const lMobile = accItem.querySelector('.layak-input-mobile');
+        const bMobile = accItem.querySelector('.berfungsi-input-mobile');
+        if (rMobile) rMobile.value = realisasi;
+        if (lMobile) lMobile.value = layak;
+        if (bMobile) bMobile.value = berfungsi;
+
+        // Update tidak layak / tidak berfungsi
+        const r = parseInt(realisasi) || 0;
+        const l = parseInt(layak) || 0;
+        const b = parseInt(berfungsi) || 0;
+        const tlSpan = accItem.querySelector('.tidak-layak-value-mobile');
+        const tbSpan = accItem.querySelector('.tidak-berfungsi-value-mobile');
+        if (tlSpan) tlSpan.textContent = Math.max(0, r - l);
+        if (tbSpan) tbSpan.textContent = Math.max(0, r - b);
+
+        // Update mobile nilai badge
+        if (typeof updateMobileNilaiBadge === 'function') {
+            updateMobileNilaiBadge(equipmentId);
+        }
     },
 
     // Calculate score for individual equipment
