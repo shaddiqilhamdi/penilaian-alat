@@ -1,3 +1,2 @@
 [functions.submit-penilaian]
-# Disable gateway JWT verification - function handles auth internally
-verify_jwt = false
+verify_jwt = true

@@ -6,10 +6,49 @@
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts'
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 
-const corsHeaders = {
-    'Access-Control-Allow-Origin': '*',
-    'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+// Allowed origins: Firebase Hosting + localhost for development
+const ALLOWED_ORIGINS = [
+    'https://penilaian-alat-uid.web.app',
+    'https://penilaian-alat-uid.firebaseapp.com',
+    'http://localhost',
+    'http://localhost:5500',
+    'http://127.0.0.1:5500',
+    'http://localhost:3000',
+]
+
+function getCorsHeaders(origin: string | null) {
+    const allowed = origin && ALLOWED_ORIGINS.includes(origin) ? origin : ALLOWED_ORIGINS[0]
+    return {
+        'Access-Control-Allow-Origin': allowed,
+        'Access-Control-Allow-Methods': 'POST, OPTIONS',
+        'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+    }
 }
+
+// ─── Input validation helpers ───────────────────────────────────────────────
+
+const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
+const DATE_RE = /^\d{4}-\d{2}-\d{2}$/
+
+function isValidUUID(id: unknown): boolean {
+    return typeof id === 'string' && UUID_RE.test(id)
+}
+
+function isValidDate(d: unknown): boolean {
+    if (typeof d !== 'string' || !DATE_RE.test(d)) return false
+    const parsed = new Date(d)
+    return !isNaN(parsed.getTime())
+}
+
+function isNonNegativeInt(n: unknown): boolean {
+    return typeof n === 'number' && Number.isInteger(n) && n >= 0
+}
+
+function isPositiveInt(n: unknown): boolean {
+    return typeof n === 'number' && Number.isInteger(n) && n > 0
+}
+
+// ─── Types ───────────────────────────────────────────────────────────────────
 
 interface AssessmentItem {
     equipment_id: string
@@ -23,50 +62,75 @@ interface AssessmentItem {
 }
 
 interface SubmitRequest {
-    // Assessment header
     tanggal_penilaian: string
     shift: string
     vendor_id: string
     peruntukan_id: string
     team_id: string | null
-    personnel_id: string | null           // Single personnel (backward compatibility)
-    personnel_ids: string[] | null        // Multiple personnel for regu
-    assessor_id: string
-
-    // Assessment items
+    personnel_id: string | null
+    personnel_ids: string[] | null
     items: AssessmentItem[]
-
-    // Calculated totals (can be recalculated server-side for validation)
     jumlah_item_peralatan: number
     total_score: number
 }
 
+// ─── Main handler ─────────────────────────────────────────────────────────────
+
 serve(async (req) => {
+    const origin = req.headers.get('Origin')
+    const corsHeaders = getCorsHeaders(origin)
+
     // Handle CORS preflight
     if (req.method === 'OPTIONS') {
         return new Response('ok', { headers: corsHeaders })
     }
 
     try {
-        // Get auth header (optional - will use service role if not provided)
+        // ── 1. Authenticate request ──────────────────────────────────────────
         const authHeader = req.headers.get('Authorization')
+        if (!authHeader || !authHeader.startsWith('Bearer ')) {
+            return new Response(
+                JSON.stringify({ success: false, error: 'Unauthorized: missing token' }),
+                { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+            )
+        }
 
-        // Create Supabase client - use service role for database operations
-        const supabaseClient = createClient(
+        const token = authHeader.replace('Bearer ', '')
+
+        // Service-role client for DB writes (bypasses RLS intentionally for atomic writes)
+        const supabaseAdmin = createClient(
             Deno.env.get('SUPABASE_URL') ?? '',
             Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '',
-            {
-                auth: {
-                    autoRefreshToken: false,
-                    persistSession: false
-                }
-            }
+            { auth: { autoRefreshToken: false, persistSession: false } }
         )
 
-        // Parse request body
+        // Verify JWT and extract user identity
+        const { data: { user }, error: authError } = await supabaseAdmin.auth.getUser(token)
+        if (authError || !user) {
+            return new Response(
+                JSON.stringify({ success: false, error: 'Unauthorized: invalid token' }),
+                { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+            )
+        }
+
+        // Fetch caller's profile for role-based vendor authorization
+        const { data: callerProfile, error: profileError } = await supabaseAdmin
+            .from('profiles')
+            .select('role, vendor_id, unit_code')
+            .eq('id', user.id)
+            .single()
+
+        if (profileError || !callerProfile) {
+            return new Response(
+                JSON.stringify({ success: false, error: 'Unauthorized: profile not found' }),
+                { status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+            )
+        }
+
+        // ── 2. Parse & validate request body ─────────────────────────────────
         const body: SubmitRequest = await req.json()
 
-        // Validate required fields
+        // Required field presence
         if (!body.vendor_id || !body.peruntukan_id || !body.items?.length) {
             return new Response(
                 JSON.stringify({ success: false, error: 'Missing required fields: vendor_id, peruntukan_id, items' }),
@@ -74,31 +138,114 @@ serve(async (req) => {
             )
         }
 
-        // Calculate scores for each item
+        // UUID format validation
+        const uuidFields: [string, unknown][] = [
+            ['vendor_id', body.vendor_id],
+            ['peruntukan_id', body.peruntukan_id],
+        ]
+        if (body.team_id) uuidFields.push(['team_id', body.team_id])
+        if (body.personnel_id) uuidFields.push(['personnel_id', body.personnel_id])
+
+        for (const [field, val] of uuidFields) {
+            if (!isValidUUID(val)) {
+                return new Response(
+                    JSON.stringify({ success: false, error: `Invalid UUID format for field: ${field}` }),
+                    { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+                )
+            }
+        }
+
+        // Date validation
+        if (!isValidDate(body.tanggal_penilaian)) {
+            return new Response(
+                JSON.stringify({ success: false, error: 'Invalid date format for tanggal_penilaian (expected YYYY-MM-DD)' }),
+                { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+            )
+        }
+
+        // Item-level validation
+        for (let i = 0; i < body.items.length; i++) {
+            const item = body.items[i]
+            if (!isValidUUID(item.equipment_id)) {
+                return new Response(
+                    JSON.stringify({ success: false, error: `Invalid equipment_id at items[${i}]` }),
+                    { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+                )
+            }
+            if (!isPositiveInt(item.required_qty)) {
+                return new Response(
+                    JSON.stringify({ success: false, error: `required_qty must be a positive integer at items[${i}]` }),
+                    { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+                )
+            }
+            if (!isNonNegativeInt(item.actual_qty)) {
+                return new Response(
+                    JSON.stringify({ success: false, error: `actual_qty must be >= 0 at items[${i}]` }),
+                    { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+                )
+            }
+            if (!isNonNegativeInt(item.layak) || !isNonNegativeInt(item.tidak_layak) ||
+                !isNonNegativeInt(item.berfungsi) || !isNonNegativeInt(item.tidak_berfungsi)) {
+                return new Response(
+                    JSON.stringify({ success: false, error: `layak/tidak_layak/berfungsi/tidak_berfungsi must be >= 0 at items[${i}]` }),
+                    { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+                )
+            }
+        }
+
+        // ── 3. Authorize: verify caller can submit for this vendor ────────────
+        const role = callerProfile.role
+        const isGlobalAdmin = role === 'uid_admin' || role === 'uid_user'
+        const isUnitAdmin = role === 'up3_admin' || role === 'up3_user'
+        const isVendorUser = role === 'vendor_k3' || role === 'petugas'
+
+        if (isVendorUser) {
+            // Vendor users can only submit for their own vendor
+            if (callerProfile.vendor_id !== body.vendor_id) {
+                return new Response(
+                    JSON.stringify({ success: false, error: 'Forbidden: you can only submit assessments for your own vendor' }),
+                    { status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+                )
+            }
+        } else if (isUnitAdmin) {
+            // Unit admins can only submit for vendors in their unit
+            const { data: vendorCheck } = await supabaseAdmin
+                .from('vendors')
+                .select('id')
+                .eq('id', body.vendor_id)
+                .eq('unit_code', callerProfile.unit_code)
+                .maybeSingle()
+
+            if (!vendorCheck) {
+                return new Response(
+                    JSON.stringify({ success: false, error: 'Forbidden: vendor does not belong to your unit' }),
+                    { status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+                )
+            }
+        } else if (!isGlobalAdmin) {
+            return new Response(
+                JSON.stringify({ success: false, error: 'Forbidden: insufficient role' }),
+                { status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+            )
+        }
+
+        // ── 4. Calculate scores ───────────────────────────────────────────────
         const processedItems = body.items.map(item => {
             const kesesuaian_kontrak = item.actual_qty >= item.required_qty ? 2 : 0
             const kondisi_fisik = item.tidak_layak === 0 ? 0 : -1
             const kondisi_fungsi = item.tidak_berfungsi === 0 ? 0 : -1
             const score_item = kesesuaian_kontrak + kondisi_fisik + kondisi_fungsi
-
-            return {
-                ...item,
-                kesesuaian_kontrak,
-                kondisi_fisik,
-                kondisi_fungsi,
-                score_item
-            }
+            return { ...item, kesesuaian_kontrak, kondisi_fisik, kondisi_fungsi, score_item }
         })
 
-        // Calculate totals
         const jumlah_peralatan_layak = processedItems.reduce((sum, i) => sum + i.layak, 0)
         const jumlah_peralatan_tidak_layak = processedItems.reduce((sum, i) => sum + i.tidak_layak, 0)
         const jumlah_peralatan_berfungsi = processedItems.reduce((sum, i) => sum + i.berfungsi, 0)
         const jumlah_peralatan_tidak_berfungsi = processedItems.reduce((sum, i) => sum + i.tidak_berfungsi, 0)
         const total_score = processedItems.reduce((sum, i) => sum + i.score_item, 0) / processedItems.length
 
-        // ========== STEP 1: Insert Assessment Header ==========
-        const { data: assessment, error: assessmentError } = await supabaseClient
+        // ── 5. Insert Assessment Header ───────────────────────────────────────
+        const { data: assessment, error: assessmentError } = await supabaseAdmin
             .from('assessments')
             .insert({
                 tanggal_penilaian: body.tanggal_penilaian,
@@ -107,7 +254,7 @@ serve(async (req) => {
                 peruntukan_id: body.peruntukan_id,
                 team_id: body.team_id,
                 personnel_id: body.personnel_id,
-                assessor_id: body.assessor_id,
+                assessor_id: user.id,  // Always use authenticated user ID, never body.assessor_id
                 jumlah_item_peralatan: body.items.length,
                 jumlah_peralatan_layak,
                 jumlah_peralatan_tidak_layak,
@@ -127,7 +274,7 @@ serve(async (req) => {
             )
         }
 
-        // ========== STEP 2: Insert Assessment Items ==========
+        // ── 6. Insert Assessment Items ────────────────────────────────────────
         const assessmentItems = processedItems.map(item => ({
             assessment_id: assessment.id,
             equipment_id: item.equipment_id,
@@ -137,28 +284,23 @@ serve(async (req) => {
             tidak_layak: item.tidak_layak,
             berfungsi: item.berfungsi,
             tidak_berfungsi: item.tidak_berfungsi
-            // Note: kesesuaian_kontrak, kondisi_fisik, kondisi_fungsi, score_item 
-            // are generated columns - calculated by database
         }))
 
-        const { data: items, error: itemsError } = await supabaseClient
+        const { data: items, error: itemsError } = await supabaseAdmin
             .from('assessment_items')
             .insert(assessmentItems)
             .select()
 
         if (itemsError) {
             console.error('Assessment items insert error:', itemsError)
-            // Rollback: delete the assessment header
-            await supabaseClient.from('assessments').delete().eq('id', assessment.id)
-
+            await supabaseAdmin.from('assessments').delete().eq('id', assessment.id)
             return new Response(
                 JSON.stringify({ success: false, error: `Failed to create assessment items: ${itemsError.message}` }),
                 { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
             )
         }
 
-        // ========== STEP 2.5: Insert Assessment Personnel (for multiple personnel/regu) ==========
-        // Combine personnel_ids array with single personnel_id for backward compatibility
+        // ── 7. Insert Assessment Personnel ────────────────────────────────────
         let allPersonnelIds: string[] = []
         if (body.personnel_ids && body.personnel_ids.length > 0) {
             allPersonnelIds = [...body.personnel_ids]
@@ -167,34 +309,27 @@ serve(async (req) => {
             allPersonnelIds.push(body.personnel_id)
         }
 
-        // Insert into assessment_personnel junction table
         if (allPersonnelIds.length > 0) {
-            const personnelRecords = allPersonnelIds.map(pid => ({
-                assessment_id: assessment.id,
-                personnel_id: pid
-            }))
+            const personnelRecords = allPersonnelIds
+                .filter(pid => isValidUUID(pid))
+                .map(pid => ({ assessment_id: assessment.id, personnel_id: pid }))
 
-            const { error: personnelError } = await supabaseClient
+            const { error: personnelError } = await supabaseAdmin
                 .from('assessment_personnel')
                 .insert(personnelRecords)
 
             if (personnelError) {
                 console.warn('Failed to insert assessment_personnel:', personnelError)
-                // Not a critical error, continue
             } else {
                 console.log(`Inserted ${personnelRecords.length} personnel records for assessment ${assessment.id}`)
             }
         }
 
-        // ========== STEP 3: Upsert Vendor Assets ==========
-        // LOGIC: owner_id ditentukan per PERUNTUKAN, bukan per item.
-        // Jika peruntukan punya salah satu alat berkategori 'Kendaraan' → owner_id = team_id
-        // Jika tidak → owner_id = personnel_id
+        // ── 8. Upsert Vendor Assets ───────────────────────────────────────────
         const upsertResults = []
         const now = new Date().toISOString()
 
-        // Cek apakah peruntukan ini punya equipment berkategori 'Kendaraan'
-        const { data: kendaraanCheck } = await supabaseClient
+        const { data: kendaraanCheck } = await supabaseAdmin
             .from('equipment_standards')
             .select('equipment_id, equipment_master!inner(kategori)')
             .eq('peruntukan_id', body.peruntukan_id)
@@ -205,11 +340,9 @@ serve(async (req) => {
         const owner_id = peruntukanHasKendaraan ? (body.team_id || null) : (body.personnel_id || null)
 
         for (const item of processedItems) {
-
-            // Lookup by owner_id + equipment_id (unique key)
             let existingAsset = null
             if (owner_id) {
-                const { data } = await supabaseClient
+                const { data } = await supabaseAdmin
                     .from('vendor_assets')
                     .select('id')
                     .eq('owner_id', owner_id)
@@ -221,8 +354,8 @@ serve(async (req) => {
             const assetData = {
                 vendor_id: body.vendor_id,
                 peruntukan_id: body.peruntukan_id,
-                team_id: body.team_id || null,
-                personnel_id: body.personnel_id || null,
+                team_id: peruntukanHasKendaraan ? (body.team_id || null) : null,
+                personnel_id: peruntukanHasKendaraan ? null : (body.personnel_id || null),
                 owner_id: owner_id,
                 equipment_id: item.equipment_id,
                 realisasi_qty: item.actual_qty,
@@ -237,13 +370,10 @@ serve(async (req) => {
             }
 
             if (existingAsset) {
-                // Update existing
-                const { data: updated, error: updateError } = await supabaseClient
+                const { error: updateError } = await supabaseAdmin
                     .from('vendor_assets')
                     .update(assetData)
                     .eq('id', existingAsset.id)
-                    .select()
-                    .single()
 
                 if (!updateError) {
                     upsertResults.push({ action: 'updated', id: existingAsset.id, equipment_id: item.equipment_id })
@@ -251,11 +381,10 @@ serve(async (req) => {
                     console.warn('Failed to update vendor_asset:', updateError)
                 }
             } else {
-                // Insert new
-                const { data: inserted, error: insertError } = await supabaseClient
+                const { data: inserted, error: insertError } = await supabaseAdmin
                     .from('vendor_assets')
                     .insert(assetData)
-                    .select()
+                    .select('id')
                     .single()
 
                 if (!insertError) {
@@ -266,15 +395,11 @@ serve(async (req) => {
             }
         }
 
-        // ========== SUCCESS RESPONSE ==========
+        // ── 9. Success ────────────────────────────────────────────────────────
         return new Response(
             JSON.stringify({
                 success: true,
-                data: {
-                    assessment: assessment,
-                    items: items,
-                    vendor_assets: upsertResults
-                },
+                data: { assessment, items, vendor_assets: upsertResults },
                 message: `Assessment created with ${items.length} items. ${upsertResults.filter(r => r.action === 'created').length} new assets, ${upsertResults.filter(r => r.action === 'updated').length} updated.`
             }),
             { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }

@@ -3,11 +3,11 @@
   "use strict";
 
   /**
-   * Apply menu permissions based on user role from localStorage
+   * Apply menu permissions based on user role from sessionStorage
    * This runs immediately to hide menus before they're visible
    */
   (function applyMenuPermissionsFromStorage() {
-    const role = localStorage.getItem('user_role');
+    const role = sessionStorage.getItem('user_role');
     if (role === 'up3_admin' || role === 'up3_user') {
       const menuPeruntukan = document.getElementById('menu-peruntukan');
       const menuPeralatan = document.getElementById('menu-peralatan');

@@ -37,10 +37,10 @@ async function logout() {
 
         const { error } = await client.auth.signOut();
 
-        // Clear role from localStorage
-        localStorage.removeItem('user_role');
-        localStorage.removeItem('user_unit_code');
-        localStorage.removeItem('user_vendor_id');
+        // Clear role from sessionStorage
+        sessionStorage.removeItem('user_role');
+        sessionStorage.removeItem('user_unit_code');
+        sessionStorage.removeItem('user_vendor_id');
 
         if (error) {
             console.error('❌ Logout failed:', error.message);
@@ -197,9 +197,9 @@ async function getCurrentUser() {
  */
 function saveUserRoleToStorage(profile) {
     if (profile) {
-        localStorage.setItem('user_role', profile.role || '');
-        localStorage.setItem('user_unit_code', profile.unit_code || '');
-        localStorage.setItem('user_vendor_id', profile.vendor_id || '');
+        sessionStorage.setItem('user_role', profile.role || '');
+        sessionStorage.setItem('user_unit_code', profile.unit_code || '');
+        sessionStorage.setItem('user_vendor_id', profile.vendor_id || '');
 
         // Apply menu permissions based on role
         applyMenuPermissions(profile.role);
@@ -225,7 +225,7 @@ function applyMenuPermissions(role) {
  * Get user role from localStorage (for quick CSS-based checks)
  */
 function getUserRoleFromStorage() {
-    return localStorage.getItem('user_role') || '';
+    return sessionStorage.getItem('user_role') || '';
 }
 
 /**
