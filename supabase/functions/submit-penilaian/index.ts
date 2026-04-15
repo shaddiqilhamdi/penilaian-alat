@@ -8,6 +8,8 @@ import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 
 // Allowed origins: Firebase Hosting + localhost for development
 const ALLOWED_ORIGINS = [
+    'https://safetytools-uid.web.app',
+    'https://safetytools-uid.firebaseapp.com',
     'https://penilaian-alat-uid.web.app',
     'https://penilaian-alat-uid.firebaseapp.com',
     'http://localhost',
