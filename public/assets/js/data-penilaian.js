@@ -9,6 +9,11 @@ let currentProfile = null;
 let assessmentsData = [];
 let dataTable = null;
 
+// Server-side pagination state
+let currentPage = 0;
+let totalCount = 0;
+const PAGE_SIZE = 50;
+
 // Role labels for display
 const ROLE_LABELS = {
     uid_admin: 'UID Admin',
@@ -102,33 +107,55 @@ function isUIDUser() {
     return role.startsWith('uid_');
 }
 
-// Load assessments data
-async function loadAssessmentsData() {
+// Build role-based filters (reused by load, apply, excel)
+function buildRoleFilters() {
+    const filters = {};
+    if (!isUIDUser() && currentProfile?.unit_code) {
+        filters.unitCode = currentProfile.unit_code;
+    }
+    if (currentProfile?.role === 'vendor_k3' && currentProfile?.vendor_id) {
+        filters.vendorId = currentProfile.vendor_id;
+    }
+    return filters;
+}
+
+// Load assessments data with server-side pagination
+async function loadAssessmentsData(page = 0) {
     try {
         showLoadingState(true);
 
-        // Build filters based on user role
-        const filters = {};
+        const filters = buildRoleFilters();
 
-        // Non-UID users can only see their unit's data
-        if (!isUIDUser() && currentProfile?.unit_code) {
-            filters.unitCode = currentProfile.unit_code;
-        }
+        // Merge any active UI filters
+        const vendorFilter = document.getElementById('filterVendor')?.value;
+        const statusFilter = document.getElementById('filterStatus')?.value;
+        const startDate = document.getElementById('filterStartDate')?.value;
+        const endDate = document.getElementById('filterEndDate')?.value;
+        if (vendorFilter) filters.vendorId = vendorFilter;
+        if (statusFilter) filters.status = statusFilter;
+        if (startDate) filters.startDate = startDate;
+        if (endDate) filters.endDate = endDate;
 
-        // Vendor users can only see their own vendor's data
-        if (currentProfile?.role === 'vendor_k3' && currentProfile?.vendor_id) {
-            filters.vendorId = currentProfile.vendor_id;
-        }
-
-        const result = await AssessmentsAPI.getAll(filters);
+        const pagination = { page, pageSize: PAGE_SIZE };
+        const result = await AssessmentsAPI.getAll(filters, pagination);
 
         if (!result.success) {
             showNotification('Gagal memuat data penilaian', 'error');
             return;
         }
 
+        currentPage = page;
+        totalCount = result.count || 0;
         assessmentsData = result.data || [];
+
+        // Destroy simpleDatatables if exists — we use server pagination now
+        if (dataTable) {
+            dataTable.destroy();
+            dataTable = null;
+        }
+
         renderAssessmentsTable(assessmentsData);
+        renderPaginationControls();
 
     } catch (error) {
         showNotification('Gagal memuat data penilaian', 'error');
@@ -169,9 +196,12 @@ function renderAssessmentsTable(data) {
         const status = assessment.status || 'Draft';
         const statusColor = STATUS_COLORS[status] || 'bg-secondary';
 
+        // Numbering with server offset
+        const rowNum = (currentPage * PAGE_SIZE) + index + 1;
+
         return `
             <tr data-id="${assessment.id}" style="cursor: pointer;" onclick="showAssessmentDetail('${assessment.id}')">
-                <td>${index + 1}</td>
+                <td>${rowNum}</td>
                 <td>${tanggal}</td>
                 <td>
                     <span class="badge bg-info">${shift}</span>
@@ -193,26 +223,74 @@ function renderAssessmentsTable(data) {
             </tr>
         `;
     }).join('');
-
-    // Initialize DataTable if not already done
-    initDataTable();
 }
 
-// Initialize DataTable
-function initDataTable() {
+// Render server-side pagination controls
+function renderPaginationControls() {
+    // Remove existing pagination
+    const existingPag = document.getElementById('serverPagination');
+    if (existingPag) existingPag.remove();
+
+    const totalPages = Math.ceil(totalCount / PAGE_SIZE);
+    if (totalPages <= 1) return; // No pagination needed
+
     const table = document.querySelector('.datatable');
-    if (table && !dataTable) {
-        dataTable = new simpleDatatables.DataTable(table, {
-            perPage: 10,
-            perPageSelect: [5, 10, 25, 50],
-            labels: {
-                placeholder: "Cari...",
-                perPage: "data per halaman",
-                noRows: "Tidak ada data",
-                info: "Menampilkan {start} sampai {end} dari {rows} data"
-            }
-        });
+    if (!table) return;
+
+    const start = currentPage * PAGE_SIZE + 1;
+    const end = Math.min((currentPage + 1) * PAGE_SIZE, totalCount);
+
+    let paginationHtml = `
+        <div id="serverPagination" class="d-flex justify-content-between align-items-center mt-3 px-2">
+            <small class="text-muted">Menampilkan ${start} - ${end} dari ${totalCount} data</small>
+            <nav>
+                <ul class="pagination pagination-sm mb-0">
+                    <li class="page-item ${currentPage === 0 ? 'disabled' : ''}">
+                        <a class="page-link" href="#" onclick="goToPage(${currentPage - 1}); return false;">
+                            <i class="bi bi-chevron-left"></i>
+                        </a>
+                    </li>`;
+
+    // Show max 5 page buttons around current page
+    const maxButtons = 5;
+    let startPage = Math.max(0, currentPage - Math.floor(maxButtons / 2));
+    let endPage = Math.min(totalPages, startPage + maxButtons);
+    if (endPage - startPage < maxButtons) {
+        startPage = Math.max(0, endPage - maxButtons);
     }
+
+    for (let i = startPage; i < endPage; i++) {
+        paginationHtml += `
+                    <li class="page-item ${i === currentPage ? 'active' : ''}">
+                        <a class="page-link" href="#" onclick="goToPage(${i}); return false;">${i + 1}</a>
+                    </li>`;
+    }
+
+    paginationHtml += `
+                    <li class="page-item ${currentPage >= totalPages - 1 ? 'disabled' : ''}">
+                        <a class="page-link" href="#" onclick="goToPage(${currentPage + 1}); return false;">
+                            <i class="bi bi-chevron-right"></i>
+                        </a>
+                    </li>
+                </ul>
+            </nav>
+        </div>`;
+
+    table.insertAdjacentHTML('afterend', paginationHtml);
+}
+
+// Navigate to page (server-side)
+function goToPage(page) {
+    const totalPages = Math.ceil(totalCount / PAGE_SIZE);
+    if (page < 0 || page >= totalPages) return;
+    loadAssessmentsData(page);
+}
+window.goToPage = goToPage;
+
+// Initialize DataTable (kept for backward compat but no longer auto-called)
+function initDataTable() {
+    // Server-side pagination is now active — simpleDatatables disabled
+    // This function is kept as a no-op so existing calls don't error
 }
 
 // Show assessment detail modal
@@ -472,11 +550,14 @@ function setupEventListeners() {
         clearFilterBtn.addEventListener('click', function () {
             const startEl = document.getElementById('filterStartDate');
             const endEl = document.getElementById('filterEndDate');
+            const vendorEl = document.getElementById('filterVendor');
+            const statusEl = document.getElementById('filterStatus');
             if (startEl) startEl.value = '';
             if (endEl) endEl.value = '';
-            // Reload all data without date filters
-            if (dataTable) { dataTable.destroy(); dataTable = null; }
-            loadAssessmentsData();
+            if (vendorEl) vendorEl.value = '';
+            if (statusEl) statusEl.value = '';
+            // Reload from page 0 without filters
+            loadAssessmentsData(0);
         });
     }
 
@@ -507,44 +588,10 @@ function setupEventListeners() {
     }
 }
 
-// Apply filters
+// Apply filters — resets to page 0 with current filter values
 async function applyFilters() {
-    const filters = {};
-
-    const vendorFilter = document.getElementById('filterVendor')?.value;
-    const statusFilter = document.getElementById('filterStatus')?.value;
-    const startDate = document.getElementById('filterStartDate')?.value;
-    const endDate = document.getElementById('filterEndDate')?.value;
-
-    if (vendorFilter) filters.vendorId = vendorFilter;
-    if (statusFilter) filters.status = statusFilter;
-    if (startDate) filters.startDate = startDate;
-    if (endDate) filters.endDate = endDate;
-
-    // Non-UID users can only see their unit's data
-    if (!isUIDUser() && currentProfile?.unit_code) {
-        filters.unitCode = currentProfile.unit_code;
-    }
-
-    if (currentProfile?.role === 'vendor_k3' && currentProfile?.vendor_id) {
-        filters.vendorId = currentProfile.vendor_id;
-    }
-
-    showLoadingState(true);
-    const result = await AssessmentsAPI.getAll(filters);
-    showLoadingState(false);
-
-    if (result.success) {
-        assessmentsData = result.data || [];
-
-        // Destroy existing datatable before re-rendering
-        if (dataTable) {
-            dataTable.destroy();
-            dataTable = null;
-        }
-
-        renderAssessmentsTable(assessmentsData);
-    }
+    // loadAssessmentsData already reads filter inputs from the DOM
+    await loadAssessmentsData(0);
 }
 
 // Show loading state
@@ -626,27 +673,48 @@ async function downloadExcel() {
 
     try {
         const client = getSupabaseClient();
-        const assessmentIds = assessmentsData.map(a => a.id);
 
-        // Fetch all assessment details with items & personnel in bulk
-        const { data: fullData, error } = await client
+        // Build same role+UI filters used by the table
+        const filters = buildRoleFilters();
+        const vendorFilter = document.getElementById('filterVendor')?.value;
+        const statusFilter = document.getElementById('filterStatus')?.value;
+        const startDate = document.getElementById('filterStartDate')?.value;
+        const endDate = document.getElementById('filterEndDate')?.value;
+        if (vendorFilter) filters.vendorId = vendorFilter;
+        if (statusFilter) filters.status = statusFilter;
+        if (startDate) filters.startDate = startDate;
+        if (endDate) filters.endDate = endDate;
+
+        // Fetch ALL matching assessments (no pagination) with only columns needed for Excel
+        let query = client
             .from('assessments')
             .select(`
-                *,
-                vendors(vendor_name, unit_code),
+                id, tanggal_penilaian, shift, status, total_score,
+                vendor_id,
+                vendors!inner(vendor_name, unit_code),
                 peruntukan(deskripsi),
                 teams(nomor_polisi),
                 profiles!assessments_assessor_id_fkey(nama),
                 assessment_items(
-                    *,
+                    required_qty, actual_qty, layak, tidak_layak,
+                    berfungsi, tidak_berfungsi, score_item,
+                    kesesuaian_kontrak, kondisi_fisik, kondisi_fungsi,
                     equipment_master(nama_alat, kategori, jenis)
                 ),
                 assessment_personnel(
                     id,
                     personnel(nama_personil)
                 )
-            `)
-            .in('id', assessmentIds)
+            `);
+
+        // Apply same filters
+        if (filters.unitCode) query = query.eq('vendors.unit_code', filters.unitCode);
+        if (filters.vendorId) query = query.eq('vendor_id', filters.vendorId);
+        if (filters.status) query = query.eq('status', filters.status);
+        if (filters.startDate) query = query.gte('tanggal_penilaian', filters.startDate);
+        if (filters.endDate) query = query.lte('tanggal_penilaian', filters.endDate);
+
+        const { data: fullData, error } = await query
             .order('tanggal_penilaian', { ascending: false });
 
         if (error) throw error;

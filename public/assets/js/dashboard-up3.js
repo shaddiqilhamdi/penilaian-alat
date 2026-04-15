@@ -16,6 +16,9 @@ async function loadUP3Dashboard() {
 
         // Load equipment issues for this unit
         await loadUP3EquipmentIssues();
+
+        // Load equipment belum sesuai kontrak
+        await loadUP3UnfulfilledContracts();
     } catch (error) {
         // Dashboard error
     }
@@ -26,30 +29,10 @@ async function loadUP3Stats() {
         const userUnitCode = window.currentUser?.unit_code;
         const userVendorId = window.currentUser?.vendor_id;
 
-        const client = getSupabaseClient();
+        // Store params for other functions
+        window.up3Params = { unit_code: userUnitCode, vendor_id: userVendorId };
 
-        // Get current month date range
-        const now = new Date();
-        const firstDayOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
-        const lastDayOfMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0, 23, 59, 59);
-
-        let vendorIds = [];
-
-        // For vendor_k3: filter by their vendor only
-        if (userVendorId) {
-            vendorIds = [userVendorId];
-        } else if (userUnitCode) {
-            // For up3_admin/up3_user: get all vendors in this unit
-            const { data: unitVendors, error: vendorError } = await client
-                .from('vendors')
-                .select('id')
-                .eq('unit_code', userUnitCode);
-
-            if (vendorError) throw vendorError;
-            vendorIds = unitVendors?.map(v => v.id) || [];
-        }
-
-        if (vendorIds.length === 0) {
+        if (!userUnitCode && !userVendorId) {
             document.getElementById('up3TotalAssessments').textContent = '0';
             document.getElementById('up3TotalEquipment').textContent = '0';
             document.getElementById('up3AvgScore').textContent = '0.00';
@@ -59,97 +42,48 @@ async function loadUP3Stats() {
             document.getElementById('up3JumlahKendaraan').textContent = '0';
             document.getElementById('up3JumlahPersonil').textContent = '0';
             renderUP3KondisiDonut(0, 0, { tlPersonal: 0, tlRegu: 0, tbPersonal: 0, tbRegu: 0 });
-            window.up3VendorIds = [];
             return;
         }
 
-        // Store vendorIds early for other functions
-        window.up3VendorIds = vendorIds;
+        const client = getSupabaseClient();
+        const now = new Date();
+        const monthParam = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-01`;
 
-        // Query assessments for vendors and current month (for assessment count)
-        const { data: assessments, error: assessmentsError } = await client
-            .from('assessments')
-            .select('id, vendor_id')
-            .in('vendor_id', vendorIds)
-            .gte('tanggal_penilaian', firstDayOfMonth.toISOString())
-            .lte('tanggal_penilaian', lastDayOfMonth.toISOString());
+        // Single RPC call — data sudah diagregasi di database
+        const { data, error } = await client.rpc('fn_up3_stats', {
+            p_unit_code: userUnitCode || null,
+            p_vendor_id: userVendorId || null,
+            p_month: monthParam
+        });
 
-        if (assessmentsError) throw assessmentsError;
+        if (error) throw error;
+        const s = data?.[0] || {};
 
-        // Calculate assessment stats
-        const totalAssessments = assessments?.length || 0;
+        // Update UI dengan data siap pakai
+        document.getElementById('up3TotalAssessments').textContent = s.total_assessments || 0;
+        document.getElementById('up3TotalEquipment').textContent = s.total_equipment || 0;
 
-        // Get vendor_assets for equipment stats (current month) with peruntukan info
-        const { data: vendorAssets, error: assetsError } = await client
-            .from('vendor_assets')
-            .select(`
-                id, nilai, kondisi_fisik, kondisi_fungsi, kesesuaian_kontrak,
-                equipment_master(jenis)
-            `)
-            .in('vendor_id', vendorIds)
-            .gte('last_assessment_date', firstDayOfMonth.toISOString())
-            .lte('last_assessment_date', lastDayOfMonth.toISOString())
-            .range(0, 9999);
-
-        if (assetsError) throw assetsError;
-
-        const totalEquipment = vendorAssets?.length || 0;
-        const avgScore = totalEquipment > 0
-            ? (vendorAssets.reduce((sum, asset) => sum + (asset.nilai || 0), 0) / totalEquipment)
-            : 0;
-
-        // Calculate Personal vs Regu scores
-        const personalAssets = vendorAssets?.filter(a => a.equipment_master?.jenis === 'Personal') || [];
-        const reguAssets = vendorAssets?.filter(a => a.equipment_master?.jenis === 'Regu') || [];
-        const avgPersonal = personalAssets.length > 0
-            ? (personalAssets.reduce((sum, a) => sum + (a.nilai || 0), 0) / personalAssets.length)
-            : 0;
-        const avgRegu = reguAssets.length > 0
-            ? (reguAssets.reduce((sum, a) => sum + (a.nilai || 0), 0) / reguAssets.length)
-            : 0;
-
-        // Calculate TL and TB counts
-        const tidakLayak = vendorAssets?.filter(a => a.kondisi_fisik === -1).length || 0;
-        const tidakBerfungsi = vendorAssets?.filter(a => a.kondisi_fungsi === -1).length || 0;
-
-        // Calculate contract fulfillment percentage
-        const kontrakOk = vendorAssets?.filter(a => a.kesesuaian_kontrak === 2).length || 0;
-        const kontrakPct = totalEquipment > 0 ? (kontrakOk / totalEquipment * 100) : 0;
-
-        // Update UI
-        document.getElementById('up3TotalAssessments').textContent = totalAssessments;
-        document.getElementById('up3TotalEquipment').textContent = totalEquipment;
-
+        const avgScoreVal = Number(s.avg_score) || 0;
         const avgScoreEl = document.getElementById('up3AvgScore');
-        avgScoreEl.textContent = avgScore.toFixed(2);
-        avgScoreEl.className = avgScore >= 1.8 ? 'text-success' : avgScore >= 1.5 ? 'text-warning' : 'text-danger';
+        avgScoreEl.textContent = avgScoreVal.toFixed(2);
+        avgScoreEl.className = avgScoreVal >= 1.8 ? 'text-success' : avgScoreVal >= 1.5 ? 'text-warning' : 'text-danger';
 
-        document.getElementById('up3PersonalScoreBadge').textContent = 'P: ' + avgPersonal.toFixed(2);
-        document.getElementById('up3ReguScoreBadge').textContent = 'R: ' + avgRegu.toFixed(2);
-        document.getElementById('up3KontrakPct').textContent = kontrakPct.toFixed(0) + '%';
+        document.getElementById('up3PersonalScoreBadge').textContent = 'P: ' + (Number(s.avg_personal) || 0).toFixed(2);
+        document.getElementById('up3ReguScoreBadge').textContent = 'R: ' + (Number(s.avg_regu) || 0).toFixed(2);
+        document.getElementById('up3KontrakPct').textContent = (Number(s.kontrak_pct) || 0).toFixed(0) + '%';
 
-        // Render Kondisi Alat donut chart
-        const bermasalah = new Set([
-            ...vendorAssets.filter(a => a.kondisi_fisik === -1).map(a => a.id),
-            ...vendorAssets.filter(a => a.kondisi_fungsi === -1).map(a => a.id)
-        ]).size;
-        const baik = totalEquipment - bermasalah;
+        document.getElementById('up3JumlahKendaraan').textContent = s.total_kendaraan || 0;
+        document.getElementById('up3JumlahPersonil').textContent = s.total_personil || 0;
 
-        // Breakdown TL/TB by jenis
-        const tlPersonal = vendorAssets.filter(a => a.kondisi_fisik === -1 && a.equipment_master?.jenis === 'Personal').length;
-        const tlRegu = vendorAssets.filter(a => a.kondisi_fisik === -1 && a.equipment_master?.jenis === 'Regu').length;
-        const tbPersonal = vendorAssets.filter(a => a.kondisi_fungsi === -1 && a.equipment_master?.jenis === 'Personal').length;
-        const tbRegu = vendorAssets.filter(a => a.kondisi_fungsi === -1 && a.equipment_master?.jenis === 'Regu').length;
-
-        renderUP3KondisiDonut(baik, bermasalah, { tlPersonal, tlRegu, tbPersonal, tbRegu });
-
-        // Load Kendaraan (teams) and Personil counts
-        const [teamsResult, personnelResult] = await Promise.all([
-            client.from('teams').select('id', { count: 'exact', head: true }).in('vendor_id', vendorIds),
-            client.from('personnel').select('id', { count: 'exact', head: true }).in('vendor_id', vendorIds)
-        ]);
-        document.getElementById('up3JumlahKendaraan').textContent = teamsResult.count || 0;
-        document.getElementById('up3JumlahPersonil').textContent = personnelResult.count || 0;
+        // Render Kondisi Equipment donut chart
+        const baik = Number(s.total_baik) || 0;
+        const bermasalah = Number(s.total_bermasalah) || 0;
+        renderUP3KondisiDonut(baik, bermasalah, {
+            tlPersonal: Number(s.tidak_layak_personal) || 0,
+            tlRegu: Number(s.tidak_layak_regu) || 0,
+            tbPersonal: Number(s.tidak_berfungsi_personal) || 0,
+            tbRegu: Number(s.tidak_berfungsi_regu) || 0
+        });
     } catch (error) {
         console.error('Error loading UP3 stats:', error);
         document.getElementById('up3TotalAssessments').textContent = 'Error';
@@ -247,134 +181,46 @@ function renderUP3KondisiDonut(baik, bermasalah, breakdown) {
 
 async function loadUP3VendorRecap() {
     const tbody = document.querySelector('#up3VendorRecapTable tbody');
-    tbody.innerHTML = '<tr><td colspan="8" class="text-center text-muted">Loading...</td></tr>';
+    tbody.innerHTML = '<tr><td colspan="9" class="text-center text-muted">Loading...</td></tr>';
 
     try {
-        const vendorIds = window.up3VendorIds || [];
-        if (vendorIds.length === 0) {
-            tbody.innerHTML = '<tr><td colspan="8" class="text-center text-muted">Tidak ada vendor</td></tr>';
+        const params = window.up3Params || {};
+        if (!params.unit_code && !params.vendor_id) {
+            tbody.innerHTML = '<tr><td colspan="9" class="text-center text-muted">Tidak ada vendor</td></tr>';
             return;
         }
 
         const client = getSupabaseClient();
-        const now = new Date();
-        const firstDayOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
-        const lastDayOfMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0, 23, 59, 59);
 
-        // Get equipment_standards for these vendors (to show all peruntukan that should exist)
-        const { data: standards, error: standardsError } = await client
-            .from('equipment_standards')
-            .select(`
-                id, vendor_id, peruntukan_id, required_qty, contract_qty,
-                vendors(vendor_name),
-                peruntukan(deskripsi),
-                equipment_master(jenis)
-            `)
-            .in('vendor_id', vendorIds);
-
-        if (standardsError) throw standardsError;
-
-        // Get count of teams per vendor+peruntukan
-        const { data: teams, error: teamsError } = await client
-            .from('teams')
-            .select('id, vendor_id, peruntukan_id')
-            .in('vendor_id', vendorIds);
-
-        if (teamsError) throw teamsError;
-
-        // Get count of personnel per vendor+peruntukan
-        const { data: personnel, error: personnelError } = await client
-            .from('personnel')
-            .select('id, vendor_id, peruntukan_id')
-            .in('vendor_id', vendorIds);
-
-        if (personnelError) throw personnelError;
-
-        // Get vendor_assets for current month
-        const { data: vendorAssets, error: assetsError } = await client
-            .from('vendor_assets')
-            .select(`
-                id, vendor_id, peruntukan_id, nilai, kondisi_fisik, kondisi_fungsi, kesesuaian_kontrak
-            `)
-            .in('vendor_id', vendorIds)
-            .not('last_assessment_date', 'is', null)
-            .gte('last_assessment_date', firstDayOfMonth.toISOString())
-            .lte('last_assessment_date', lastDayOfMonth.toISOString())
-            .range(0, 9999);
-
-        if (assetsError) throw assetsError;
-
-        // Group standards by vendor + peruntukan
-        const recap = {};
-        standards?.forEach(std => {
-            const key = `${std.vendor_id}_${std.peruntukan_id}`;
-            if (!recap[key]) {
-                recap[key] = {
-                    vendorId: std.vendor_id,
-                    vendorName: std.vendors?.vendor_name || '-',
-                    peruntukanId: std.peruntukan_id,
-                    jenis: std.equipment_master?.jenis || '-',
-                    peruntukan: std.peruntukan?.deskripsi || '-',
-                    jumlah: 0,
-                    equipmentCount: 0,
-                    totalNilai: 0,
-                    tidakLayak: 0,
-                    tidakBerfungsi: 0,
-                    kontrakOk: 0
-                };
-            }
+        // Single RPC call — data sudah diagregasi per vendor+peruntukan di database
+        // Menggunakan data penilaian terakhir per vendor_asset (tanpa filter bulan)
+        const { data: recapData, error } = await client.rpc('fn_up3_vendor_recap', {
+            p_unit_code: params.unit_code || null,
+            p_vendor_id: params.vendor_id || null
         });
 
-        // Count teams per vendor+peruntukan
-        teams?.forEach(team => {
-            const key = `${team.vendor_id}_${team.peruntukan_id}`;
-            if (recap[key]) {
-                recap[key].jumlah++;
-            }
-        });
+        if (error) throw error;
 
-        // Count personnel per vendor+peruntukan (for Personal type)
-        personnel?.forEach(person => {
-            const key = `${person.vendor_id}_${person.peruntukan_id}`;
-            if (recap[key] && recap[key].jenis === 'Personal') {
-                recap[key].jumlah++;
-            }
-        });
+        // Render table — data sudah siap pakai
+        const rows = (recapData || []).map(r => {
+            const avgScore = r.equipment_count > 0 ? Number(r.avg_score).toFixed(2) : '-';
+            const scoreClass = avgScore >= 1.8 ? 'success' : avgScore >= 1.5 ? 'warning' : 'danger';
+            const kontrakPct = Number(r.kontrak_pct) || 0;
+            const kontrakClass = kontrakPct >= 80 ? 'success' : kontrakPct >= 50 ? 'warning' : 'danger';
 
-        // Aggregate vendor_assets data
-        vendorAssets?.forEach(asset => {
-            const key = `${asset.vendor_id}_${asset.peruntukan_id}`;
-            if (recap[key]) {
-                recap[key].equipmentCount++;
-                recap[key].totalNilai += asset.nilai || 0;
-                if (asset.kondisi_fisik === -1) recap[key].tidakLayak++;
-                if (asset.kondisi_fungsi === -1) recap[key].tidakBerfungsi++;
-                if (asset.kesesuaian_kontrak === 2) recap[key].kontrakOk++;
-            }
-        });
-
-        // Render table
-        const rows = Object.values(recap)
-            .sort((a, b) => a.vendorName.localeCompare(b.vendorName) || a.jenis.localeCompare(b.jenis))
-            .map(r => {
-                const avgScore = r.equipmentCount > 0 ? (r.totalNilai / r.equipmentCount).toFixed(2) : '-';
-                const scoreClass = avgScore >= 1.8 ? 'success' : avgScore >= 1.5 ? 'warning' : 'danger';
-                const kontrakPct = r.equipmentCount > 0 ? (r.kontrakOk / r.equipmentCount * 100).toFixed(0) : 0;
-                const kontrakClass = kontrakPct >= 80 ? 'success' : kontrakPct >= 50 ? 'warning' : 'danger';
-
-                return `
-                    <tr>
-                        <td><strong>${r.vendorName}</strong></td>
-                        <td>${r.peruntukan}</td>
-                        <td class="text-center">${r.jumlah || '-'}</td>
-                        <td class="text-center">${r.equipmentCount || '-'}</td>
-                        <td class="text-center">${avgScore !== '-' ? `<span class="badge bg-${scoreClass}">${avgScore}</span>` : '-'}</td>
-                        <td class="text-center">${r.tidakLayak || '-'}</td>
-                        <td class="text-center">${r.tidakBerfungsi || '-'}</td>
-                        <td class="text-center">${r.equipmentCount > 0 ? `<span class="badge bg-${kontrakClass}">${kontrakPct}%</span>` : '-'}</td>
-                    </tr>
-                `;
-            }).join('');
+            return `
+                <tr>
+                    <td><strong>${r.vendor_name || '-'}</strong></td>
+                    <td>${r.peruntukan || '-'}</td>
+                    <td class="text-center">${r.jumlah || '-'}</td>
+                    <td class="text-center">${r.equipment_count || '-'}</td>
+                    <td class="text-center">${avgScore !== '-' ? `<span class="badge bg-${scoreClass}">${avgScore}</span>` : '-'}</td>
+                    <td class="text-center">${r.tidak_layak || '-'}</td>
+                    <td class="text-center">${r.tidak_berfungsi || '-'}</td>
+                    <td class="text-center">${r.equipment_count > 0 ? `<span class="badge bg-${kontrakClass}">${kontrakPct.toFixed(0)}%</span>` : '-'}</td>
+                </tr>
+            `;
+        }).join('');
 
         tbody.innerHTML = rows || '<tr><td colspan="8" class="text-center text-muted">Tidak ada data</td></tr>';
     } catch (error) {
@@ -385,43 +231,28 @@ async function loadUP3VendorRecap() {
 
 async function loadUP3EquipmentIssues() {
     const tbody = document.querySelector('#up3IssuesTable tbody');
-    tbody.innerHTML = '<tr><td colspan="7" class="text-center text-muted">Loading...</td></tr>';
+    tbody.innerHTML = '<tr><td colspan="9" class="text-center text-muted">Loading...</td></tr>';
 
     try {
-        const vendorIds = window.up3VendorIds || [];
-        if (vendorIds.length === 0) {
-            tbody.innerHTML = '<tr><td colspan="7" class="text-center text-muted">Tidak ada vendor</td></tr>';
+        const params = window.up3Params || {};
+        if (!params.unit_code && !params.vendor_id) {
+            tbody.innerHTML = '<tr><td colspan="9" class="text-center text-muted">Tidak ada vendor</td></tr>';
             return;
         }
 
         const client = getSupabaseClient();
 
-        // Query langsung dari vendor_assets yang bermasalah untuk vendor di UP3 ini
-        const { data: issueAssets, error } = await client
-            .from('vendor_assets')
-            .select(`
-                id,
-                vendor_id,
-                equipment_id,
-                kondisi_fisik,
-                kondisi_fungsi,
-                nilai,
-                last_assessment_date,
-                vendors(vendor_name),
-                equipment_master(nama_alat, jenis),
-                teams(nomor_polisi),
-                personnel(nama_personil)
-            `)
-            .in('vendor_id', vendorIds)
-            .or('kondisi_fisik.eq.-1,kondisi_fungsi.eq.-1')
-            .not('last_assessment_date', 'is', null)
-            .order('last_assessment_date', { ascending: false })
-            .limit(20);
+        // Single RPC call — data sudah di-join di database
+        const { data: issueAssets, error } = await client.rpc('fn_up3_equipment_issues', {
+            p_unit_code: params.unit_code || null,
+            p_vendor_id: params.vendor_id || null,
+            p_limit: 20
+        });
 
         if (error) throw error;
 
         if (!issueAssets || issueAssets.length === 0) {
-            tbody.innerHTML = '<tr><td colspan="7" class="text-center text-muted">Tidak ada equipment bermasalah 🎉</td></tr>';
+            tbody.innerHTML = '<tr><td colspan="9" class="text-center text-muted">Tidak ada equipment bermasalah 🎉</td></tr>';
             return;
         }
 
@@ -442,20 +273,22 @@ async function loadUP3EquipmentIssues() {
             const scoreClass = nilaiScore >= 1.8 ? 'success' : nilaiScore >= 1.5 ? 'warning' : 'danger';
             const nilaiDisplay = asset.nilai !== null && asset.nilai !== undefined ? asset.nilai : '-';
 
-            // Determine Tim/Personil display based on peruntukan type
+            // Determine Tim/Personil display based on jenis
             let timPersonil = '-';
-            if (asset.equipment_master?.jenis === 'Regu' && asset.teams?.nomor_polisi) {
-                timPersonil = `<i class="bi bi-truck"></i> ${asset.teams.nomor_polisi}`;
-            } else if (asset.equipment_master?.jenis === 'Personal' && asset.personnel?.nama_personil) {
-                timPersonil = `<i class="bi bi-person"></i> ${asset.personnel.nama_personil}`;
+            if (asset.eq_jenis === 'Regu' && asset.nomor_polisi) {
+                timPersonil = `<i class="bi bi-truck"></i> ${asset.nomor_polisi}`;
+            } else if (asset.eq_jenis === 'Personal' && asset.nama_personil) {
+                timPersonil = `<i class="bi bi-person"></i> ${asset.nama_personil}`;
             }
 
             return `
                 <tr>
                     <td>${tanggal}</td>
-                    <td>${asset.vendors?.vendor_name || '-'}</td>
+                    <td>${asset.vendor_name || '-'}</td>
+                    <td>${asset.peruntukan || '-'}</td>
                     <td>${timPersonil}</td>
-                    <td>${asset.equipment_master?.nama_alat || '-'}</td>
+                    <td>${asset.nama_alat || '-'}</td>
+                    <td class="text-muted small">${asset.sub_kategori && asset.sub_kategori !== '-' ? asset.sub_kategori : (asset.kategori || '-')}</td>
                     <td class="text-center">${kondisiFisik}</td>
                     <td class="text-center">${kondisiFungsi}</td>
                     <td class="text-center"><span class="badge bg-${scoreClass}">${nilaiDisplay}</span></td>
@@ -463,10 +296,10 @@ async function loadUP3EquipmentIssues() {
             `;
         }).join('');
 
-        tbody.innerHTML = rows || '<tr><td colspan="7" class="text-center text-muted">Tidak ada data</td></tr>';
+        tbody.innerHTML = rows || '<tr><td colspan="9" class="text-center text-muted">Tidak ada data</td></tr>';
     } catch (error) {
         console.error('Error loading UP3 equipment issues:', error);
-        tbody.innerHTML = '<tr><td colspan="7" class="text-center text-danger">Error loading data</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="9" class="text-center text-danger">Error loading data</td></tr>';
     }
 }
 
@@ -475,70 +308,28 @@ async function loadUP3DailyChart() {
     if (!chartEl) return;
 
     try {
-        const vendorIds = window.up3VendorIds || [];
-        const userUnitCode = window.currentUser?.unit_code;
+        const params = window.up3Params || {};
 
-        if (vendorIds.length === 0) {
+        if (!params.unit_code && !params.vendor_id) {
             chartEl.innerHTML = '<p class="text-center text-muted py-4">Tidak ada vendor</p>';
             return;
         }
 
         const client = getSupabaseClient();
-        const now = new Date();
-        const days = [];
 
-        // Generate last 30 days
-        for (let i = 29; i >= 0; i--) {
-            const date = new Date(now);
-            date.setDate(date.getDate() - i);
-            date.setHours(0, 0, 0, 0);
-            const endDate = new Date(date);
-            endDate.setHours(23, 59, 59, 999);
-            days.push({
-                label: String(date.getDate()).padStart(2, '0') + '/' + String(date.getMonth() + 1).padStart(2, '0'),
-                start: date,
-                end: endDate
-            });
-        }
-
-        const thirtyDaysAgo = new Date(now);
-        thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 29);
-        thirtyDaysAgo.setHours(0, 0, 0, 0);
-
-        // Load assessments and target in parallel
-        const [assessResult, targetResult] = await Promise.all([
-            client
-                .from('assessments')
-                .select('id, tanggal_penilaian')
-                .in('vendor_id', vendorIds)
-                .gte('tanggal_penilaian', thirtyDaysAgo.toISOString())
-                .lte('tanggal_penilaian', now.toISOString()),
-            userUnitCode
-                ? client.from('target_penilaian')
-                    .select('target_harian')
-                    .eq('unit_code', userUnitCode)
-                : Promise.resolve({ data: [] })
-        ]);
-
-        if (assessResult.error) throw assessResult.error;
-
-        const assessments = assessResult.data || [];
-        const targets = targetResult.data || [];
-
-        // Sum all target_harian for this unit = daily target
-        const dailyTarget = targets.reduce((sum, t) => sum + (t.target_harian || 0), 0);
-
-        // Count assessments per day
-        const dailyData = days.map(day => {
-            return assessments.filter(a => {
-                const assessDate = new Date(a.tanggal_penilaian);
-                return assessDate >= day.start && assessDate <= day.end;
-            }).length;
+        // Single RPC call — data sudah dihitung per hari di database
+        const { data: chartData, error } = await client.rpc('fn_up3_daily_chart', {
+            p_unit_code: params.unit_code || null,
+            p_vendor_id: params.vendor_id || null
         });
 
-        // Remaining to target per day (faded bar on top)
+        if (error) throw error;
+
+        const rows = chartData || [];
+        const categories = rows.map(r => r.day_label);
+        const dailyData = rows.map(r => Number(r.assessment_count) || 0);
+        const dailyTarget = rows.length > 0 ? Number(rows[0].daily_target) || 0 : 0;
         const remaining = dailyData.map(count => Math.max(0, dailyTarget - count));
-        const categories = days.map(d => d.label);
 
         const options = {
             series: [
@@ -596,5 +387,66 @@ async function loadUP3DailyChart() {
     } catch (error) {
         console.error('Error loading UP3 daily chart:', error);
         chartEl.innerHTML = '<p class="text-center text-muted py-4">Gagal memuat chart</p>';
+    }
+}
+
+async function loadUP3UnfulfilledContracts() {
+    const tbody = document.querySelector('#up3UnfulfilledTable tbody');
+    if (!tbody) return;
+    tbody.innerHTML = '<tr><td colspan="8" class="text-center text-muted">Loading...</td></tr>';
+
+    try {
+        const params = window.up3Params || {};
+        if (!params.unit_code && !params.vendor_id) {
+            tbody.innerHTML = '<tr><td colspan="8" class="text-center text-muted">Tidak ada vendor</td></tr>';
+            return;
+        }
+
+        const client = getSupabaseClient();
+
+        // Data penilaian terakhir per vendor_asset (tanpa filter bulan)
+        const { data, error } = await client.rpc('fn_up3_unfulfilled_contracts', {
+            p_unit_code: params.unit_code || null,
+            p_vendor_id: params.vendor_id || null,
+            p_limit: 50
+        });
+
+        if (error) throw error;
+
+        if (!data || data.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="9" class="text-center text-muted">Semua equipment sesuai kontrak ✅</td></tr>';
+            return;
+        }
+
+        const rows = data.map(r => {
+            const ownerIcon = r.owner_type === 'tim'
+                ? '<i class="bi bi-truck"></i> '
+                : '<i class="bi bi-person"></i> ';
+            const tanggal = r.last_assessment_date
+                ? new Date(r.last_assessment_date).toLocaleDateString('id-ID', { day: '2-digit', month: '2-digit', year: 'numeric' })
+                : '-';
+
+            const selisih = Number(r.selisih) || 0;
+            const selisihClass = selisih > 0 ? 'text-danger fw-bold' : '';
+
+            return `
+                <tr>
+                    <td>${tanggal}</td>
+                    <td>${r.vendor_name || '-'}</td>
+                    <td>${r.peruntukan || '-'}</td>
+                    <td>${ownerIcon}${r.owner_label || '-'}</td>
+                    <td>${r.nama_alat || '-'}</td>
+                    <td class="text-muted small">${r.sub_kategori !== '-' ? r.sub_kategori : (r.kategori || '-')}</td>
+                    <td class="text-center">${r.required_qty}</td>
+                    <td class="text-center">${r.realisasi_qty}</td>
+                    <td class="text-center ${selisihClass}">${selisih > 0 ? '-' + selisih : selisih}</td>
+                </tr>
+            `;
+        }).join('');
+
+        tbody.innerHTML = rows;
+    } catch (error) {
+        console.error('Error loading UP3 unfulfilled contracts:', error);
+        tbody.innerHTML = '<tr><td colspan="9" class="text-center text-danger">Error loading data</td></tr>';
     }
 }

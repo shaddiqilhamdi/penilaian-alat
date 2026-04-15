@@ -98,6 +98,22 @@ function isVendorUser() {
     return currentProfile?.role === 'vendor_k3';
 }
 
+// Build server-side filter params based on user role
+// For UP3: resolve unit_code to vendor_ids so the DB filters server-side
+async function getPersonnelFilters() {
+    const filters = {};
+    if (isVendorUser() && currentProfile?.vendor_id) {
+        filters.vendor_id = currentProfile.vendor_id;
+    } else if (!isUIDUser() && currentProfile?.unit_code) {
+        // Get all vendor IDs for this unit_code
+        const vendorIds = vendorsList.map(v => v.id);
+        if (vendorIds.length > 0) {
+            filters.vendor_ids = vendorIds;
+        }
+    }
+    return filters;
+}
+
 // Load vendors for dropdown (filtered by role)
 async function loadVendors() {
     try {
@@ -209,25 +225,14 @@ async function loadPersonnel(showLoading = true) {
             tableBody.innerHTML = '<tr><td colspan="8" class="text-center"><div class="spinner-border spinner-border-sm" role="status"></div> Memuat data...</td></tr>';
         }
 
-        const result = await PersonnelAPI.getAll(showActiveOnly);
+        const result = await PersonnelAPI.getAll(showActiveOnly, await getPersonnelFilters());
 
         if (!result.success) {
             tableBody.innerHTML = '<tr><td colspan="8" class="text-center text-danger">Gagal memuat data: ' + result.error + '</td></tr>';
             return;
         }
 
-        let data = result.data || [];
-
-        // Filter based on role
-        if (isVendorUser() && currentProfile?.vendor_id) {
-            // Vendor K3: only their vendor's personnel
-            data = data.filter(p => p.vendor_id === currentProfile.vendor_id);
-        } else if (!isUIDUser() && currentProfile?.unit_code) {
-            // UP3: filter by unit_code
-            data = data.filter(p => p.vendors?.unit_code === currentProfile.unit_code);
-        }
-
-        personnelList = data;
+        personnelList = result.data || [];
 
         if (personnelList.length === 0) {
             tableBody.innerHTML = '<tr><td colspan="8" class="text-center">Tidak ada data personil</td></tr>';

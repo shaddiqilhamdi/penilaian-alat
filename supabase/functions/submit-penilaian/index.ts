@@ -91,13 +91,23 @@ serve(async (req) => {
         // ── 1. Authenticate request ──────────────────────────────────────────
         const authHeader = req.headers.get('Authorization')
         if (!authHeader || !authHeader.startsWith('Bearer ')) {
+            console.error('[auth] Missing or malformed Authorization header')
             return new Response(
                 JSON.stringify({ success: false, error: 'Unauthorized: missing token' }),
                 { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
             )
         }
 
-        const token = authHeader.replace('Bearer ', '')
+        // User-scoped client — recommended Supabase pattern for edge functions
+        // This uses the user's JWT to authenticate, with anon key as apikey
+        const supabaseUser = createClient(
+            Deno.env.get('SUPABASE_URL') ?? '',
+            Deno.env.get('SUPABASE_ANON_KEY') ?? '',
+            {
+                global: { headers: { Authorization: authHeader } },
+                auth: { autoRefreshToken: false, persistSession: false }
+            }
+        )
 
         // Service-role client for DB writes (bypasses RLS intentionally for atomic writes)
         const supabaseAdmin = createClient(
@@ -106,9 +116,10 @@ serve(async (req) => {
             { auth: { autoRefreshToken: false, persistSession: false } }
         )
 
-        // Verify JWT and extract user identity
-        const { data: { user }, error: authError } = await supabaseAdmin.auth.getUser(token)
+        // Verify JWT via user-scoped client (standard Supabase edge function pattern)
+        const { data: { user }, error: authError } = await supabaseUser.auth.getUser()
         if (authError || !user) {
+            console.error('[auth] getUser failed:', authError?.message)
             return new Response(
                 JSON.stringify({ success: false, error: 'Unauthorized: invalid token' }),
                 { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
@@ -143,7 +154,6 @@ serve(async (req) => {
         // UUID format validation
         const uuidFields: [string, unknown][] = [
             ['vendor_id', body.vendor_id],
-            ['peruntukan_id', body.peruntukan_id],
         ]
         if (body.team_id) uuidFields.push(['team_id', body.team_id])
         if (body.personnel_id) uuidFields.push(['personnel_id', body.personnel_id])
@@ -155,6 +165,14 @@ serve(async (req) => {
                     { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
                 )
             }
+        }
+
+        // peruntukan_id is TEXT (not UUID) — validate as non-empty string
+        if (typeof body.peruntukan_id !== 'string' || body.peruntukan_id.trim() === '') {
+            return new Response(
+                JSON.stringify({ success: false, error: 'peruntukan_id is required and must be a non-empty string' }),
+                { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+            )
         }
 
         // Date validation

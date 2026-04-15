@@ -9,6 +9,7 @@ let currentProfile = null;
 let usersList = [];
 let selectedUserId = null;
 let currentFilter = 'all'; // 'all' or 'pending'
+let currentSearchTerm = ''; // search keyword
 
 // Initialize page
 document.addEventListener('DOMContentLoaded', async function () {
@@ -186,12 +187,58 @@ async function loadUsers() {
     }
 }
 
-// Filter users based on current filter
+// Filter users based on current filter and search term
 function filterUsersList() {
+    let filtered = usersList;
+
     if (currentFilter === 'pending') {
-        return usersList.filter(u => u.is_active === false);
+        filtered = filtered.filter(u => u.is_active === false);
     }
-    return usersList;
+
+    if (currentSearchTerm) {
+        const term = currentSearchTerm.toLowerCase();
+        filtered = filtered.filter(u => {
+            const nama = (u.nama || '').toLowerCase();
+            const nip = (u.nip || '').toLowerCase();
+            const email = (u.email || '').toLowerCase();
+            const unit = (u.units?.unit_name || u.unit_code || '').toLowerCase();
+            const jabatan = (u.jabatan || '').toLowerCase();
+            const role = formatRole(u.role).toLowerCase();
+            const vendor = (u.vendors?.vendor_name || '').toLowerCase();
+            const bidang = (u.bidang || '').toLowerCase();
+            return nama.includes(term) || nip.includes(term) || email.includes(term) || unit.includes(term) || jabatan.includes(term) || role.includes(term) || vendor.includes(term) || bidang.includes(term);
+        });
+    }
+
+    return filtered;
+}
+
+// Search users by keyword
+function searchUsers(value) {
+    currentSearchTerm = (value || '').trim();
+    const clearBtn = document.getElementById('searchClearBtn');
+    if (clearBtn) clearBtn.style.display = currentSearchTerm ? 'block' : 'none';
+    applyFilters();
+}
+
+// Clear search input
+function clearSearch() {
+    const input = document.getElementById('searchInput');
+    if (input) input.value = '';
+    searchUsers('');
+}
+
+// Apply both filter and search, then refresh table
+function applyFilters() {
+    const filteredUsers = filterUsersList();
+    if (filteredUsers.length > 0) {
+        displayUsers(filteredUsers);
+        document.getElementById('usersTableContainer').style.display = 'block';
+        document.getElementById('emptyState').style.display = 'none';
+    } else {
+        document.getElementById('usersTableContainer').style.display = 'none';
+        document.getElementById('emptyState').style.display = 'block';
+    }
 }
 
 // Update pending count badge
@@ -224,14 +271,41 @@ function filterUsers(filter) {
     }
 
     // Display filtered users
-    const filteredUsers = filterUsersList();
-    if (filteredUsers.length > 0) {
-        displayUsers(filteredUsers);
-        document.getElementById('usersTableContainer').style.display = 'block';
-        document.getElementById('emptyState').style.display = 'none';
-    } else {
-        document.getElementById('usersTableContainer').style.display = 'none';
-        document.getElementById('emptyState').style.display = 'block';
+    applyFilters();
+}
+
+// Check if current user is uid_admin (super admin)
+function isUidAdmin() {
+    return currentProfile && currentProfile.role === 'uid_admin';
+}
+
+// Render table header based on role
+function renderTableHeader() {
+    const thead = document.getElementById('usersTableHead');
+    if (!thead) return;
+
+    let headerHTML = '<tr>';
+    headerHTML += '<th>Nama</th>';
+    headerHTML += '<th>NIP</th>';
+    headerHTML += '<th>Unit</th>';
+    headerHTML += '<th>Jabatan</th>';
+    headerHTML += '<th>Vendor</th>';
+    headerHTML += '<th>Role</th>';
+    headerHTML += '<th style="width: 80px;">Status</th>';
+    headerHTML += '<th style="width: 120px;">Aksi</th>';
+    headerHTML += '</tr>';
+    thead.innerHTML = headerHTML;
+}
+
+// Format date for display
+function formatDate(dateStr) {
+    if (!dateStr) return '-';
+    try {
+        const d = new Date(dateStr);
+        return d.toLocaleDateString('id-ID', { day: '2-digit', month: 'short', year: 'numeric' })
+            + ' ' + d.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' });
+    } catch {
+        return '-';
     }
 }
 
@@ -242,6 +316,9 @@ function displayUsers(users) {
     if (!tbody) {
         return;
     }
+
+    // Render header (adapts to role)
+    renderTableHeader();
 
     tbody.innerHTML = '';
 
@@ -258,8 +335,15 @@ function displayUsers(users) {
         // Get unit name from units relation (if available)
         const unitName = user.units?.unit_name || user.unit_code || '-';
 
+        // Get vendor name from vendors relation
+        const vendorName = user.vendors?.vendor_name || '-';
+
+        // Jabatan + Bidang combined
+        const jabatan = user.jabatan || '-';
+        const bidang = user.bidang ? `<br><small class="text-muted">${user.bidang}</small>` : '';
+
         // Status badge
-        const isActive = user.is_active !== false; // Default to true if undefined
+        const isActive = user.is_active !== false;
         const statusBadge = isActive
             ? '<span class="badge bg-success">Aktif</span>'
             : '<span class="badge bg-warning text-dark">Pending</span>';
@@ -286,14 +370,15 @@ function displayUsers(users) {
         <div class="d-flex align-items-center">
           <div class="user-avatar">${initial}</div>
           <div class="ms-2">
-            <p class="mb-0"><strong>${user.nama || '-'}</strong></p>
+            <strong>${user.nama || '-'}</strong>
+            <br><small class="text-muted">${user.email || '-'}</small>
           </div>
         </div>
       </td>
       <td>${user.nip || '-'}</td>
-      <td>${user.email || '-'}</td>
-      <td>${unitName}</td>
-      <td>${user.jabatan || '-'}</td>
+      <td class="text-truncate-cell" title="${unitName}">${unitName}</td>
+      <td>${jabatan}${bidang}</td>
+      <td class="text-truncate-cell" title="${vendorName}">${vendorName}</td>
       <td>
         <span class="badge ${roleBadgeClass} badge-role">${roleLabel}</span>
       </td>
@@ -316,7 +401,8 @@ function formatRole(role) {
         'uid_user': 'UID User',
         'up3_admin': 'UP3 Admin',
         'up3_user': 'UP3 User',
-        'vendor_k3': 'Vendor K3'
+        'vendor_k3': 'Vendor K3',
+        'petugas': 'Petugas'
     };
     return roles[role] || role || '-';
 }
@@ -328,7 +414,8 @@ function getRoleBadgeClass(role) {
         'uid_user': 'bg-info',
         'up3_admin': 'bg-warning',
         'up3_user': 'bg-secondary',
-        'vendor_k3': 'bg-success'
+        'vendor_k3': 'bg-success',
+        'petugas': 'bg-primary'
     };
     return classes[role] || 'bg-secondary';
 }
@@ -359,6 +446,18 @@ function viewUser(userId) {
     document.getElementById('modalUserJabatan').textContent = user.jabatan || '-';
     document.getElementById('modalUserBidang').textContent = user.bidang || '-';
     document.getElementById('modalUserSubBidang').textContent = user.sub_bidang || '-';
+
+    // uid_admin extra detail rows
+    const adminDetailEls = document.querySelectorAll('.admin-detail');
+    if (isUidAdmin()) {
+        adminDetailEls.forEach(el => el.style.display = 'flex');
+        const vendorName = user.vendors?.vendor_name || '-';
+        document.getElementById('modalUserVendor').textContent = vendorName;
+        document.getElementById('modalUserCreatedAt').textContent = formatDate(user.created_at);
+        document.getElementById('modalUserId').textContent = user.id || '-';
+    } else {
+        adminDetailEls.forEach(el => el.style.display = 'none');
+    }
 
     // Status display
     const isActive = user.is_active !== false;
@@ -436,8 +535,60 @@ function editUserFromModal() {
     }
 }
 
+// Populate unit dropdown for edit modal
+async function populateUnitDropdown(selectedUnitCode) {
+    const unitSelect = document.getElementById('editUnitCode');
+    if (!unitSelect) return;
+    unitSelect.innerHTML = '<option value="">-- Pilih Unit --</option>';
+
+    try {
+        const result = await UnitsAPI.getAll();
+        if (result.success && result.data) {
+            result.data.forEach(unit => {
+                const option = document.createElement('option');
+                option.value = unit.unit_code;
+                option.textContent = unit.unit_name;
+                if (unit.unit_code === selectedUnitCode) option.selected = true;
+                unitSelect.appendChild(option);
+            });
+        }
+    } catch (e) {
+        console.error('Error loading units for dropdown:', e);
+    }
+}
+
+// Populate vendor dropdown filtered by unit_code
+async function populateVendorDropdown(unitCode, selectedVendorId) {
+    const vendorSelect = document.getElementById('editVendorId');
+    if (!vendorSelect) return;
+    vendorSelect.innerHTML = '<option value="">-- Pilih Vendor --</option>';
+
+    if (!unitCode) return; // No unit selected, leave empty
+
+    try {
+        const result = await VendorsAPI.getByUnitCode(unitCode);
+        if (result.success && result.data) {
+            result.data.forEach(vendor => {
+                const option = document.createElement('option');
+                option.value = vendor.id;
+                option.textContent = `${vendor.unit_code} - ${vendor.vendor_name}`;
+                if (vendor.id === selectedVendorId) option.selected = true;
+                vendorSelect.appendChild(option);
+            });
+        }
+    } catch (e) {
+        console.error('Error loading vendors for dropdown:', e);
+    }
+}
+
+// Handle unit dropdown change — refresh vendor list
+async function onUnitChange() {
+    const unitCode = document.getElementById('editUnitCode').value;
+    await populateVendorDropdown(unitCode, null);
+}
+
 // Open edit modal and populate data
-function openEditModal(userId) {
+async function openEditModal(userId) {
     const user = usersList.find(u => u.id === userId);
     if (!user) return;
 
@@ -452,8 +603,26 @@ function openEditModal(userId) {
     document.getElementById('editBidang').value = user.bidang || '';
     document.getElementById('editSubBidang').value = user.sub_bidang || '';
 
+    // Populate unit & vendor dropdowns
+    await populateUnitDropdown(user.unit_code);
+    await populateVendorDropdown(user.unit_code, user.vendor_id);
+
+    // Attach unit change listener to filter vendors
+    const unitSelect = document.getElementById('editUnitCode');
+    if (unitSelect) {
+        unitSelect.onchange = onUnitChange;
+    }
+
     // Check if editing own profile
     const isOwnProfile = user.id === currentProfile.id;
+    const myRole = currentProfile.role;
+
+    // Unit & Vendor dropdown editability
+    // uid_admin can change everything; others depending on their level
+    const canChangeUnitVendor = ['uid_admin', 'uid_user'].includes(myRole);
+    const vendorSelect = document.getElementById('editVendorId');
+    if (unitSelect) unitSelect.disabled = !canChangeUnitVendor;
+    if (vendorSelect) vendorSelect.disabled = !canChangeUnitVendor;
 
     // Set is_active toggle
     const isActiveContainer = document.getElementById('editIsActiveContainer');
@@ -461,7 +630,7 @@ function openEditModal(userId) {
     const isActiveLabel = document.getElementById('editIsActiveLabel');
 
     // Show is_active toggle only for admins editing others (not self)
-    const canToggleActive = ['uid_admin', 'uid_user', 'up3_admin'].includes(currentProfile.role) && !isOwnProfile;
+    const canToggleActive = ['uid_admin', 'uid_user', 'up3_admin'].includes(myRole) && !isOwnProfile;
     if (isActiveContainer) {
         isActiveContainer.style.display = canToggleActive ? 'block' : 'none';
     }
@@ -523,14 +692,16 @@ function populateRoleDropdown(targetUserRole, isOwnProfile = false) {
                 { value: 'uid_user', label: 'UID User' },
                 { value: 'up3_admin', label: 'UP3 Admin' },
                 { value: 'up3_user', label: 'UP3 User' },
-                { value: 'vendor_k3', label: 'Vendor K3' }
+                { value: 'vendor_k3', label: 'Vendor K3' },
+                { value: 'petugas', label: 'Petugas' }
             ];
         } else if (myRole === 'uid_user') {
             allowedRoles = [
                 { value: 'uid_user', label: 'UID User' },
                 { value: 'up3_admin', label: 'UP3 Admin' },
                 { value: 'up3_user', label: 'UP3 User' },
-                { value: 'vendor_k3', label: 'Vendor K3' }
+                { value: 'vendor_k3', label: 'Vendor K3' },
+                { value: 'petugas', label: 'Petugas' }
             ];
         } else if (myRole === 'up3_admin') {
             allowedRoles = [
@@ -564,6 +735,8 @@ async function saveUserEdit() {
     const bidang = document.getElementById('editBidang').value.trim();
     const subBidang = document.getElementById('editSubBidang').value.trim();
     const role = document.getElementById('editRole').value;
+    const unitCode = document.getElementById('editUnitCode').value;
+    const vendorId = document.getElementById('editVendorId').value;
 
     // Get is_active if the container is visible
     const isActiveContainer = document.getElementById('editIsActiveContainer');
@@ -588,7 +761,9 @@ async function saveUserEdit() {
             jabatan: jabatan || null,
             bidang: bidang || null,
             sub_bidang: subBidang || null,
-            role: role
+            role: role,
+            unit_code: unitCode || null,
+            vendor_id: vendorId || null
         };
 
         // Include is_active only if admin is editing others

@@ -16,7 +16,7 @@ if (typeof window.UnitsAPI === 'undefined') {
                 const client = getSupabaseClient();
                 const { data, error } = await client
                     .from('units')
-                    .select('*')
+                    .select('unit_code, unit_name, unit_tipe')
                     .order('unit_code', { ascending: true });
 
                 if (error) {
@@ -37,7 +37,7 @@ if (typeof window.UnitsAPI === 'undefined') {
                 const client = getSupabaseClient();
                 const { data, error } = await client
                     .from('units')
-                    .select('*')
+                    .select('unit_code, unit_name, unit_tipe')
                     .eq('unit_code', unitCode)
                     .single();
 
@@ -59,7 +59,7 @@ if (typeof window.UnitsAPI === 'undefined') {
                 const client = getSupabaseClient();
                 const { data, error } = await client
                     .from('units')
-                    .select('*')
+                    .select('unit_code, unit_name, unit_tipe')
                     .eq('unit_tipe', unitTipe)
                     .order('unit_code', { ascending: true });
 

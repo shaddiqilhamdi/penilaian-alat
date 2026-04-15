@@ -17,10 +17,11 @@ if (typeof window.ProfilesAPI === 'undefined') {
                 const { data, error } = await client
                     .from('profiles')
                     .select(`
-                    *,
-                    units:unit_code(unit_name, unit_tipe),
-                    vendors(vendor_name)
-                `)
+                        id, nama, email, nip, role, unit_code, vendor_id,
+                        jabatan, bidang, sub_bidang, is_active, created_at,
+                        units:unit_code(unit_name, unit_tipe),
+                        vendors(vendor_name)
+                    `)
                     .order('nama', { ascending: true });
 
                 if (error) {
@@ -44,10 +45,11 @@ if (typeof window.ProfilesAPI === 'undefined') {
                 const { data, error } = await client
                     .from('profiles')
                     .select(`
-                    *,
-                    units:unit_code(unit_name, unit_tipe),
-                    vendors(vendor_name)
-                `)
+                        id, nama, email, nip, role, unit_code, vendor_id,
+                        jabatan, bidang, sub_bidang, is_active, created_at,
+                        units:unit_code(unit_name, unit_tipe),
+                        vendors(vendor_name)
+                    `)
                     .eq('id', profileId)
                     .single();
 
@@ -76,10 +78,11 @@ if (typeof window.ProfilesAPI === 'undefined') {
                 const { data, error } = await client
                     .from('profiles')
                     .select(`
-                    *,
-                    units:unit_code(unit_name, unit_tipe),
-                    vendors(vendor_name)
-                `)
+                        id, nama, email, nip, role, unit_code, vendor_id,
+                        jabatan, bidang, sub_bidang, is_active, created_at,
+                        units:unit_code(unit_name, unit_tipe),
+                        vendors(vendor_name)
+                    `)
                     .eq('email', email)
                     .single();
 
@@ -104,10 +107,11 @@ if (typeof window.ProfilesAPI === 'undefined') {
                 const { data, error } = await client
                     .from('profiles')
                     .select(`
-                    *,
-                    units:unit_code(unit_name, unit_tipe),
-                    vendors(vendor_name)
-                `)
+                        id, nama, email, nip, role, unit_code, vendor_id,
+                        jabatan, bidang, sub_bidang, is_active, created_at,
+                        units:unit_code(unit_name, unit_tipe),
+                        vendors(vendor_name)
+                    `)
                     .eq('nip', nip)
                     .single();
 
@@ -133,10 +137,11 @@ if (typeof window.ProfilesAPI === 'undefined') {
                 let query = client
                     .from('profiles')
                     .select(`
-                    *,
-                    units:unit_code(unit_name, unit_tipe),
-                    vendors(vendor_name)
-                `);
+                        id, nama, email, nip, role, unit_code, vendor_id,
+                        jabatan, bidang, sub_bidang, is_active, created_at,
+                        units:unit_code(unit_name, unit_tipe),
+                        vendors(vendor_name)
+                    `);
 
                 // If role is 'all', fetch all profiles without filter
                 if (role !== 'all') {
@@ -166,10 +171,11 @@ if (typeof window.ProfilesAPI === 'undefined') {
                 const { data, error } = await client
                     .from('profiles')
                     .select(`
-                    *,
-                    units:unit_code(unit_name, unit_tipe),
-                    vendors(vendor_name)
-                `)
+                        id, nama, email, nip, role, unit_code, vendor_id,
+                        jabatan, bidang, sub_bidang, is_active, created_at,
+                        units:unit_code(unit_name, unit_tipe),
+                        vendors(vendor_name)
+                    `)
                     .eq('unit_code', unitCode)
                     .order('nama', { ascending: true });
 
@@ -193,7 +199,7 @@ if (typeof window.ProfilesAPI === 'undefined') {
                 const client = getSupabaseClient();
                 const { data, error } = await client
                     .from('profiles')
-                    .select('*')
+                    .select('id, nama, email, nip, role, unit_code, vendor_id, jabatan, bidang, sub_bidang, is_active, created_at')
                     .eq('vendor_id', vendorId)
                     .order('nama', { ascending: true });
 

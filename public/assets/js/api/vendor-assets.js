@@ -9,29 +9,57 @@
 if (typeof window.VendorAssetsAPI === 'undefined') {
     window.VendorAssetsAPI = {
         /**
-         * Get all vendor assets
+         * Get vendor assets with optional server-side filters.
+         * Automatically paginates to bypass PostgREST 1000-row default limit.
+         * @param {Object} filters - Optional filters
+         * @param {string[]} filters.vendorIds - Array of vendor UUIDs to filter by
+         * @param {string} filters.vendorId - Single vendor UUID
          */
-        async getAll() {
+        async getAll(filters = {}) {
             try {
                 const client = getSupabaseClient();
-                const { data, error } = await client
-                    .from('vendor_assets')
-                    .select(`
-                        *,
-                        vendors(vendor_name, unit_code),
-                        peruntukan(deskripsi),
-                        teams(nomor_polisi, category),
-                        personnel(nama_personil),
-                        equipment_master(nama_alat, kategori, satuan, jenis)
-                    `)
-                    .order('created_at', { ascending: false });
+                const PAGE_SIZE = 1000;
+                let allData = [];
+                let from = 0;
+                let hasMore = true;
 
-                if (error) {
-                    console.error('❌ Failed to fetch vendor assets:', error);
-                    return { success: false, error: error.message, data: null };
+                while (hasMore) {
+                    let query = client
+                        .from('vendor_assets')
+                        .select(`
+                            id, vendor_id, peruntukan_id, equipment_id,
+                            realisasi_qty, kondisi_fisik, kondisi_fungsi,
+                            kesesuaian_kontrak, last_assessment_date,
+                            team_id, personnel_id,
+                            vendors(vendor_name, unit_code),
+                            peruntukan(deskripsi),
+                            teams(nomor_polisi),
+                            personnel(nama_personil),
+                            equipment_master(nama_alat, kategori, satuan, jenis)
+                        `);
+
+                    // Server-side filter by vendor IDs (reduces result set)
+                    if (filters.vendorIds && filters.vendorIds.length > 0) {
+                        query = query.in('vendor_id', filters.vendorIds);
+                    } else if (filters.vendorId) {
+                        query = query.eq('vendor_id', filters.vendorId);
+                    }
+
+                    const { data, error } = await query
+                        .order('created_at', { ascending: false })
+                        .range(from, from + PAGE_SIZE - 1);
+
+                    if (error) {
+                        console.error('❌ Failed to fetch vendor assets:', error);
+                        return { success: false, error: error.message, data: null };
+                    }
+
+                    allData = allData.concat(data || []);
+                    hasMore = data && data.length === PAGE_SIZE;
+                    from += PAGE_SIZE;
                 }
 
-                return { success: true, data, error: null };
+                return { success: true, data: allData, error: null };
             } catch (error) {
                 console.error('❌ Error fetching vendor assets:', error);
                 return { success: false, error: error.message, data: null };
@@ -47,9 +75,12 @@ if (typeof window.VendorAssetsAPI === 'undefined') {
                 const { data, error } = await client
                     .from('vendor_assets')
                     .select(`
-                        *,
+                        id, vendor_id, peruntukan_id, equipment_id,
+                        realisasi_qty, kondisi_fisik, kondisi_fungsi,
+                        kesesuaian_kontrak, last_assessment_date,
+                        team_id, personnel_id,
                         peruntukan(deskripsi),
-                        teams(nomor_polisi, category),
+                        teams(nomor_polisi),
                         personnel(nama_personil),
                         equipment_master(nama_alat, kategori, satuan, jenis)
                     `)
@@ -81,7 +112,10 @@ if (typeof window.VendorAssetsAPI === 'undefined') {
                 const { data, error } = await client
                     .from('vendor_assets')
                     .select(`
-                        *,
+                        id, vendor_id, peruntukan_id, equipment_id,
+                        realisasi_qty, kondisi_fisik, kondisi_fungsi,
+                        kesesuaian_kontrak, last_assessment_date,
+                        team_id, personnel_id,
                         peruntukan(deskripsi),
                         equipment_master(id, nama_alat, kategori, sub_kategori1, satuan, jenis)
                     `)
@@ -182,9 +216,10 @@ if (typeof window.VendorAssetsAPI === 'undefined') {
                 const { data, error } = await client
                     .from('vendor_assets')
                     .select(`
-                    *,
-                    equipment_master(nama_alat, kategori, satuan)
-                `)
+                        id, vendor_id, equipment_id, realisasi_qty,
+                        kondisi_fisik, kondisi_fungsi, kesesuaian_kontrak,
+                        equipment_master(nama_alat, kategori, satuan)
+                    `)
                     .eq('team_id', teamId)
                     .order('created_at', { ascending: false });
 
@@ -209,9 +244,10 @@ if (typeof window.VendorAssetsAPI === 'undefined') {
                 const { data, error } = await client
                     .from('vendor_assets')
                     .select(`
-                    *,
-                    equipment_master(nama_alat, kategori, satuan)
-                `)
+                        id, vendor_id, equipment_id, realisasi_qty,
+                        kondisi_fisik, kondisi_fungsi, kesesuaian_kontrak,
+                        equipment_master(nama_alat, kategori, satuan)
+                    `)
                     .eq('personnel_id', personnelId)
                     .order('created_at', { ascending: false });
 
@@ -239,10 +275,10 @@ if (typeof window.VendorAssetsAPI === 'undefined') {
                 const { data, error } = await client
                     .from('vendor_assets')
                     .select(`
-                    *,
-                    vendors(vendor_name),
-                    equipment_master(nama_alat, kategori)
-                `)
+                        id, vendor_id, equipment_id, last_assessment_date, realisasi_qty,
+                        vendors(vendor_name),
+                        equipment_master(nama_alat, kategori)
+                    `)
                     .or(`last_assessment_date.is.null,last_assessment_date.lt.${cutoffDate.toISOString()}`)
                     .order('last_assessment_date', { ascending: true, nullsFirst: true });
 

@@ -31,12 +31,14 @@ document.addEventListener('DOMContentLoaded', async function () {
     // Check authentication
     await checkAuth();
 
-    // Load initial data
+    // Load vendors & peruntukan first (needed for server-side filter)
     await Promise.all([
         loadVendors(),
-        loadPeruntukan(),
-        loadAllAssets()
+        loadPeruntukan()
     ]);
+
+    // Load assets AFTER vendors are loaded (depends on vendors for filter)
+    await loadAllAssets();
 
     // Setup logout
     setupLogout();
@@ -143,25 +145,33 @@ async function loadAllAssets() {
     showLoading();
 
     try {
-        const result = await VendorAssetsAPI.getAll();
+        // Build server-side filter to avoid PostgREST 1000-row limit
+        const filters = {};
+        if (currentUserProfile) {
+            const role = currentUserProfile.role;
+            const unitCode = currentUserProfile.unit_code;
+            const vendorId = currentUserProfile.vendor_id;
+
+            if (role === 'vendor_k3' && vendorId) {
+                // Vendor user: filter by their vendor
+                filters.vendorId = vendorId;
+            } else if ((role === 'up3_admin' || role === 'up3_user') && unitCode) {
+                // UP3 user: get vendor IDs for their unit, then filter server-side
+                const unitVendors = vendors.filter(v => v.unit_code === unitCode);
+                if (unitVendors.length > 0) {
+                    filters.vendorIds = unitVendors.map(v => v.id);
+                }
+            }
+            // UID users: no filter — gets all (paginated if needed)
+        }
+
+        const result = await VendorAssetsAPI.getAll(filters);
 
         if (!result.success) {
             throw new Error(result.error || 'Failed to load assets');
         }
 
-        let assets = result.data || [];
-
-        // Filter by unit_code for UP3 users
-        if (currentUserProfile) {
-            const role = currentUserProfile.role;
-            const unitCode = currentUserProfile.unit_code;
-
-            if ((role === 'up3_admin' || role === 'up3_user') && unitCode) {
-                assets = assets.filter(a => a.vendors?.unit_code === unitCode);
-            }
-        }
-
-        allAssets = assets;
+        allAssets = result.data || [];
         renderAssets(allAssets);
 
     } catch (error) {
@@ -172,7 +182,6 @@ async function loadAllAssets() {
 
 // Render assets table
 function renderAssets(assets) {
-    const tbody = document.getElementById('assetsTableBody');
     const tableContainer = document.getElementById('tableContainer');
     const loadingState = document.getElementById('loadingState');
     const emptyState = document.getElementById('emptyState');
@@ -182,6 +191,10 @@ function renderAssets(assets) {
         dataTable.destroy();
         dataTable = null;
     }
+
+    // Get tbody AFTER DataTable destroy (simpleDatatables may replace DOM)
+    const table = document.getElementById('assetsTable');
+    const tbody = table ? (table.querySelector('tbody') || document.getElementById('assetsTableBody')) : null;
 
     loadingState.style.display = 'none';
 
@@ -193,6 +206,11 @@ function renderAssets(assets) {
 
     emptyState.style.display = 'none';
     tableContainer.style.display = 'block';
+
+    if (!tbody) {
+        console.error('assetsTableBody not found in DOM');
+        return;
+    }
 
     tbody.innerHTML = assets.map((asset, index) => {
         const vendorName = asset.vendors?.vendor_name || '-';

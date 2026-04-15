@@ -2,7 +2,8 @@
 
 **Tanggal Audit:** 15 April 2026  
 **Tanggal Implementasi:** 15 April 2026  
-**Status:** Fase 1 & 3 selesai — Fase 2 (XSS) tersisa
+**Update Terakhir:** 15 April 2026 (fix auth pattern edge function)  
+**Status:** Fase 1 & 3 selesai — Fase 2 (XSS) tersisa — Bug form submit 401 sedang diinvestigasi
 
 ---
 
@@ -43,7 +44,16 @@ Audit mendalam menemukan **16 masalah** (12 dari review awal + 4 temuan baru kri
 
 **Yang sudah diperbaiki:**
 1. `verify_jwt = true` di `config.toml` — gateway Supabase menolak request tanpa JWT
-2. Di dalam fungsi: validasi header `Authorization`, verifikasi token via `supabaseAdmin.auth.getUser(token)`, return 401 jika invalid
+2. Di dalam fungsi: validasi header `Authorization`, verifikasi token via **user-scoped client** (`supabaseUser.auth.getUser()`), return 401 jika invalid
+
+**Catatan implementasi (15 April 2026):** Awalnya menggunakan `supabaseAdmin.auth.getUser(token)` tapi menyebabkan 401 pada user yang sudah login. Diubah ke user-scoped client pattern (rekomendasi resmi Supabase):
+```typescript
+const supabaseUser = createClient(URL, SUPABASE_ANON_KEY, {
+    global: { headers: { Authorization: authHeader } },
+    auth: { autoRefreshToken: false, persistSession: false }
+})
+const { data: { user } } = await supabaseUser.auth.getUser()
+```
 
 ---
 
@@ -120,8 +130,11 @@ Validasi yang ditambahkan:
 **File:** `supabase/functions/submit-penilaian/index.ts`
 
 CORS sekarang hanya mengizinkan:
-- `https://penilaian-alat-uid.web.app`
+- `https://safetytools-uid.web.app` ← domain aktif Firebase project
+- `https://safetytools-uid.firebaseapp.com`
+- `https://penilaian-alat-uid.web.app` ← domain lama (backward compat)
 - `https://penilaian-alat-uid.firebaseapp.com`
+- `http://localhost`, `http://localhost:5500`, `http://127.0.0.1:5500`, `http://localhost:3000`
 
 ---
 

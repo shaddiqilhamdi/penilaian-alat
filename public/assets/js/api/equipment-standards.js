@@ -17,12 +17,13 @@ if (typeof window.EquipmentStandardsAPI === 'undefined') {
                 const { data, error } = await client
                     .from('equipment_standards')
                     .select(`
-                    *,
-                    vendors(vendor_name),
-                    units:unit_code(unit_name),
-                    peruntukan(deskripsi),
-                    equipment_master(nama_alat, kategori, satuan, jenis)
-                `)
+                        id, vendor_id, unit_code, peruntukan_id, equipment_id,
+                        required_qty, contract_qty,
+                        vendors(vendor_name),
+                        units:unit_code(unit_name),
+                        peruntukan(deskripsi),
+                        equipment_master(nama_alat, kategori, satuan, jenis)
+                    `)
                     .order('created_at', { ascending: false });
 
                 if (error) {
@@ -46,10 +47,11 @@ if (typeof window.EquipmentStandardsAPI === 'undefined') {
                 const { data, error } = await client
                     .from('equipment_standards')
                     .select(`
-                    *,
-                    peruntukan(deskripsi),
-                    equipment_master(nama_alat, kategori, satuan, jenis)
-                `)
+                        id, vendor_id, peruntukan_id, equipment_id,
+                        required_qty, contract_qty,
+                        peruntukan(deskripsi),
+                        equipment_master(nama_alat, kategori, satuan, jenis)
+                    `)
                     .eq('vendor_id', vendorId)
                     .order('created_at', { ascending: false });
 
@@ -75,9 +77,10 @@ if (typeof window.EquipmentStandardsAPI === 'undefined') {
                 const { data, error } = await client
                     .from('equipment_standards')
                     .select(`
-                    *,
-                    equipment_master(id, nama_alat, kategori, sub_kategori1, satuan)
-                `)
+                        id, vendor_id, peruntukan_id, equipment_id,
+                        required_qty, contract_qty,
+                        equipment_master(id, nama_alat, kategori, sub_kategori1, satuan)
+                    `)
                     .eq('vendor_id', vendorId)
                     .eq('peruntukan_id', peruntukanId)
                     .order('created_at', { ascending: true });
@@ -103,11 +106,12 @@ if (typeof window.EquipmentStandardsAPI === 'undefined') {
                 const { data, error } = await client
                     .from('equipment_standards')
                     .select(`
-                    *,
-                    vendors(vendor_name),
-                    peruntukan(deskripsi),
-                    equipment_master(nama_alat, kategori, satuan, jenis)
-                `)
+                        id, vendor_id, unit_code, peruntukan_id, equipment_id,
+                        required_qty, contract_qty,
+                        vendors(vendor_name),
+                        peruntukan(deskripsi),
+                        equipment_master(nama_alat, kategori, satuan, jenis)
+                    `)
                     .eq('unit_code', unitCode)
                     .order('created_at', { ascending: false });
 

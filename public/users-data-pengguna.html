@@ -5,7 +5,7 @@
   <meta charset="utf-8">
   <meta content="width=device-width, initial-scale=1.0" name="viewport">
 
-  <title>Data Pengguna - PPE Health Index</title>
+  <title>Data Pengguna - SIGAP</title>
   <meta content="" name="description">
   <meta content="" name="keywords">
 
@@ -175,6 +175,23 @@
     .admin-visible .admin-only {
       display: inline-block;
     }
+
+    /* Responsive table for uid_admin extra columns */
+    .table-responsive {
+      overflow-x: auto;
+    }
+
+    .text-truncate-cell {
+      max-width: 150px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .col-created-at {
+      white-space: nowrap;
+      font-size: 11px;
+    }
   </style>
   <!-- Role-based menu visibility - must run before body renders -->
   <script>
@@ -199,8 +216,8 @@
 
     <div class="d-flex align-items-center justify-content-between">
       <a href="index.html" class="logo d-flex align-items-center">
-        <i class="bi bi-shield-check fs-4 text-primary me-2"></i>
-        <span class="d-none d-lg-block">PPE Health Index</span>
+        <i class="bi bi-shield-check"></i>
+        <span class="d-none d-lg-block">SIGAP</span>
       </a>
       <i class="bi bi-list toggle-sidebar-btn"></i>
     </div><!-- End Logo -->
@@ -437,7 +454,16 @@
             <div class="card-body">
               <div class="d-flex justify-content-between align-items-center mb-3">
                 <h5 class="card-title mb-0">Daftar Pengguna</h5>
-                <div class="d-flex gap-2">
+                <div class="d-flex gap-2 align-items-center">
+                  <div class="input-group input-group-sm" style="width: 250px;">
+                    <span class="input-group-text"><i class="bi bi-search"></i></span>
+                    <input type="text" class="form-control" id="searchInput"
+                      placeholder="Cari nama, NIP, email, unit..." oninput="searchUsers(this.value)">
+                    <button class="btn btn-outline-secondary" type="button" id="searchClearBtn" onclick="clearSearch()"
+                      style="display:none;">
+                      <i class="bi bi-x-lg"></i>
+                    </button>
+                  </div>
                   <div class="btn-group" role="group" id="filterGroup">
                     <button type="button" class="btn btn-outline-secondary btn-sm active" id="filterAll"
                       onclick="filterUsers('all')">
@@ -450,7 +476,7 @@
                     </button>
                   </div>
                   <a href="users-tambah-pengguna.html" class="btn btn-primary btn-sm" id="btnAddUser">
-                    <i class="bi bi-plus-circle"></i> Tambah Pengguna
+                    <i class="bi bi-plus-circle"></i>
                   </a>
                 </div>
               </div>
@@ -467,23 +493,16 @@
 
               <!-- Table with user data -->
               <div id="usersTableContainer" style="display: none;">
-                <table class="table table-striped table-hover" id="usersTable">
-                  <thead>
-                    <tr>
-                      <th>Nama</th>
-                      <th>NIP</th>
-                      <th>Email</th>
-                      <th>Unit</th>
-                      <th>Jabatan</th>
-                      <th>Role</th>
-                      <th style="width: 80px;">Status</th>
-                      <th style="width: 120px;">Aksi</th>
-                    </tr>
-                  </thead>
-                  <tbody id="usersTableBody">
-                    <!-- Data akan diisi dengan JavaScript -->
-                  </tbody>
-                </table>
+                <div class="table-responsive">
+                  <table class="table table-striped table-hover" id="usersTable">
+                    <thead id="usersTableHead">
+                      <!-- Header akan diisi dinamis berdasarkan role -->
+                    </thead>
+                    <tbody id="usersTableBody">
+                      <!-- Data akan diisi dengan JavaScript -->
+                    </tbody>
+                  </table>
+                </div>
               </div>
 
               <!-- Empty state -->
@@ -545,6 +564,19 @@
             <span class="detail-label">Status</span>
             <span class="detail-value" id="modalUserStatus">-</span>
           </div>
+          <div class="detail-row admin-detail" style="display:none;">
+            <span class="detail-label">Vendor</span>
+            <span class="detail-value" id="modalUserVendor">-</span>
+          </div>
+          <div class="detail-row admin-detail" style="display:none;">
+            <span class="detail-label">Tgl Daftar</span>
+            <span class="detail-value" id="modalUserCreatedAt">-</span>
+          </div>
+          <div class="detail-row admin-detail" style="display:none;">
+            <span class="detail-label">User ID</span>
+            <span class="detail-value" id="modalUserId"
+              style="font-size:11px;font-family:monospace;word-break:break-all;">-</span>
+          </div>
         </div>
         <div class="modal-footer">
           <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Tutup</button>
@@ -564,7 +596,7 @@
   <!-- Edit User Modal -->
   <div class="modal fade user-detail-modal" id="editUserModal" tabindex="-1" aria-labelledby="editUserModalLabel"
     aria-hidden="true">
-    <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
       <div class="modal-content">
         <div class="modal-header">
           <h5 class="modal-title" id="editUserModalLabel"><i class="bi bi-pencil-square me-2"></i>Edit Pengguna</h5>
@@ -574,51 +606,76 @@
           <form id="editUserForm">
             <input type="hidden" id="editUserId">
 
-            <div class="mb-3">
-              <label for="editNama" class="form-label">Nama Lengkap <span class="text-danger">*</span></label>
-              <input type="text" class="form-control form-control-sm" id="editNama" required>
+            <!-- Row 1: Identitas -->
+            <div class="row">
+              <div class="col-md-8 mb-3">
+                <label for="editNama" class="form-label">Nama Lengkap <span class="text-danger">*</span></label>
+                <input type="text" class="form-control form-control-sm" id="editNama" required>
+              </div>
+              <div class="col-md-4 mb-3">
+                <label for="editNip" class="form-label">NIP</label>
+                <input type="text" class="form-control form-control-sm" id="editNip">
+              </div>
             </div>
 
+            <!-- Row 2: Email (readonly) -->
             <div class="mb-3">
               <label for="editEmail" class="form-label">Email</label>
-              <input type="email" class="form-control form-control-sm" id="editEmail" readonly disabled>
-              <small class="text-muted">Email tidak dapat diubah</small>
+              <input type="email" class="form-control form-control-sm bg-light" id="editEmail" readonly disabled>
             </div>
 
-            <div class="mb-3">
-              <label for="editNip" class="form-label">NIP</label>
-              <input type="text" class="form-control form-control-sm" id="editNip">
-            </div>
-
-            <div class="mb-3">
-              <label for="editJabatan" class="form-label">Jabatan</label>
-              <input type="text" class="form-control form-control-sm" id="editJabatan">
-            </div>
-
-            <div class="mb-3">
-              <label for="editBidang" class="form-label">Bidang</label>
-              <input type="text" class="form-control form-control-sm" id="editBidang">
-            </div>
-
-            <div class="mb-3">
-              <label for="editSubBidang" class="form-label">Sub Bidang</label>
-              <input type="text" class="form-control form-control-sm" id="editSubBidang">
-            </div>
-
-            <div class="mb-3">
-              <label for="editRole" class="form-label">Role <span class="text-danger">*</span></label>
-              <select class="form-select form-select-sm" id="editRole" required>
-                <!-- Options will be populated dynamically based on current user role -->
-              </select>
-            </div>
-            <div class="mb-3" id="editIsActiveContainer" style="display: none;">
-              <label class="form-label">Status Akun</label>
-              <div class="form-check form-switch">
-                <input class="form-check-input" type="checkbox" id="editIsActive">
-                <label class="form-check-label" for="editIsActive" id="editIsActiveLabel">Aktif</label>
+            <!-- Row 3: Unit & Vendor -->
+            <div class="row">
+              <div class="col-md-6 mb-3">
+                <label for="editUnitCode" class="form-label">Unit</label>
+                <select class="form-select form-select-sm" id="editUnitCode">
+                  <option value="">-- Pilih Unit --</option>
+                </select>
               </div>
-              <small class="text-muted">Nonaktifkan untuk suspend akun pengguna</small>
+              <div class="col-md-6 mb-3">
+                <label for="editVendorId" class="form-label">Vendor / Pelaksana</label>
+                <select class="form-select form-select-sm" id="editVendorId">
+                  <option value="">-- Pilih Vendor --</option>
+                </select>
+              </div>
             </div>
+
+            <!-- Row 4: Jabatan & Bidang -->
+            <div class="row">
+              <div class="col-md-4 mb-3">
+                <label for="editJabatan" class="form-label">Jabatan</label>
+                <input type="text" class="form-control form-control-sm" id="editJabatan">
+              </div>
+              <div class="col-md-4 mb-3">
+                <label for="editBidang" class="form-label">Bidang</label>
+                <input type="text" class="form-control form-control-sm" id="editBidang">
+              </div>
+              <div class="col-md-4 mb-3">
+                <label for="editSubBidang" class="form-label">Sub Bidang</label>
+                <input type="text" class="form-control form-control-sm" id="editSubBidang">
+              </div>
+            </div>
+
+            <hr class="my-2">
+
+            <!-- Row 5: Role & Status -->
+            <div class="row">
+              <div class="col-md-6 mb-3">
+                <label for="editRole" class="form-label">Role <span class="text-danger">*</span></label>
+                <select class="form-select form-select-sm" id="editRole" required>
+                  <!-- Options will be populated dynamically based on current user role -->
+                </select>
+              </div>
+              <div class="col-md-6 mb-3" id="editIsActiveContainer" style="display: none;">
+                <label class="form-label">Status Akun</label>
+                <div class="form-check form-switch mt-1">
+                  <input class="form-check-input" type="checkbox" id="editIsActive">
+                  <label class="form-check-label" for="editIsActive" id="editIsActiveLabel">Aktif</label>
+                </div>
+                <small class="text-muted">Nonaktifkan untuk suspend akun pengguna</small>
+              </div>
+            </div>
+
             <div id="editAlertContainer"></div>
           </form>
         </div>
@@ -656,6 +713,7 @@
   <script src="assets/js/auth/supabase-auth.js"></script>
   <script src="assets/js/api/profiles.js"></script>
   <script src="assets/js/api/units.js"></script>
+  <script src="assets/js/api/vendors.js"></script>
 
   <!-- Page specific script -->
   <script src="assets/js/users-data-pengguna.js"></script>

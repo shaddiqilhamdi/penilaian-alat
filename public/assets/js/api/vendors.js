@@ -15,7 +15,7 @@ if (typeof window.VendorsAPI === 'undefined') {
                 const client = getSupabaseClient();
                 const { data, error } = await client
                     .from('vendors')
-                    .select('*')
+                    .select('id, vendor_name, unit_code, unit_name, class, class_code, created_at')
                     .order('vendor_name', { ascending: true });
 
                 if (error) {
@@ -38,7 +38,7 @@ if (typeof window.VendorsAPI === 'undefined') {
                 const client = await getSupabaseClient();
                 const { data, error } = await client
                     .from('vendors')
-                    .select('*')
+                    .select('id, vendor_name, unit_code, unit_name, class, class_code, created_at')
                     .eq('id', vendorId)
                     .single();
 
@@ -134,7 +134,7 @@ if (typeof window.VendorsAPI === 'undefined') {
                 const client = getSupabaseClient();
                 const { data, error } = await client
                     .from('vendors')
-                    .select('*')
+                    .select('id, vendor_name, unit_code, unit_name, class, class_code, created_at')
                     .eq('unit_code', unitCode)
                     .order('vendor_name', { ascending: true });
 

@@ -15,7 +15,7 @@ if (typeof window.EquipmentAPI === 'undefined') {
                 const client = getSupabaseClient();
                 const { data, error } = await client
                     .from('equipment_master')
-                    .select('*')
+                    .select('id, nama_alat, kategori, sub_kategori1, satuan, jenis')
                     .order('kategori', { ascending: true })
                     .order('nama_alat', { ascending: true });
 
@@ -40,7 +40,7 @@ if (typeof window.EquipmentAPI === 'undefined') {
                 const client = getSupabaseClient();
                 const { data, error } = await client
                     .from('equipment_master')
-                    .select('*')
+                    .select('id, nama_alat, kategori, sub_kategori1, satuan, jenis')
                     .ilike('kategori', `%${kategori}%`)
                     .order('nama_alat', { ascending: true });
 
@@ -64,7 +64,7 @@ if (typeof window.EquipmentAPI === 'undefined') {
                 const client = getSupabaseClient();
                 const { data, error } = await client
                     .from('equipment_master')
-                    .select('*')
+                    .select('id, nama_alat, kategori, sub_kategori1, satuan, jenis')
                     .eq('id', equipmentId)
                     .single();
 
@@ -88,7 +88,7 @@ if (typeof window.EquipmentAPI === 'undefined') {
                 const client = await getSupabaseClient();
                 const { data, error } = await client
                     .from('equipment_standards')
-                    .select('*')
+                    .select('id, vendor_id, peruntukan_id, equipment_id, required_qty, contract_qty')
                     .order('equipment_id', { ascending: true });
 
                 if (error) {

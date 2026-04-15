@@ -568,7 +568,19 @@ const FormPenilaianManager = {
             if (progress.total === 0) {
                 submitBtn.innerHTML = `<i class="bi bi-clock"></i> Pilih Peruntukan Dahulu`;
             } else if (!this.validateSessionInfo()) {
-                submitBtn.innerHTML = `<i class="bi bi-exclamation-triangle"></i> Lengkapi Info Sesi`;
+                // Check specific reason for invalid session
+                if (this.hasKendaraanEquipment()) {
+                    const nopolSelect = document.getElementById('modalNopolSelect');
+                    const teamIdInput = document.getElementById('modalTeamId');
+                    const hasNopol = (nopolSelect?.value && nopolSelect.value !== '' && nopolSelect.value !== '__ADD_NEW__') || (teamIdInput?.value && teamIdInput.value !== '');
+                    if (!hasNopol) {
+                        submitBtn.innerHTML = `<i class="bi bi-exclamation-triangle"></i> Pilih Kendaraan (Nopol)`;
+                    } else {
+                        submitBtn.innerHTML = `<i class="bi bi-exclamation-triangle"></i> Lengkapi Info Sesi`;
+                    }
+                } else {
+                    submitBtn.innerHTML = `<i class="bi bi-exclamation-triangle"></i> Lengkapi Info Sesi`;
+                }
             } else if (progress.completed !== progress.total) {
                 submitBtn.innerHTML = `<i class="bi bi-clock"></i> Lengkapi Penilaian (${progress.completed}/${progress.total})`;
             } else if (!isIntegrityChecked) {
@@ -590,7 +602,26 @@ const FormPenilaianManager = {
         const hasNewPetugas = window.newPetugasList && window.newPetugasList.length > 0;
         const hasPetugas = hasSelectedPetugas || hasNewPetugas;
 
+        // Check if equipment list has Kendaraan kategori → nopol wajib
+        const needsNopol = this.hasKendaraanEquipment();
+        if (needsNopol) {
+            const nopolSelect = document.getElementById('modalNopolSelect');
+            const teamIdInput = document.getElementById('modalTeamId');
+            const hasNopol = (nopolSelect?.value && nopolSelect.value !== '' && nopolSelect.value !== '__ADD_NEW__') || (teamIdInput?.value && teamIdInput.value !== '');
+            if (!hasNopol) return false;
+        }
+
         return tanggal && shift && unit && vendor && peruntukan && hasPetugas;
+    },
+
+    // Check if current equipment data contains items with kategori 'Kendaraan'
+    hasKendaraanEquipment() {
+        const equipmentData = window.currentEquipmentData;
+        if (!equipmentData || equipmentData.length === 0) return false;
+        return equipmentData.some(item => {
+            const kategori = item.equipment_master?.kategori || item.kategori || '';
+            return kategori.toLowerCase() === 'kendaraan';
+        });
     },
 
     // Get form data for submission

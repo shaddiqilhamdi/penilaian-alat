@@ -17,7 +17,8 @@ if (typeof window.TeamsAPI === 'undefined') {
                 const { data, error } = await client
                     .from('teams')
                     .select(`
-                        *,
+                        id, vendor_id, peruntukan_id, category,
+                        nomor_polisi, description, access_token, created_at,
                         vendors(vendor_name, unit_code),
                         peruntukan(deskripsi)
                     `)
@@ -44,10 +45,11 @@ if (typeof window.TeamsAPI === 'undefined') {
                 const { data, error } = await client
                     .from('teams')
                     .select(`
-                    *,
-                    vendors(vendor_name),
-                    peruntukan(deskripsi)
-                `)
+                        id, vendor_id, peruntukan_id, category,
+                        nomor_polisi, description, access_token, created_at,
+                        vendors(vendor_name),
+                        peruntukan(deskripsi)
+                    `)
                     .eq('id', teamId)
                     .single();
 
@@ -72,9 +74,10 @@ if (typeof window.TeamsAPI === 'undefined') {
                 const { data, error } = await client
                     .from('teams')
                     .select(`
-                    *,
-                    peruntukan(deskripsi)
-                `)
+                        id, vendor_id, peruntukan_id, category,
+                        nomor_polisi, description, access_token, created_at,
+                        peruntukan(deskripsi)
+                    `)
                     .eq('vendor_id', vendorId)
                     .order('created_at', { ascending: false });
 
@@ -99,9 +102,10 @@ if (typeof window.TeamsAPI === 'undefined') {
                 const { data, error } = await client
                     .from('teams')
                     .select(`
-                    *,
-                    vendors(vendor_name)
-                `)
+                        id, vendor_id, peruntukan_id, category,
+                        nomor_polisi, description, access_token, created_at,
+                        vendors(vendor_name)
+                    `)
                     .eq('peruntukan_id', peruntukanId)
                     .order('created_at', { ascending: false });
 
@@ -126,9 +130,10 @@ if (typeof window.TeamsAPI === 'undefined') {
                 const { data, error } = await client
                     .from('teams')
                     .select(`
-                    *,
-                    peruntukan(deskripsi)
-                `)
+                        id, vendor_id, peruntukan_id, category,
+                        nomor_polisi, description, access_token, created_at,
+                        peruntukan(deskripsi)
+                    `)
                     .eq('vendor_id', vendorId)
                     .eq('peruntukan_id', peruntukanId)
                     .order('created_at', { ascending: false });
@@ -154,10 +159,11 @@ if (typeof window.TeamsAPI === 'undefined') {
                 const { data, error } = await client
                     .from('teams')
                     .select(`
-                    *,
-                    vendors(vendor_name, unit_code, unit_name),
-                    peruntukan(deskripsi)
-                `)
+                        id, vendor_id, peruntukan_id, category,
+                        nomor_polisi, description, access_token, created_at,
+                        vendors(vendor_name, unit_code, unit_name),
+                        peruntukan(deskripsi)
+                    `)
                     .eq('access_token', accessToken)
                     .single();
 
@@ -268,7 +274,8 @@ if (typeof window.TeamsAPI === 'undefined') {
                 const { data, error } = await client
                     .from('teams')
                     .select(`
-                        *,
+                        id, vendor_id, peruntukan_id, category,
+                        nomor_polisi, description, access_token, created_at,
                         vendors!inner(vendor_name, unit_code),
                         peruntukan(deskripsi)
                     `)
@@ -294,7 +301,8 @@ if (typeof window.TeamsAPI === 'undefined') {
                 const { data, error } = await client
                     .from('teams')
                     .select(`
-                        *,
+                        id, vendor_id, peruntukan_id, category,
+                        nomor_polisi, description, access_token, created_at,
                         vendors(vendor_name, unit_code),
                         peruntukan(deskripsi)
                     `)

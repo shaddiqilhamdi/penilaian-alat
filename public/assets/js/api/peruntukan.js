@@ -16,7 +16,7 @@ if (typeof window.PeruntukanAPI === 'undefined') {
                 const client = getSupabaseClient();
                 const { data, error } = await client
                     .from('peruntukan')
-                    .select('*')
+                    .select('id, deskripsi')
                     .order('deskripsi', { ascending: true });
 
                 if (error) {
@@ -39,7 +39,7 @@ if (typeof window.PeruntukanAPI === 'undefined') {
                 const client = getSupabaseClient();
                 const { data, error } = await client
                     .from('peruntukan')
-                    .select('*')
+                    .select('id, deskripsi')
                     .eq('id', peruntukanId)
                     .single();
 

@@ -20,6 +20,16 @@ async function handleFormSubmission(event) {
     try {
         // Validate form data
         if (!FormPenilaianManager.validateSessionInfo()) {
+            // Check specific reason
+            if (FormPenilaianManager.hasKendaraanEquipment()) {
+                const nopolSelect = document.getElementById('modalNopolSelect');
+                const teamIdInput = document.getElementById('modalTeamId');
+                const hasNopol = (nopolSelect?.value && nopolSelect.value !== '' && nopolSelect.value !== '__ADD_NEW__') || (teamIdInput?.value && teamIdInput.value !== '');
+                if (!hasNopol) {
+                    FormPenilaianManager.showValidationMessage('Peruntukan ini memiliki item Kendaraan. Mohon pilih Nomor Polisi terlebih dahulu.', 'warning');
+                    return;
+                }
+            }
             FormPenilaianManager.showValidationMessage('Mohon lengkapi semua informasi sesi penilaian', 'warning');
             return;
         }
@@ -254,23 +264,49 @@ function formatDate(dateString) {
 // ========== EDGE FUNCTION HELPER ==========
 // Submit penilaian via Supabase Edge Function for atomic transaction
 async function submitPenilaianEdgeFunction(payload) {
-    try {
-        const client = getSupabaseClient();
+    const client = getSupabaseClient();
 
-        // Call edge function using Supabase client (handles auth automatically)
-        const { data, error } = await client.functions.invoke('submit-penilaian', {
-            body: payload
-        });
+    async function doInvoke() {
+        return await client.functions.invoke('submit-penilaian', { body: payload });
+    }
+
+    try {
+        let { data, error } = await doInvoke();
+
+        // If 401, force-refresh session and retry once
+        if (error && error.context?.status === 401) {
+            console.warn('[submit] Got 401, attempting session refresh...');
+            const { data: refreshed, error: refreshError } = await client.auth.refreshSession();
+            if (refreshError || !refreshed?.session) {
+                console.error('[submit] Session refresh failed:', refreshError?.message);
+                return { success: false, error: 'Sesi Anda telah berakhir. Silakan logout lalu login kembali.' };
+            }
+            console.log('[submit] Session refreshed, retrying...');
+            ({ data, error } = await doInvoke());
+        }
 
         if (error) {
-            console.error('Edge function error:', error);
+            const status = error.context?.status;
+            // Log full error body for diagnostics
+            try {
+                const body = await error.context?.clone()?.json();
+                console.error('[submit] Edge function error - status:', status, 'body:', body);
+            } catch (_) {
+                console.error('[submit] Edge function error - status:', status, error.message);
+            }
+            if (status === 401) {
+                return { success: false, error: 'Autentikasi gagal. Silakan logout lalu login kembali.' };
+            }
+            if (status === 403) {
+                return { success: false, error: 'Anda tidak memiliki izin untuk submit penilaian ini.' };
+            }
             return { success: false, error: error.message || 'Edge Function error' };
         }
 
         return data;
-    } catch (error) {
-        console.error('Submit penilaian error:', error);
-        return { success: false, error: error.message };
+    } catch (err) {
+        console.error('[submit] Submit penilaian error:', err);
+        return { success: false, error: err.message };
     }
 }
 

@@ -9,19 +9,27 @@ if (typeof window.AssessmentsAPI === 'undefined') {
     window.AssessmentsAPI = {
         /**
          * Get all assessments with relations
+         * @param {Object} filters - unitCode, vendorId, status, startDate, endDate
+         * @param {Object} pagination - { page: 0, pageSize: 50 } (optional, omit for all)
+         * @returns {Object} { success, data, count, error }
          */
-        async getAll(filters = {}) {
+        async getAll(filters = {}, pagination = null) {
             try {
                 const client = getSupabaseClient();
+
+                // Use exact count header when pagination is active
+                const selectOptions = pagination ? { count: 'exact' } : {};
+
                 let query = client
                     .from('assessments')
                     .select(`
-                        *,
+                        id, tanggal_penilaian, shift, status, total_score,
+                        jumlah_item_peralatan, vendor_id,
                         vendors!inner(id, vendor_name, unit_code),
                         peruntukan(id, deskripsi),
                         teams(id, nomor_polisi, category),
                         profiles!assessments_assessor_id_fkey(id, nama)
-                    `);
+                    `, selectOptions);
 
                 // Apply filters
                 if (filters.unitCode) {
@@ -41,17 +49,26 @@ if (typeof window.AssessmentsAPI === 'undefined') {
                     query = query.lte('tanggal_penilaian', filters.endDate);
                 }
 
-                const { data, error } = await query.order('tanggal_penilaian', { ascending: false });
+                // Apply server-side pagination if provided
+                if (pagination) {
+                    const page = pagination.page || 0;
+                    const pageSize = pagination.pageSize || 50;
+                    const from = page * pageSize;
+                    const to = from + pageSize - 1;
+                    query = query.range(from, to);
+                }
+
+                const { data, error, count } = await query.order('tanggal_penilaian', { ascending: false });
 
                 if (error) {
                     console.error('❌ Failed to fetch assessments:', error);
-                    return { success: false, error: error.message, data: null };
+                    return { success: false, error: error.message, data: null, count: 0 };
                 }
 
-                return { success: true, data, error: null };
+                return { success: true, data, count: count ?? data?.length ?? 0, error: null };
             } catch (error) {
                 console.error('❌ Error fetching assessments:', error);
-                return { success: false, error: error.message, data: null };
+                return { success: false, error: error.message, data: null, count: 0 };
             }
         },
 
@@ -64,13 +81,17 @@ if (typeof window.AssessmentsAPI === 'undefined') {
                 const { data, error } = await client
                     .from('assessments')
                     .select(`
-                        *,
+                        id, tanggal_penilaian, shift, status, total_score,
+                        jumlah_item_peralatan, jumlah_peralatan_layak, jumlah_peralatan_berfungsi,
+                        vendor_id,
                         vendors(id, vendor_name, unit_code, unit_name),
                         peruntukan(id, deskripsi),
                         teams(id, nomor_polisi, category),
                         profiles!assessments_assessor_id_fkey(id, nama),
                         assessment_items(
-                            *,
+                            id, required_qty, actual_qty, layak, tidak_layak,
+                            berfungsi, tidak_berfungsi, score_item,
+                            kesesuaian_kontrak, kondisi_fisik, kondisi_fungsi,
                             equipment_master(id, nama_alat, kategori, satuan)
                         ),
                         assessment_personnel(

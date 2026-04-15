@@ -5,7 +5,7 @@
   <meta charset="utf-8">
   <meta content="width=device-width, initial-scale=1.0" name="viewport">
 
-  <title>Dashboard - PPE Health Index</title>
+  <title>Dashboard - SIGAP</title>
   <meta content="" name="description">
   <meta content="" name="keywords">
   <meta name="google-site-verification" content="XjBc9_zpgGM-YTmBhNG0GlkDs3JY4CJDoOhKNQmM9-A" />
@@ -52,8 +52,8 @@
 
     <div class="d-flex align-items-center justify-content-between">
       <a href="index.html" class="logo d-flex align-items-center">
-        <i class="bi bi-shield-check fs-4 text-primary me-2"></i>
-        <span class="d-none d-lg-block">PPE Health Index</span>
+        <i class="bi bi-shield-check"></i>
+        <span class="d-none d-lg-block">SIGAP</span>
       </a>
       <i class="bi bi-list toggle-sidebar-btn"></i>
     </div><!-- End Logo -->
@@ -444,7 +444,7 @@
           </div>
         </div>
 
-        <!-- Row 3: Daily Entry + Kondisi Alat -->
+        <!-- Row 3: Daily Entry + Kondisi Equipment -->
         <div class="row">
           <div class="col-lg-8 d-flex">
             <div class="card flex-fill">
@@ -465,7 +465,7 @@
           <div class="col-lg-4 d-flex">
             <div class="card flex-fill">
               <div class="card-body">
-                <h5 class="card-title">Kondisi Alat <span>| Baik vs Rusak</span></h5>
+                <h5 class="card-title">Kondisi Equipment <span>| Baik vs Rusak</span></h5>
                 <div id="uidConditionChart" style="min-height: 350px;"></div>
               </div>
             </div>
@@ -631,7 +631,7 @@
           <div class="col-xxl-3 col-md-6">
             <div class="card info-card revenue-card">
               <div class="card-body">
-                <h5 class="card-title">Total Equipment <span>| Bulan Ini</span></h5>
+                <h5 class="card-title">Total Equipment <span>| Penilaian Terakhir</span></h5>
                 <div class="d-flex align-items-center">
                   <div class="card-icon rounded-circle d-flex align-items-center justify-content-center">
                     <i class="bi bi-tools"></i>
@@ -677,7 +677,7 @@
           <div class="col-lg-4 d-flex">
             <div class="card w-100">
               <div class="card-body d-flex flex-column">
-                <h5 class="card-title">Kondisi Alat <span>| Bulan Ini</span></h5>
+                <h5 class="card-title">Kondisi Equipment <span>| Penilaian Terakhir</span></h5>
                 <div id="up3KondisiDonut" style="min-height: 220px;"></div>
                 <div id="up3KondisiDetail" class="small"></div>
                 <div class="mt-auto">
@@ -707,7 +707,7 @@
           <div class="col-12">
             <div class="card">
               <div class="card-body">
-                <h5 class="card-title">Rekap Penilaian <span>| Per Vendor & Peruntukan (Bulan Ini)</span></h5>
+                <h5 class="card-title">Rekap Penilaian <span>| Per Vendor & Peruntukan</span></h5>
                 <div class="table-responsive">
                   <table class="table table-hover table-sm mb-0 small" id="up3VendorRecapTable">
                     <thead class="table-light sticky-top">
@@ -746,8 +746,10 @@
                       <tr>
                         <th scope="col">Tanggal</th>
                         <th scope="col">Vendor</th>
+                        <th scope="col">Peruntukan</th>
                         <th scope="col">Tim/Personil</th>
                         <th scope="col">Equipment</th>
+                        <th scope="col">Kategori</th>
                         <th scope="col" class="text-center">Fisik</th>
                         <th scope="col" class="text-center">Fungsi</th>
                         <th scope="col" class="text-center">Score</th>
@@ -755,7 +757,40 @@
                     </thead>
                     <tbody>
                       <tr>
-                        <td colspan="7" class="text-center text-muted">Loading...</td>
+                        <td colspan="9" class="text-center text-muted">Loading...</td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Row 6: Equipment Belum Sesuai Kontrak -->
+        <div class="row">
+          <div class="col-12">
+            <div class="card">
+              <div class="card-body">
+                <h5 class="card-title">Equipment Belum Sesuai Kontrak <span>| Penilaian Terakhir</span></h5>
+                <div class="table-responsive" style="max-height: 420px;">
+                  <table class="table table-hover table-sm mb-0 small" id="up3UnfulfilledTable">
+                    <thead class="table-light sticky-top">
+                      <tr>
+                        <th scope="col">Tanggal</th>
+                        <th scope="col">Vendor</th>
+                        <th scope="col">Peruntukan</th>
+                        <th scope="col">Tim/Personil</th>
+                        <th scope="col">Equipment</th>
+                        <th scope="col">Kategori</th>
+                        <th scope="col" class="text-center">Kontrak</th>
+                        <th scope="col" class="text-center">Realisasi</th>
+                        <th scope="col" class="text-center text-danger">Selisih</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <tr>
+                        <td colspan="9" class="text-center text-muted">Loading...</td>
                       </tr>
                     </tbody>
                   </table>
@@ -777,7 +812,7 @@
             <div class="card">
               <div class="card-body text-center py-5">
                 <i class="bi bi-info-circle text-primary" style="font-size: 3rem;"></i>
-                <h4 class="mt-3">Selamat Datang di PPE Health Index</h4>
+                <h4 class="mt-3">Selamat Datang di SIGAP</h4>
                 <p class="text-muted">Dashboard khusus untuk role Anda sedang dalam pengembangan.</p>
                 <p class="text-muted small">Silakan hubungi administrator jika membutuhkan akses ke fitur tertentu.</p>
               </div>
@@ -810,7 +845,7 @@
               <thead class="table-light sticky-top">
                 <tr>
                   <th class="text-center" style="width: 35px;">#</th>
-                  <th>Nama Alat</th>
+                  <th>Nama Equipment</th>
                   <th>Kategori</th>
                   <th class="text-center" style="width: 80px;">Jenis</th>
                   <th>Tim/Personil</th>

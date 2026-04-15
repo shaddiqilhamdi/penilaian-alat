@@ -622,7 +622,7 @@ h6 {
 
 @media (min-width: 1200px) {
   .logo {
-    width: 280px;
+    width: 230px;
   }
 }
 
@@ -631,11 +631,20 @@ h6 {
   margin-right: 6px;
 }
 
+.logo i {
+  font-size: 28px;
+  color: #4154f1;
+  margin-right: 8px;
+  display: inline-block !important;
+  line-height: 1;
+}
+
 .logo span {
   font-size: 26px;
-  font-weight: 700;
+  font-weight: 800;
   color: #012970;
-  font-family: "Nunito", sans-serif;
+  font-family: "Poppins", sans-serif;
+  letter-spacing: 3px;
 }
 
 .header {
@@ -644,7 +653,7 @@ h6 {
   height: 60px;
   box-shadow: 0px 2px 20px rgba(1, 41, 112, 0.1);
   background-color: #fff;
-  padding-left: 20px;
+  padding-left: 30px;
   /* Toggle Sidebar Button */
   /* Search Bar */
 }
@@ -652,8 +661,11 @@ h6 {
 .header .toggle-sidebar-btn {
   font-size: 32px;
   padding-left: 10px;
+  margin-left: auto;
   cursor: pointer;
   color: #012970;
+  position: absolute;
+  left: 235px;
 }
 
 .header .search-bar {
@@ -864,7 +876,7 @@ h6 {
   top: 60px;
   left: 0;
   bottom: 0;
-  width: 300px;
+  width: 250px;
   z-index: 996;
   transition: all 0.3s;
   padding: 20px;
@@ -877,7 +889,7 @@ h6 {
 
 @media (max-width: 1199px) {
   .sidebar {
-    left: -300px;
+    left: -250px;
   }
 }
 
@@ -895,7 +907,7 @@ h6 {
 
   #main,
   #footer {
-    margin-left: 300px;
+    margin-left: 250px;
   }
 }
 
@@ -913,7 +925,7 @@ h6 {
   }
 
   .toggle-sidebar .sidebar {
-    left: -300px;
+    left: -250px;
   }
 }
 
@@ -936,7 +948,7 @@ h6 {
 .sidebar-nav .nav-heading {
   font-size: 11px;
   text-transform: uppercase;
-  color: #899bbd;
+  color: #825bbd;
   font-weight: 600;
   margin: 10px 0 5px 15px;
 }
@@ -947,7 +959,7 @@ h6 {
   font-size: 15px;
   font-weight: 600;
   color: #4154f1;
-  transition: 0.3;
+  transition: 0.3s;
   background: #f6f9ff;
   padding: 10px 15px;
   border-radius: 4px;
@@ -998,7 +1010,6 @@ h6 {
   font-size: 14px;
   font-weight: 600;
   color: #012970;
-  transition: 0.3;
   padding: 10px 0 10px 40px;
   transition: 0.3s;
 }

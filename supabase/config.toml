@@ -1,2 +1,5 @@
 [functions.submit-penilaian]
-verify_jwt = true
+# Gateway JWT verification disabled because Supabase Auth now issues ES256 tokens
+# which the gateway doesn't support. Auth is handled inside the function via
+# supabaseUser.auth.getUser() which validates the token server-side.
+verify_jwt = false

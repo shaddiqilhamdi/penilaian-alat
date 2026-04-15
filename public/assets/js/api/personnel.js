@@ -10,14 +10,17 @@ if (typeof window.PersonnelAPI === 'undefined') {
     window.PersonnelAPI = {
         /**
          * Get all personnel
+         * @param {boolean} activeOnly - filter active only (default true)
+         * @param {object} filters - optional server-side filters { vendor_id, vendor_ids }
          */
-        async getAll(activeOnly = true) {
+        async getAll(activeOnly = true, filters = {}) {
             try {
                 const client = getSupabaseClient();
                 let query = client
                     .from('personnel')
                     .select(`
-                        *,
+                        id, vendor_id, team_id, peruntukan_id,
+                        nama_personil, nik, is_active,
                         vendors(vendor_name, unit_code),
                         teams(nomor_polisi, category),
                         peruntukan(deskripsi)
@@ -27,8 +30,17 @@ if (typeof window.PersonnelAPI === 'undefined') {
                     query = query.eq('is_active', true);
                 }
 
+                // Server-side filters
+                if (filters.vendor_id) {
+                    // Single vendor (vendor_k3)
+                    query = query.eq('vendor_id', filters.vendor_id);
+                } else if (filters.vendor_ids && filters.vendor_ids.length > 0) {
+                    // Multiple vendors (UP3 - all vendors in their unit)
+                    query = query.in('vendor_id', filters.vendor_ids);
+                }
+
                 const { data, error } = await query
-                    .order('created_at', { ascending: false });
+                    .order('nama_personil', { ascending: true });
 
                 if (error) {
                     console.error('❌ Failed to fetch personnel:', error);
@@ -51,7 +63,8 @@ if (typeof window.PersonnelAPI === 'undefined') {
                 const { data, error } = await client
                     .from('personnel')
                     .select(`
-                        *,
+                        id, vendor_id, team_id, peruntukan_id,
+                        nama_personil, nik, is_active,
                         vendors(vendor_name, unit_code),
                         teams(nomor_polisi, category),
                         peruntukan(deskripsi)
@@ -80,7 +93,8 @@ if (typeof window.PersonnelAPI === 'undefined') {
                 let query = client
                     .from('personnel')
                     .select(`
-                        *,
+                        id, vendor_id, team_id, peruntukan_id,
+                        nama_personil, nik, is_active,
                         teams(nomor_polisi, category),
                         peruntukan(deskripsi)
                     `)
@@ -113,7 +127,7 @@ if (typeof window.PersonnelAPI === 'undefined') {
                 const client = getSupabaseClient();
                 const { data, error } = await client
                     .from('personnel')
-                    .select('*')
+                    .select('id, vendor_id, team_id, peruntukan_id, nama_personil, nik, is_active')
                     .eq('team_id', teamId)
                     .order('nama_personil', { ascending: true });
 
@@ -138,7 +152,8 @@ if (typeof window.PersonnelAPI === 'undefined') {
                 const { data, error } = await client
                     .from('personnel')
                     .select(`
-                        *,
+                        id, vendor_id, team_id, peruntukan_id,
+                        nama_personil, nik, is_active,
                         vendors(vendor_name, unit_code),
                         teams(nomor_polisi, category)
                     `)
